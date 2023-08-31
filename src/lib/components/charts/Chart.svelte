@@ -2,7 +2,7 @@
 	import * as Pancake from '@sveltejs/pancake'; 
 	import { spring } from 'svelte/motion';
 	import { onMount } from 'svelte';
-	import data from './data.js';
+	import data from './data';
 
 	const age1 = Math.max(...data.map(d => d.age));
 	const year0 = Math.min(...data.map(d => d.year));
