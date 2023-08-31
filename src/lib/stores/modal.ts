@@ -1,16 +1,63 @@
 import type { ModalComponent } from "@skeletonlabs/skeleton";
-import IsQueueForm from "$lib/components/forms/IsQueueForm.svelte";
 
-const priority = [
-  { id: 1, name: "Low"},
-  { id: 2, name: "Medium"},
-  { id: 3, name: "High"}
-]
+// Create Imports
+import IsQueue_Create from "$lib/components/forms/create/IsQueue_Create.svelte";
+import DrQueue_Create from "$lib/components/forms/create/DrQueue_Create.svelte";
+import PopulationSelection_Create from "$lib/components/forms/create/PopulationSelection_Create.svelte";
+import Form_Create from "$lib/components/forms/create/Form_Create.svelte";
+import StandardProcedure_Create	from "$lib/components/forms/create/StandardProcedure_Create.svelte";
+import Letter_Create from "$lib/components/forms/create/Letter_Create.svelte";
+import MasterCalendar_Create from "$lib/components/forms/create/MasterCalendar_Create.svelte";
+import TrainingSchedule_Create from "$lib/components/forms/create/TrainingSchedule_Create.svelte";
+import GeneralLibrary_Create from "$lib/components/forms/create/GeneralLibrary_Create.svelte";
+import Appointment_Create from "$lib/components/forms/create/Appointment_Create.svelte";
+
+// Update Imports
+import IsQueue_Update from "$lib/components/forms/update/IsQueue_Update.svelte"
+import DrQueue_Update from "$lib/components/forms/update/DrQueue_Update.svelte"
+import Form_Update from "$lib/components/forms/update/Form_Update.svelte"
+import StandardProcedure_Update from "$lib/components/forms/update/StandardProcedure_Update.svelte"
+import Letter_Update from "$lib/components/forms/update/Letter_Update.svelte"
+import MasterCalendar_Update from "$lib/components/forms/update/MasterCalendar_Update.svelte"
+import TrainingSchedule_Update from "$lib/components/forms/update/TrainingSchedule_Update.svelte";
+import UserProfile_Update from "$lib/components/forms/update/UserProfile_Update.svelte";
+import GeneralLibrary_Update from "$lib/components/forms/update/GeneralLibrary_Update.svelte";
+import Appointment_Update from "$lib/components/forms/update/Appointment_Update.svelte";
+import Referral_Update from "$lib/components/forms/update/Referral_Update.svelte";
+
+// Other Imports
+import EmbedModal from "$lib/components/modals/EmbedModal.svelte";
+import ConfirmDeleteModal from "$lib/components/modals/ConfirmDeleteModal.svelte";
+import GlobalSearchModal from "$lib/components/modals/GlobalSearchModal.svelte";
 
 export const forms: Record<string, ModalComponent> = {
-	isQueueModal: {
-		ref: IsQueueForm,
-		props: { priority },
-		slot: '<p>Skeleton</p>'
-	}
+	// Create
+	drQueueModal: { ref: DrQueue_Create },
+	formModal: { ref: Form_Create },
+	isQueueModal: { ref: IsQueue_Create },
+	letterModal: { ref: Letter_Create },
+	masterCalendarModal: { ref: MasterCalendar_Create },
+	popselModal: { ref: PopulationSelection_Create },
+	standardProcedureModal: { ref: StandardProcedure_Create },
+	trainingModal: { ref: TrainingSchedule_Create },
+	libraryModal: { ref: GeneralLibrary_Create },
+	appointmentModal: { ref: Appointment_Create },
+
+	// Update
+	updateDrQueueModal: { ref: DrQueue_Update },
+	updateFormModal: { ref: Form_Update },
+	updateIsQueueModal: { ref: IsQueue_Update },
+	updateLetterModal: { ref: Letter_Update },
+	updateMasterCalendarModal: { ref: MasterCalendar_Update },
+	updateStandardProcedureModal: { ref: StandardProcedure_Update },
+	updateTrainingModal: { ref: TrainingSchedule_Update },
+	updateUserProfileModal: { ref: UserProfile_Update },
+	updateLibraryModal: { ref: GeneralLibrary_Update },
+	updateAppointmentModal: { ref: Appointment_Update },
+	updateReferralModal: { ref: Referral_Update },
+
+	// Other
+	embedModal: { ref: EmbedModal },
+	confirmDeleteModal: { ref: ConfirmDeleteModal },
+	globalSearch: {ref: GlobalSearchModal }
 };
