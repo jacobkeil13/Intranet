@@ -30,7 +30,8 @@
 				name: referral.studentName,
 				uid: referral.studentUid,
 				assignedUser: referral.counterUser,
-				completed: referral.completed,
+				lastUpdatedBy: referral.lastUpdatedBy,
+				completed: referral.completed
 			}
 			sourceData.push(tr);
 		});
@@ -53,8 +54,8 @@
 		updatePageSettings(filteredSourceData);
   }
 
-	const headers: string[] = ['Date & Time', 'Name', 'UID', 'Assigned User', 'Completed'];
-	const body: string[] = ['dateTime', 'name', 'uid', 'assignedUser', 'completed'];
+	const headers: string[] = ['Date & Time', 'Name', 'UID', 'Assigned User', 'Last Updated By'];
+	const body: string[] = ['dateTime', 'name', 'uid', 'assignedUser', 'lastUpdatedBy'];
 	const meta: string[] = ['id'];
   let state = { firstLast: false, previousNext: true };
 	let pageSettings = { offset: 0, limit: 10, size: filteredSourceData.length, amounts: [5, 10, 15] } as PaginationSettings;
@@ -76,6 +77,10 @@
   }
 </script>
 
+<svelte:head>
+	<title>OFA • Referrals</title>
+</svelte:head>
+
 <section in:fly={{ y: -10, duration: 200 }}>
 	<div class="flex justify-between items-center">
 		<h1 class="text-2xl text-usfGreen font-semibold">{filterCompleted ? "Completed" : "Pending"} Referrals</h1>
@@ -87,7 +92,7 @@
 			<Search bind:value={searchQuery} />
 			<!-- svelte-ignore a11y-click-events-have-key-events -->
 			<div class="flex justify-center items-center bg-accSlate p-[6px] rounded-full cursor-pointer" 
-				on:click={() => { openModal("appointmentModal", { constants: data.constants })
+				on:click={() => { openModal("appointmentModal", { constants: data.constants, appointmentReasons: data.appointmentReasons, visitCounterReasons: data.visitCounterReasons })
 			}}>
 				<box-icon class="fill-white/90" name={"plus"} />
 			</div>

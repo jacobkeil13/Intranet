@@ -5,8 +5,15 @@ import moment from "moment";
 
 export const load = async ({ locals }) => {
 	if (locals.user) {
-    let referrals = await db.referral.findMany();
-    return { referrals, user: locals.user }
+    let referrals = await db.referral.findMany({
+			include: {
+				comments: true
+			}
+		});
+		const appointmentReasons = await db.appointmentReason.findMany();
+		const visitCounterReasons = await db.visitCounterReason.findMany();
+
+    return { referrals, constants: locals.constants, user: locals.user, appointmentReasons, visitCounterReasons }
 	} else {
 		throw redirect(302, '/dashboard');
 	}
@@ -24,7 +31,11 @@ export const actions = {
 			referralDetails,
 			callbackNumber,
 			bestTimeCallback,
-			preferredContactMethod
+			preferredContactMethod,
+			source,
+			referralType,
+			researchUser,
+			escalatedUser
      } = Object.fromEntries(await request.formData()) as {
 			type: string
 			visitorType: string
@@ -38,6 +49,10 @@ export const actions = {
 			bestTimeCallback: string
 			preferredContactMethod: string
 			submittedDocument: string
+			source: string
+			referralType: string
+			researchUser: string
+			escalatedUser: string
     }
 
 		const counterUserInfo = await db.userProfile.findFirst({
@@ -64,35 +79,65 @@ export const actions = {
 					reason: appReason,
 					details: referralDetails,
 					callbackNumber: callbackNumber === "" ? undefined : callbackNumber,
-					preferredContactMethod
+					preferredContactMethod,
+					source,
+					referralType,
+					escalationUser: referralType === "Escalated Referral" ? escalatedUser : null,
+					researchUser: referralType === "Research Referral" ? researchUser : null
         }
       });
+
+			const newComment = await db.referralComment.create({
+				data: {
+					user: counterUserInfo?.first_name + " " + counterUserInfo?.last_name,
+					content: referralDetails,
+					Referral: { connect: { id: newReferral.id } }
+				}
+			})
 
       return { success: true }
     } catch (error) {
       return { success: false }
     }
 	},
-  update: async ({ request }) => {
+  update: async ({ locals, request }) => {
 		const {
       id,
-			complete
+			complete,
+			description,
+			responseMethod
      } = Object.fromEntries(await request.formData()) as {
 			id: string
 			complete: string
+			description: string
+			responseMethod: string
     }
 
-		console.log({id, complete});
+		const counterUserInfo = await db.userProfile.findFirst({
+			where: {
+				netid: locals.user.netid
+			}
+		});
 
     try {
-      const updatedReferral = await db.referral.update({
+      await db.referral.update({
 				where: {
 					id
 				},
         data: {
-					completed: complete === "on"
+					completed: complete === "on",
+					responseMethod: responseMethod === "" ? undefined : responseMethod,
+					lastUpdatedBy: counterUserInfo?.first_name + " " + counterUserInfo?.last_name
         }
       });
+
+			await db.referralComment.create({
+				data: {
+					user: counterUserInfo?.first_name + " " + counterUserInfo?.last_name,
+					content: description,
+					Referral: { connect: { id } }
+				}
+			})
 			
       return { success: true, message: "Referral updated successfully!" }
     } catch (error) {

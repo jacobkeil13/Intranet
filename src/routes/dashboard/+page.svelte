@@ -44,6 +44,11 @@
 	let profileName = data.profile?.first_name + " " + data.profile?.last_name;
 </script>
 
+<svelte:head>
+	<title>OFA • Dashboard</title>
+	<meta name="description" content="Main dashboard for the Office of Financial Aid Intranet.">
+</svelte:head>
+
 <article in:fly={{ y: -10, duration: 200 }}>
 	<!-- <h1 class="text-2xl font-medium text-usfGreen mb-2">Announcements</h1>
 	<section class="grid grid-cols-3 gap-2">
@@ -265,7 +270,7 @@
 		<h1 class="text-2xl font-medium text-usfGreen mb-2">Management</h1>
 		<section class="grid grid-cols-2 gap-4">
 			<section class="grid grid-cols-2 gap-2">
-				<a class="flex flex-col justify-between rounded py-1 px-4 border border-accSlate/20 shadow-lg group" href="{`/visit_stats`}">
+				<a class="flex flex-col justify-between rounded py-1 px-4 border border-accSlate/20 shadow-lg group" href="/visitor_stats">
 					<div class="flex justify-between items-center">
 						<h1 class="text-6xl text-black/70">{data.counterVisits}</h1>
 						<box-icon name='support' class="w-12 h-12 mt-2 fill-black/70" ></box-icon>

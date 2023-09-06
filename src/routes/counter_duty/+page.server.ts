@@ -102,13 +102,14 @@ export const actions = {
           type,
 					visitorType,
 					advisor: advisorRequested === "" ? null : advisorRequested,
-					studentEmail: studentEmail === "undefined" ? null : studentEmail,
+					studentEmail: studentEmail === "" ? null : studentEmail,
 					studentUid: studentUid === "" ? null : studentUid,
 					studentName: studentName === "" ? null : studentName,
-					dateTime: getUtcDate(date + "T" + time.replace("_", ":") + ":00.000"),
+					dateTime: getUtcDate(date + "T" + time.replace("_", ":") + ":00.000Z"),
 					reason: appReason,
 					callbackNumber: callbackNumber === "" ? undefined : callbackNumber,
-					rhacomm: rhacomm === 'true'
+					rhacomm: rhacomm === 'true',
+					source: "Counter Duty"
         }
       });
 
@@ -117,7 +118,7 @@ export const actions = {
 					reason,
 					visitorType,
 					counterUser: counterUserInfo === undefined ? "No User" : counterUserInfo?.first_name + " " + counterUserInfo?.last_name,
-					studentEmail: studentEmail === "undefined" ? null : studentEmail,
+					studentEmail: studentEmail === "" ? null : studentEmail,
 					studentUid: studentUid === "" ? null : studentUid,
 					studentName: studentName === "" ? null : studentName,
 					submittedDocument: submittedDocument === 'true',
@@ -143,7 +144,10 @@ export const actions = {
 			callbackNumber,
 			bestTimeCallback,
 			preferredContactMethod,
-			submittedDocument
+			submittedDocument,
+			referralType,
+			researchUser,
+			escalatedUser
      } = Object.fromEntries(await request.formData()) as {
 			type: string
 			visitorType: string
@@ -157,6 +161,9 @@ export const actions = {
 			bestTimeCallback: string
 			preferredContactMethod: string
 			submittedDocument: string
+			referralType: string
+			researchUser: string
+			escalatedUser: string
     }
 
 		const counterUserInfo = await db.userProfile.findFirst({
@@ -179,14 +186,18 @@ export const actions = {
           type,
 					visitorType,
 					counterUser: counterUserInfo === undefined ? "No User" : counterUserInfo?.first_name + " " + counterUserInfo?.last_name,
-					studentEmail: studentEmail === "undefined" ? null : studentEmail,
+					studentEmail: studentEmail === "" ? null : studentEmail,
 					studentUid: studentUid === "" ? null : studentUid,
 					studentName: studentName === "" ? null : studentName,
-					bestTimeCallback: getUtcDate(callbackDate.format("YYYY-MM-DD") + "T" + bestTimeCallback + ":00.000"),
+					bestTimeCallback: getUtcDate(callbackDate.format("YYYY-MM-DD") + "T" + bestTimeCallback + ":00.000Z"),
 					reason: appReason,
 					details: referralDetails,
 					callbackNumber: callbackNumber === "" ? undefined : callbackNumber,
-					preferredContactMethod
+					preferredContactMethod,
+					referralType,
+					escalationUser: referralType === "Escalated Referral" ? escalatedUser : null,
+					researchUser: referralType === "Research Referral" ? researchUser : null,
+					source: "Counter Duty"
         }
       });
 
@@ -195,13 +206,21 @@ export const actions = {
 					reason,
 					visitorType,
 					counterUser: counterUserInfo === undefined ? "No User" : counterUserInfo?.first_name + " " + counterUserInfo?.last_name,
-					studentEmail: studentEmail === "undefined" ? null : studentEmail,
+					studentEmail: studentEmail === "" ? null : studentEmail,
 					studentUid: studentUid === "" ? null : studentUid,
 					studentName: studentName === "" ? null : studentName,
 					submittedDocument: submittedDocument === 'true',
 					referral: { connect: { id: newReferral.id } }
 				}
 			});
+
+			const newComment = await db.referralComment.create({
+				data: {
+					user: counterUserInfo?.first_name + " " + counterUserInfo?.last_name,
+					content: referralDetails,
+					Referral: { connect: { id: newReferral.id } }
+				}
+			})
 
       return { success: true }
     } catch (error) {

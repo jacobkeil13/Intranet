@@ -61,6 +61,10 @@
   }
 </script>
 
+<svelte:head>
+	<title>OFA • Data Request Queue</title>
+</svelte:head>
+
 <section in:fly={{ y: -10, duration: 200 }}>
 	<span class="flex justify-between items-center">
 		<h1 class="text-2xl text-usfGreen font-semibold">Data Request Queue</h1>

@@ -109,6 +109,10 @@
   }
 </script>
 
+<svelte:head>
+	<title>OFA • Procedures</title>
+</svelte:head>
+
 <section in:fly={{ y: -10, duration: 200 }}>
   <div class="flex justify-between items-center">
     <h1 class="text-2xl text-usfGreen font-semibold">Standards & Procedures</h1>

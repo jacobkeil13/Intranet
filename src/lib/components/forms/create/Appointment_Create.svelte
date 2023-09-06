@@ -14,6 +14,8 @@
 	import type { Appointment } from '@prisma/client';
 
   let data = $modalStore[0].meta;
+  console.log(data);
+  
 
   enum Actions {
     Referral = "Referral",
@@ -42,6 +44,9 @@
 
   let appointmentForm = writable({
     type: "",
+    referralType: "",
+    escalatedUser: "",
+    researchUser: "",
     visitorType: "Student",
     studentUid: "",
     studentEmail: "",
@@ -55,6 +60,7 @@
     time: "",
     bestTimeCallback: "",
     preferredContactMethod: "Phone",
+    source: ""
   })
 
   $: $appointmentForm.studentUid, $appointmentForm.studentUid = $appointmentForm.studentUid.trim();
@@ -124,6 +130,22 @@
       errorToast("Please pick a reason!");
       return
     }
+    if ($appointmentForm.source === "") {
+      errorToast("Please pick the source of this request!");
+      return
+    }
+    if (action === Actions.Referral && $appointmentForm.referralType === "") {
+      errorToast("Please pick a referral type!");
+      return
+    }
+    if (action === Actions.Referral && $appointmentForm.referralType === "Escalated Referral" && $appointmentForm.escalatedUser === "") {
+      errorToast("Please pick an escalated user!");
+      return
+    }
+    if (action === Actions.Referral && $appointmentForm.referralType === "Research Referral" && $appointmentForm.researchUser === "") {
+      errorToast("Please pick a research user!");
+      return
+    }
 
     await fetch(`/api/counter_duty?type=${action}`).then(async (res) => {
       let response = await res.json();
@@ -153,6 +175,10 @@
 
     const formData = new FormData();
     formData.append('type', $appointmentForm.type);
+    formData.append('source', $appointmentForm.source);
+    formData.append('referralType', $appointmentForm.referralType);
+    formData.append('escalatedUser', $appointmentForm.escalatedUser);
+    formData.append('researchUser', $appointmentForm.researchUser);
     formData.append('visitorType', $appointmentForm.visitorType);
     formData.append('studentUid', $appointmentForm.studentUid);
     formData.append('studentEmail', $appointmentForm.studentEmail);
@@ -390,6 +416,49 @@
                 </div>
               </div>
             {/if}
+            <div class="flex space-x-2">
+              <div class="space-y-1">
+                <label for="source">Source</label>
+                <select class="select w-fit" name="source" id="source" bind:value={$appointmentForm.source}>
+                  <option disabled selected value="">Select one...</option>
+                  <option value="Counter Duty">Counter Duty</option>
+                  <option value="Phone Duty">Phone Duty</option>
+                </select>
+              </div>
+              {#if action === Actions.Referral}
+                <div class="space-y-1">
+                  <label for="referralType">Referral Type</label>
+                  <select class="select w-fit" name="referralType" id="referralType" bind:value={$appointmentForm.referralType}>
+                    <option disabled selected value="">Select one...</option>
+                    <option value="Self Referral">Self Referral</option>
+                    <option value="Research Referral">Research Referral</option>
+                    <option value="Escalated Referral">Escalated Referral</option>
+                  </select>
+                </div>
+                {#if $appointmentForm.referralType === "Research Referral"}
+                  <div class="space-y-1">
+                    <label for="researchUser">Research User</label>
+                    <select class="select w-fit" name="researchUser" id="researchUser" bind:value={$appointmentForm.researchUser}>
+                      <option disabled selected value="">Select one...</option>
+                      {#each data.constants.users as user}
+                        <option value={user.first_name + " " + user.last_name}>{user.first_name + " " + user.last_name}</option>
+                      {/each}
+                    </select>
+                  </div>
+                {/if}
+                {#if $appointmentForm.referralType === "Escalated Referral"}
+                  <div class="space-y-1">
+                    <label for="escalatedUser">Escalated User</label>
+                    <select class="select w-fit" name="escalatedUser" id="escalatedUser" bind:value={$appointmentForm.escalatedUser}>
+                      <option disabled selected value="">Select one...</option>
+                      {#each data.constants.users as user}
+                        <option value={user.first_name + " " + user.last_name}>{user.first_name + " " + user.last_name}</option>
+                      {/each}
+                    </select>
+                  </div>
+                {/if}
+              {/if}
+            </div>
             <div class="flex space-x-2">
               <div 
                 class:border-usfGreen={$appointmentForm.rhacomm}

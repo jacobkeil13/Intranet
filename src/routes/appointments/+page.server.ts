@@ -25,7 +25,8 @@ export const actions = {
 			callbackNumber,
 			advisorRequested,
 			date,
-			time
+			time,
+			source
      } = Object.fromEntries(await request.formData()) as {
 			type: string
 			visitorType: string
@@ -39,6 +40,7 @@ export const actions = {
 			advisorRequested: string
 			date: string
 			time: string
+			source: string
     }
 
     try {
@@ -53,7 +55,8 @@ export const actions = {
 					dateTime: getUtcDate(date + "T" + time.replace("_", ":") + ":00.000"),
 					reason: appReason,
 					callbackNumber: callbackNumber === "" ? undefined : callbackNumber,
-					rhacomm: rhacomm === 'true'
+					rhacomm: rhacomm === 'true',
+					source
         }
       });
 
@@ -62,7 +65,7 @@ export const actions = {
       return { success: false }
     }
   },
-	update: async ({ request }) => {
+	update: async ({ locals, request }) => {
     const {
       id,
 			timeIn,
@@ -75,6 +78,12 @@ export const actions = {
 			complete: string
     }
 
+		const counterUserInfo = await db.userProfile.findFirst({
+			where: {
+				netid: locals.user.netid
+			}
+		});
+
 		console.log({id, timeIn, timeOut, complete});
 
     try {
@@ -85,7 +94,8 @@ export const actions = {
         data: {
           timeIn: timeIn === "" ? null : getUtcDate(moment().format("YYYY-MM-DD") + "T" + timeIn + ":00.000"),
 					timeOut: timeOut === "" ? null : getUtcDate(moment().format("YYYY-MM-DD") + "T" + timeOut + ":00.000"),
-					completed: complete === "on"
+					completed: complete === "on",
+					lastUpdatedBy: counterUserInfo?.first_name + " " + counterUserInfo?.last_name
         }
       });
 			

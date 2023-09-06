@@ -46,17 +46,19 @@
 					<span class="flex items-center space-x-2">
 						<!-- svelte-ignore a11y-click-events-have-key-events -->
 						<div class="flex justify-center items-center bg-usfWhite p-2 rounded-full cursor-pointer" on:click={() => { 
-								openModal("globalSearch", { constants: data.constants })
+								openModal("globalSearchModal", { constants: data.constants })
 							}}>
 							<box-icon class="fill-accSlate" name="search" />
 						</div>
-						<Avatar background="bg-white/90" initials={data.profile?.first_name.charAt(0) + "" + data.profile?.last_name.charAt(0)} width="w-10" />
+						<Avatar background="bg-usfWhite" initials={data.profile?.first_name.charAt(0) + "" + data.profile?.last_name.charAt(0)} width="w-10" />
 					</span>
 				</svelte:fragment>
 			</AppBar>
 			<AppBar background="bg-accSlate/90 text-white/90" padding="p-2">
 				<!-- svelte-ignore a11y-click-events-have-key-events -->
 				<span on:click={() => goto("/dashboard")} class="chip bg-usfWhite/90 text-black py-1 px-2 rounded-sm">Dashboard</span>
+				<!-- svelte-ignore a11y-click-events-have-key-events -->
+				<span on:click={() => goto("/visitor_stats")} class="chip bg-usfWhite/90 text-black py-1 px-2 rounded-sm">Visitor Stats</span>
 				<!-- svelte-ignore a11y-click-events-have-key-events -->
 				<span on:click={() => goto("/counter_duty")} class="chip bg-usfWhite/90 text-black py-1 px-2 rounded-sm">Counter Duty</span>
 				<!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -104,7 +106,7 @@
 			{/if}
 		</svelte:fragment>
 		<section id="content">
-			<section class="p-8 { $sidebarStore ? "max-w-6xl" : "max-w-7xl"} mx-auto min-h-[calc(100vh_-_3.5rem_-_41px)]">
+			<section class="p-8 { $sidebarStore ? "max-w-6xl" : "max-w-[1500px]"} mx-auto min-h-[calc(100vh_-_3.5rem_-_41px)]">
 				<div>
 					<slot />
 				</div>

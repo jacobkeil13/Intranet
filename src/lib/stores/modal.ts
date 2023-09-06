@@ -29,6 +29,7 @@ import Referral_Update from "$lib/components/forms/update/Referral_Update.svelte
 import EmbedModal from "$lib/components/modals/EmbedModal.svelte";
 import ConfirmDeleteModal from "$lib/components/modals/ConfirmDeleteModal.svelte";
 import GlobalSearchModal from "$lib/components/modals/GlobalSearchModal.svelte";
+import VisitStatsModal from "$lib/components/modals/VisitStatsModal.svelte";
 
 export const forms: Record<string, ModalComponent> = {
 	// Create
@@ -59,5 +60,6 @@ export const forms: Record<string, ModalComponent> = {
 	// Other
 	embedModal: { ref: EmbedModal },
 	confirmDeleteModal: { ref: ConfirmDeleteModal },
-	globalSearch: {ref: GlobalSearchModal }
+	globalSearchModal: {ref: GlobalSearchModal },
+	visitStatsModal: { ref: VisitStatsModal }
 };

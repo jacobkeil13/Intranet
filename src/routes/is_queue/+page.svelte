@@ -62,6 +62,10 @@
   }
 </script>
 
+<svelte:head>
+	<title>OFA • Information Services Queue</title>
+</svelte:head>
+
 <section in:fly={{ y: -10, duration: 200 }}>
 	<span class="flex justify-between items-center">
 		<h1 class="text-2xl text-usfGreen font-semibold">Information Services Queue</h1>

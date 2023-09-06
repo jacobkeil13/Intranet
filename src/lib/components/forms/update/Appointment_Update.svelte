@@ -10,7 +10,7 @@
 
   let timeIn = getDateLocal(String(appt.timeIn?.toISOString()), "HH:mm");
   let timeOut = getDateLocal(String(appt.timeOut?.toISOString()), "HH:mm");
-  console.log(timeIn);
+  // console.log(timeIn);
   
 
 	function closeForm(): void {

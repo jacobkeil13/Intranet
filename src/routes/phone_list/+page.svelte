@@ -99,6 +99,10 @@
   }
 </script>
 
+<svelte:head>
+	<title>OFA • Phone List</title>
+</svelte:head>
+
 <section in:fly={{ y: -10, duration: 200 }}>
 	<div class="grid {gridCols} auto-rows-min gap-x-4">
 		<div class="flex justify-between items-center">
