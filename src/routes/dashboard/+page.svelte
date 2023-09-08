@@ -1,10 +1,13 @@
 <script lang="ts">
-	import Chart from '$lib/components/charts/Chart.svelte';
 	import { getDateLocal, openModal } from '$lib/helpers.js';
 	import { fly } from 'svelte/transition';
+	import chartData from '$lib/components/charts/data.json';
+	import D3Chart from '$lib/components/charts/D3Chart.svelte';
+	import { ProgressRadial } from '@skeletonlabs/skeleton';
 	export let data;
 
-	let todaysDate = getDateLocal(new Date().toISOString(), "YYYY-MM-DD");
+	let todaysDate = getDateLocal(new Date().toISOString(), "YYYY-MM-DD");	
+	let clientX: number;
 
 	let constants = data.constants;
 	let isTeam = data.isTeam;
@@ -49,41 +52,9 @@
 	<meta name="description" content="Main dashboard for the Office of Financial Aid Intranet.">
 </svelte:head>
 
+<svelte:window bind:innerWidth={clientX} />
+
 <article in:fly={{ y: -10, duration: 200 }}>
-	<!-- <h1 class="text-2xl font-medium text-usfGreen mb-2">Announcements</h1>
-	<section class="grid grid-cols-3 gap-2">
-		<a class="block rounded py-1 px-4 border border-accSlate/20 shadow-lg group" href={`/appointments?tab=0&search=${profileName}`}>
-			<div class="flex justify-between items-center">
-				<h1 class="text-6xl text-black/70">{phoneAppointments.filter(appt => appt.advisor === profileName).length}</h1>
-				<box-icon name='phone-call' type='solid' class="w-12 h-12 mt-2 fill-accTeal/80" ></box-icon>
-			</div>
-			<div class="flex justify-between items-center">
-				<h1 class="text-lg">Phone</h1>
-				<box-icon name='arrow-to-right' type='solid' class="hidden group-hover:block fill-black/70" ></box-icon>
-			</div>
-		</a>
-		<a class="block rounded py-1 px-4 border border-accSlate/20 shadow-lg group" href={`/appointments?tab=0&search=${profileName}`}>
-			<div class="flex justify-between items-center">
-				<h1 class="text-6xl text-black/70">{phoneAppointments.filter(appt => appt.advisor === profileName).length}</h1>
-				<box-icon name='phone-call' type='solid' class="w-12 h-12 mt-2 fill-accTeal/80" ></box-icon>
-			</div>
-			<div class="flex justify-between items-center">
-				<h1 class="text-lg">Phone</h1>
-				<box-icon name='arrow-to-right' type='solid' class="hidden group-hover:block fill-black/70" ></box-icon>
-			</div>
-		</a>
-		<a class="block rounded py-1 px-4 border border-accSlate/20 shadow-lg group" href={`/appointments?tab=0&search=${profileName}`}>
-			<div class="flex justify-between items-center">
-				<h1 class="text-6xl text-black/70">{phoneAppointments.filter(appt => appt.advisor === profileName).length}</h1>
-				<box-icon name='phone-call' type='solid' class="w-12 h-12 mt-2 fill-accTeal/80" ></box-icon>
-			</div>
-			<div class="flex justify-between items-center">
-				<h1 class="text-lg">Phone</h1>
-				<box-icon name='arrow-to-right' type='solid' class="hidden group-hover:block fill-black/70" ></box-icon>
-			</div>
-		</a>
-	</section>
-	<br> -->
 	<h1 class="text-2xl font-medium text-usfGreen mb-2">My Pending Appointments & Referrals</h1>
 	<section class="grid grid-cols-4 gap-2">
 		<a class="block rounded py-1 px-4 border border-accSlate/20 shadow-lg group" href={`/appointments?tab=0&search=${profileName}`}>
@@ -136,10 +107,8 @@
 			</div>
 		</a>
 	</section>
-	<br />
-	<section 
-		class={`grid ${data.profile?.role.name === "ADMIN" ? "grid-cols-[auto_200px_1fr]" : "grid-cols-[auto_1fr]"} gap-4`}
-	>
+	<hr class="my-8"/>
+	<section class="grid grid-cols-2 gap-8">
 		<div>
 			<h1 class="text-2xl font-medium text-usfGreen mb-2">Quick Actions</h1>
 			<section class="grid grid-cols-2 gap-2">
@@ -151,11 +120,6 @@
 				>
 					<h1>Create Appointment / Referral</h1>
 				</a>
-				<!-- <a class="flex justify-center items-center rounded p-4 border border-accSlate/20 shadow-md" href="/"
-					on:click={() => { openModal("referralModal", { constants, isTeam, managementTeam }); }}
-				>
-					<h1>Take Referral</h1>
-				</a> -->
 				<a class="flex justify-center items-center rounded p-4 border border-accSlate/20 shadow-md" href="/"
 					on:click={() => { openModal("isQueueModal", { constants, isTeam, managementTeam }); }}
 				>
@@ -167,16 +131,31 @@
 					<h1>Create DR Queue</h1>
 				</a>
 				<a class="flex justify-center items-center rounded p-4 border border-accSlate/20 shadow-md" href="/"
-					on:click={() => { openModal("popselModal", { constants }); }}
+					on:click={() => { openModal("popselModal", { constants, isTeam }); }}
 				>
 					<h1>Create Popsel</h1>
+				</a>
+			</section>
+		</div>
+		<div class:row-span-2={data.profile?.role.name === "ADMIN"} class="border-l border-l-[#BFC4D7] pl-8">
+			<h1 class="text-2xl font-medium text-usfGreen mb-2">Announcements</h1>
+			<section class="grid grid-cols-2 gap-2">
+				<a class="flex flex-col justify-center items-center rounded p-4 border border-accSlate/20 shadow-md col-span-2" href="/training">
+					<h1>Upcoming Training • {getDateLocal(String(data.nextTraining?.date.toISOString()), "MMMM Do, YYYY")}</h1>
+					<p class="font-medium">{data.nextTraining?.name} <span class="font-normal">presented by</span> {data.nextTraining?.trainers[0].first_name}</p>
+				</a>
+				<a class="flex justify-center items-center rounded p-4 border border-accSlate/20 shadow-md" href="/">
+					<h1>News</h1>
+				</a>
+				<a class="flex justify-center items-center rounded p-4 border border-accSlate/20 shadow-md"  href="/">
+					<h1>Rush</h1>
 				</a>
 			</section>
 		</div>
 		{#if data.profile?.role.name === "ADMIN"}
 			<div>
 				<h1 class="text-2xl font-medium text-usfGreen mb-2">Admin Actions</h1>
-				<section class="grid grid-cols-1 gap-2">
+				<section class="grid grid-cols-2 gap-2">
 					<a class="flex justify-center items-center rounded p-4 border border-accSlate/20 shadow-md" href="/" 
 						on:click={() => { openModal("formModal", { constants }); }}
 					>
@@ -195,43 +174,8 @@
 				</section>
 			</div>
 		{/if}
-		<div>
-			<h1 class="text-2xl font-medium text-usfGreen mb-2">Applications</h1>
-			<section class={`grid ${data.profile?.role.name === "ADMIN" ? "grid-cols-2" : "grid-cols-3"} gap-2`}>
-				<a class="block rounded py-1 px-4 border border-accSlate/20 shadow-lg group" href={`/is_queue`}>
-					<div class="flex justify-between items-center">
-						<h1 class="text-6xl text-black/70">{data.isQueueCount}</h1>
-						<box-icon name='info-circle' type='solid' class="w-12 h-12 mt-2 fill-black/70" ></box-icon>
-					</div>
-					<div class="flex justify-between items-center">
-						<h1 class="text-lg">IS Queue</h1>
-						<box-icon name='arrow-to-right' type='solid' class="hidden group-hover:block fill-black/70" ></box-icon>
-					</div>
-				</a>
-				<a class="block rounded py-1 px-4 border border-accSlate/20 shadow-lg group" href={`/dr_queue`}>
-					<div class="flex justify-between items-center">
-						<h1 class="text-6xl text-black/70">{data.drQueueCount}</h1>
-						<box-icon name='data' type='solid' class="w-12 h-12 mt-2 fill-black/70" ></box-icon>
-					</div>
-					<div class="flex justify-between items-center">
-						<h1 class="text-lg">DR Queue</h1>
-						<box-icon name='arrow-to-right' type='solid' class="hidden group-hover:block fill-black/70" ></box-icon>
-					</div>
-				</a>
-				<a class="block rounded py-1 px-4 border border-accSlate/20 shadow-lg group" href={`/master_calendar`}>
-					<div class="flex justify-between items-center">
-						<h1 class="text-6xl text-black/70">{data.drQueueCount}</h1>
-						<box-icon name='calendar' type='solid' class="w-12 h-12 mt-2 fill-black/70" ></box-icon>
-					</div>
-					<div class="flex justify-between items-center">
-						<h1 class="text-lg">Master Calendar</h1>
-						<box-icon name='arrow-to-right' type='solid' class="hidden group-hover:block fill-black/70" ></box-icon>
-					</div>
-				</a>
-			</section>
-		</div>
 	</section>
-	<br />
+	<hr class="my-8"/>
 	<h1 class="text-2xl font-medium text-usfGreen mb-2">My Documents</h1>
 	<section class="grid grid-cols-4 gap-2">
 		<a class="block rounded py-1 px-4 border border-accSlate/20 shadow-lg group" href="{`/documents/forms?search=${profileName}`}">
@@ -265,63 +209,104 @@
 			</div>
 		</a>
 	</section>
+	<hr class="my-8"/>
+	<section>
+		<h1 class="text-2xl font-medium text-usfGreen mb-2">Applications</h1>
+		<section class="grid grid-cols-4 gap-2">
+			<a class="block rounded py-1 px-4 border border-accSlate/20 shadow-lg group" href={`/is_queue`}>
+				<div class="flex justify-between items-center">
+					<h1 class="text-6xl text-black/70">{data.isQueueCount}</h1>
+					<box-icon name='info-circle' type='solid' class="w-12 h-12 mt-2 fill-black/70" ></box-icon>
+				</div>
+				<div class="flex justify-between items-center">
+					<h1 class="text-lg">IS Queue</h1>
+					<box-icon name='arrow-to-right' type='solid' class="hidden group-hover:block fill-black/70" ></box-icon>
+				</div>
+			</a>
+			<a class="block rounded py-1 px-4 border border-accSlate/20 shadow-lg group" href={`/dr_queue`}>
+				<div class="flex justify-between items-center">
+					<h1 class="text-6xl text-black/70">{data.drQueueCount}</h1>
+					<box-icon name='data' type='solid' class="w-12 h-12 mt-2 fill-black/70" ></box-icon>
+				</div>
+				<div class="flex justify-between items-center">
+					<h1 class="text-lg">DR Queue</h1>
+					<box-icon name='arrow-to-right' type='solid' class="hidden group-hover:block fill-black/70" ></box-icon>
+				</div>
+			</a>
+			<a class="block rounded py-1 px-4 border border-accSlate/20 shadow-lg group" href={`/master_calendar`}>
+				<div class="flex justify-between items-center">
+					<h1 class="text-6xl text-black/70">{data.drQueueCount}</h1>
+					<box-icon name='calendar' type='solid' class="w-12 h-12 mt-2 fill-black/70" ></box-icon>
+				</div>
+				<div class="flex justify-between items-center">
+					<h1 class="text-lg">Master Calendar</h1>
+					<box-icon name='arrow-to-right' type='solid' class="hidden group-hover:block fill-black/70" ></box-icon>
+				</div>
+			</a>
+		</section>
+	</section>
 	{#if currentUserTeams?.includes("Management") || currentUserTeams?.includes("Information Systems")}
-		<br />
-		<h1 class="text-2xl font-medium text-usfGreen mb-2">Management</h1>
+	  <hr class="my-8"/>
+		<h1 class="text-2xl font-medium text-usfGreen mb-2">Today's Visitor Stats</h1>
+		<section class="grid grid-cols-5 gap-2">
+			<a class="flex flex-col justify-between rounded py-1 px-4 border border-accSlate/20 shadow-lg group" href="/visitor_stats">
+				<div class="flex justify-between items-center">
+					<h1 class="text-6xl text-black/70">{data.counterVisits}</h1>
+					<box-icon name='support' class="w-12 h-12 mt-2 fill-black/70" ></box-icon>
+				</div>
+				<div class="flex justify-between items-center">
+					<h1 class="text-md">Counter Visits</h1>
+					<box-icon name='arrow-to-right' type='solid' class="hidden group-hover:block fill-black/70" ></box-icon>
+				</div>
+			</a>
+			<a class="flex flex-col justify-between rounded py-1 px-4 border border-accSlate/20 shadow-lg group" href={`/appointments?tab=0`}>
+				<div class="flex justify-between items-center">
+					<h1 class="text-6xl text-black/70">{todayPhoneAppt}</h1>
+					<box-icon name='phone-call' type='solid' class="w-12 h-12 mt-2 fill-black/70" ></box-icon>
+				</div>
+				<div class="flex justify-between items-center">
+					<h1 class="text-md">Phone Appts.</h1>
+					<box-icon name='arrow-to-right' type='solid' class="hidden group-hover:block fill-black/70" ></box-icon>
+				</div>
+			</a>
+			<a class="flex flex-col justify-between rounded py-1 px-4 border border-accSlate/20 shadow-lg group" href={`/appointments?tab=1`}>
+				<div class="flex justify-between items-center">
+					<h1 class="text-6xl text-black/70">{todayInPersonAppt}</h1>
+					<box-icon name='buildings' type='solid' class="w-12 h-12 mt-2 fill-black/70" ></box-icon>
+				</div>
+				<div class="flex justify-between items-center">
+					<h1 class="text-md">In-person Appts.</h1>
+					<box-icon name='arrow-to-right' type='solid' class="hidden group-hover:block fill-black/70" ></box-icon>
+				</div>
+			</a>
+			<a class="flex flex-col justify-between rounded py-1 px-4 border border-accSlate/20 shadow-lg group" href={`/appointments?tab=2`}>
+				<div class="flex justify-between items-center">
+					<h1 class="text-6xl text-black/70">{todayWalkinAppt}</h1>
+					<box-icon name='walk' class="w-12 h-12 mt-2 fill-black/70" ></box-icon>
+				</div>
+				<div class="flex justify-between items-center">
+					<h1 class="text-md">Walk-in Appts.</h1>
+					<box-icon name='arrow-to-right' type='solid' class="hidden group-hover:block fill-black/70" ></box-icon>
+				</div>
+			</a>
+			<a class="flex flex-col justify-between rounded py-1 px-4 border border-accSlate/20 shadow-lg group" href={`/referrals`}>
+				<div class="flex justify-between items-center">
+					<h1 class="text-6xl text-black/70">{todayReferral}</h1>
+					<box-icon name='group' type='solid' class="w-12 h-12 mt-2 fill-black/70" ></box-icon>
+				</div>
+				<div class="flex justify-between items-center">
+					<h1 class="text-md">Referrals Created</h1>
+					<box-icon name='arrow-to-right' type='solid' class="hidden group-hover:block fill-black/70" ></box-icon>
+				</div>
+			</a>
+		</section>
+		<br>
+		<!-- <Chart /> -->
 		<section class="grid grid-cols-2 gap-4">
-			<section class="grid grid-cols-2 gap-2">
-				<a class="flex flex-col justify-between rounded py-1 px-4 border border-accSlate/20 shadow-lg group" href="/visitor_stats">
-					<div class="flex justify-between items-center">
-						<h1 class="text-6xl text-black/70">{data.counterVisits}</h1>
-						<box-icon name='support' class="w-12 h-12 mt-2 fill-black/70" ></box-icon>
-					</div>
-					<div class="flex justify-between items-center">
-						<h1 class="text-md">Counter Visits Today</h1>
-						<box-icon name='arrow-to-right' type='solid' class="hidden group-hover:block fill-black/70" ></box-icon>
-					</div>
-				</a>
-				<a class="flex flex-col justify-between rounded py-1 px-4 border border-accSlate/20 shadow-lg group" href={`/appointments?tab=0`}>
-					<div class="flex justify-between items-center">
-						<h1 class="text-6xl text-black/70">{todayPhoneAppt}</h1>
-						<box-icon name='phone-call' type='solid' class="w-12 h-12 mt-2 fill-black/70" ></box-icon>
-					</div>
-					<div class="flex justify-between items-center">
-						<h1 class="text-md">Phone Appts. Created Today</h1>
-						<box-icon name='arrow-to-right' type='solid' class="hidden group-hover:block fill-black/70" ></box-icon>
-					</div>
-				</a>
-				<a class="flex flex-col justify-between rounded py-1 px-4 border border-accSlate/20 shadow-lg group" href={`/appointments?tab=1`}>
-					<div class="flex justify-between items-center">
-						<h1 class="text-6xl text-black/70">{todayInPersonAppt}</h1>
-						<box-icon name='buildings' type='solid' class="w-12 h-12 mt-2 fill-black/70" ></box-icon>
-					</div>
-					<div class="flex justify-between items-center">
-						<h1 class="text-md">In-person Appts. Created Today</h1>
-						<box-icon name='arrow-to-right' type='solid' class="hidden group-hover:block fill-black/70" ></box-icon>
-					</div>
-				</a>
-				<a class="flex flex-col justify-between rounded py-1 px-4 border border-accSlate/20 shadow-lg group" href={`/appointments?tab=2`}>
-					<div class="flex justify-between items-center">
-						<h1 class="text-6xl text-black/70">{todayWalkinAppt}</h1>
-						<box-icon name='walk' class="w-12 h-12 mt-2 fill-black/70" ></box-icon>
-					</div>
-					<div class="flex justify-between items-center">
-						<h1 class="text-md">Walk-in Appts. Created Today</h1>
-						<box-icon name='arrow-to-right' type='solid' class="hidden group-hover:block fill-black/70" ></box-icon>
-					</div>
-				</a>
-				<a class="flex flex-col justify-between rounded py-1 px-4 border border-accSlate/20 shadow-lg group" href={`/referrals`}>
-					<div class="flex justify-between items-center">
-						<h1 class="text-6xl text-black/70">{todayReferral}</h1>
-						<box-icon name='group' type='solid' class="w-12 h-12 mt-2 fill-black/70" ></box-icon>
-					</div>
-					<div class="flex justify-between items-center">
-						<h1 class="text-md">Referrals Created Today</h1>
-						<box-icon name='arrow-to-right' type='solid' class="hidden group-hover:block fill-black/70" ></box-icon>
-					</div>
-				</a>
-			</section>
-			<Chart />
+			<D3Chart height={400} width={700} data={chartData} />
+			<!-- <section class="flex items-center justify-center gap-4">
+				<ProgressRadial value={50} width="w-[250px]">{50}%</ProgressRadial>
+			</section> -->
 		</section>
 	{/if}
 </article>

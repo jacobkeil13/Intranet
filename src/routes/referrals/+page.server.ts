@@ -1,4 +1,4 @@
-import { getUtcDate } from "$lib/helpers";
+import { dateAddOffset, getUtcDate } from "$lib/helpers";
 import { db } from "$lib/server/database";
 import { redirect } from "@sveltejs/kit";
 import moment from "moment";
@@ -75,7 +75,7 @@ export const actions = {
 					studentEmail: studentEmail === "" ? null : studentEmail,
 					studentUid: studentUid === "" ? null : studentUid,
 					studentName: studentName === "" ? null : studentName,
-					bestTimeCallback: getUtcDate(callbackDate.format("YYYY-MM-DD") + "T" + bestTimeCallback + ":00.000"),
+					bestTimeCallback: dateAddOffset(getUtcDate(callbackDate.format("YYYY-MM-DD") + "T" + bestTimeCallback + ":00.000Z")),
 					reason: appReason,
 					details: referralDetails,
 					callbackNumber: callbackNumber === "" ? undefined : callbackNumber,

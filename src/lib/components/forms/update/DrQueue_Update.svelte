@@ -1,7 +1,22 @@
 <script lang="ts">
-	import { modalStore } from '@skeletonlabs/skeleton';
+	import { SlideToggle, modalStore } from '@skeletonlabs/skeleton';
 	import Loading from '../../animation/Loading.svelte';
 	import { getDateLocal } from '$lib/helpers';
+	import type { Priority, QueueComment, QueueItem, RequestType, UserProfile } from '@prisma/client';
+
+  interface FullComment extends QueueComment {
+    userProfile: UserProfile
+  }
+
+  interface FullRequest extends QueueItem {
+    priority: Priority
+    requestedBy: UserProfile
+    assignedTo: UserProfile
+    approvedBy: UserProfile
+    requestType: RequestType
+    emailTo: UserProfile[]
+    comments: FullComment[]
+  }
 
 	let isLoading = false;
 	let constants = $modalStore[0].meta.constants;
@@ -9,7 +24,7 @@
 
   console.log(eptTeam);
 
-  let request: any = $modalStore[0].meta.request;
+  let request: FullRequest = $modalStore[0].meta.request;
 
 	function closeForm(): void {
 		modalStore.close();
@@ -48,7 +63,7 @@
           </span>
           <span class="flex flex-col space-y-1">
             <label for="dateNeeded">Date Needed</label>
-            <input required type="date" name="dateNeeded" class="input rounded-md" value={getDateLocal(request.dateNeeded, "YYYY-MM-DD")} />
+            <input required type="date" name="dateNeeded" class="input rounded-md" value={getDateLocal(request.dateNeeded.toISOString(), "YYYY-MM-DD")} />
           </span>
         </div>
         <div class="flex space-x-2">
@@ -92,6 +107,10 @@
           <label for="description">Description</label>
           <textarea required class="input rounded-md" name="description" cols="20" rows="4" placeholder="Why are you making this request..." />
         </div>
+        <span class="flex flex-col space-y-1">
+          <label for="complete" class="mb-2 text-transparent">Completed</label>
+          <SlideToggle name="complete" size="sm" checked={request.complete}>Completed</SlideToggle>
+        </span>
       </section>
       <footer class="float-right mt-3">
         <button type="submit" class="btn bg-accSlate text-white/90 rounded-md">

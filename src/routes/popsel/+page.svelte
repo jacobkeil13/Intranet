@@ -4,7 +4,16 @@
 	import { onMount } from 'svelte';
 	import { fly } from 'svelte/transition';
 	import { getDateLocal, openModal } from '$lib/helpers.js';
+	export let form;
 	export let data;
+
+	if (form) {
+    toastStore.trigger({
+		  message: String(form?.message),
+      background: form?.success ? "bg-accTeal" : "bg-[#930000]",
+      classes: "text-white/90 font-medium"
+	  });
+  }
 
 	let sourceData: any[] = [];
 	let filteredSourceData: any[] = [];
@@ -28,10 +37,10 @@
 
 	$: {
     filteredSourceData = sourceData.filter((popsel: any) => {
-      if (popsel.letterCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
-					popsel.selectionId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-					popsel.letterCount.toLowerCase().includes(searchQuery.toLowerCase()) ||
-					popsel.requestedBy.toLowerCase().includes(searchQuery.toLowerCase())) {
+      if (popsel.letterCode.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+					popsel.selectionId.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+					popsel.letterCount.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+					popsel.requestedBy.toLowerCase().includes(searchQuery.toLowerCase().trim())) {
         return popsel;
       }
     })
@@ -91,7 +100,7 @@
 				<Search bind:value={searchQuery} />
 				<!-- svelte-ignore a11y-click-events-have-key-events -->
 				<div class="flex justify-center items-center bg-accSlate p-[6px] rounded-full cursor-pointer" on:click={() => { 
-            openModal("popselModal", { constants: data.constants }) 
+            openModal("popselModal", { constants: data.constants, isTeam: data.isTeam }) 
           }}>
           <box-icon class="fill-white/90" name={"plus"} />
         </div>

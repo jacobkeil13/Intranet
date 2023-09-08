@@ -1,12 +1,24 @@
 <script lang="ts">
-	import moment from 'moment';
 	import { writable } from 'svelte/store';
-	import type { UserProfile } from '@prisma/client';
+	import type { AidYear, UserProfile } from '@prisma/client';
 	import { Autocomplete, InputChip, modalStore, type AutocompleteOption } from '@skeletonlabs/skeleton';
+	import { getDateLocal } from '$lib/helpers';
 
 	let constants = $modalStore[0].meta.constants;
+	let isTeam = $modalStore[0].meta.isTeam;
+	let aidYears = $modalStore[0].meta.constants.aidYears.filter((year: AidYear) => year.name !== "Non-Year")
+	
 	let emailInput = '';
+	let stringEmailList: string = '';
 	let userEmails: AutocompleteOption[] = [];
+	let emailList: string[] = isTeam[0].userProfile.map((user: UserProfile) => { return user.first_name + ' ' + user.last_name })
+
+	$: {
+		let list	= userEmails.filter((tr: AutocompleteOption) => {
+			return emailList.includes(String(tr.label));
+		})
+		stringEmailList = JSON.stringify(list);
+	}
 
 	constants.users.forEach((user: UserProfile) => {
 		let userName = user.first_name + ' ' + user.last_name;
@@ -19,7 +31,7 @@
 	});
 
 	let aidYear = writable<string>('');
-	let date: string = moment.utc(new Date()).local().toISOString(true).split('T')[0];
+	let date: string = getDateLocal(new Date().toISOString(), "YYYY-MM-DD");
 	let termCode: string;
 	let application: string;
 	let letterCode: string;
@@ -30,30 +42,46 @@
 	let addressType: string;
 	let requestedBy: string;
 	let paidDate: string;
-	let emailList: string[] = ['Khaled Mosli', 'Jacob Keil', 'Steven Lopilato'];
-	$: firstTerm = String(`Fall 20${$aidYear.slice(0, 2)}`);
-	$: secondTerm = String(`Spring 20${$aidYear.slice(-2)}`);
-	$: thirdTerm = String(`Summer 20${$aidYear.slice(-2)}`);
-	$: priorAidYear = String(`20${parseInt($aidYear.slice(0, 2)) - 1}-20${$aidYear.slice(0, 2)}`);
-	$: priorFallTerm = String(`Fall 20${parseInt($aidYear.slice(0, 2)) - 1}`);
-	$: priorSpringTerm = String(`Spring 20${$aidYear.slice(0, 2)}`);
+	let paidDateThirty: string;
+	let paidDateSixty: string;
+	let firstTerm: string;
+	let secondTerm: string;
+	let thirdTerm: string;
+	let priorAidYear: string;
+	let priorFallTerm: string;
+	let priorSpringTerm: string;
+	let termCodeOptions: string[];
 
-	$: termCodeOptions = [
-		`Summer 20${$aidYear.slice(0, 2)}`,
-		`Fall 20${$aidYear.slice(0, 2)}`,
-		`Spring 20${$aidYear.slice(-2)}`,
-		`Summer 20${$aidYear.slice(-2)}`
-	];
+	$: {
+		firstTerm = String(`Fall 20${$aidYear.slice(0, 2)}`);
+		secondTerm = String(`Spring 20${$aidYear.slice(-2)}`);
+		thirdTerm = String(`Summer 20${$aidYear.slice(-2)}`); 
+		priorAidYear = String(`20${parseInt($aidYear.slice(0, 2)) - 1}-20${$aidYear.slice(0, 2)}`);
+		priorFallTerm = String(`Fall 20${parseInt($aidYear.slice(0, 2)) - 1}`);
+		priorSpringTerm = String(`Spring 20${$aidYear.slice(0, 2)}`);
+
+		termCodeOptions = [
+			`Summer 20${$aidYear.slice(0, 2)}`,
+			`Fall 20${$aidYear.slice(0, 2)}`,
+			`Spring 20${$aidYear.slice(-2)}`,
+			`Summer 20${$aidYear.slice(-2)}`
+		];
+	}
 
 	function closeForm(): void {
 		modalStore.close();
 	}
 
 	function onEmailInput(event: any): void {
-		if (emailList.includes(event.detail.value) === false) {
-			emailList = [...emailList, event.detail.value];
+		if (emailList.includes(event.detail.label) === false) {
+			emailList = [...emailList, event.detail.label];
 			emailInput = '';
 		}
+	}
+
+	function handleRemove(event: any) {
+		console.log(event.detail);
+		userEmails = userEmails
 	}
 </script>
 
@@ -64,7 +92,15 @@
 		<box-icon class="fill-black cursor-pointer" name="x" on:click={closeForm} />
 	</div>
 	<br />
-	<form on:submit|preventDefault enctype="multipart/form-data">
+	<form method="POST" action="/popsel?/create" enctype="multipart/form-data">
+		<input type="hidden" name="emailList" bind:value={stringEmailList}>
+		<input type="hidden" name="date" bind:value={date}>
+		<input type="hidden" name="firstTermFull" bind:value={firstTerm}>
+		<input type="hidden" name="secondTermFull" bind:value={secondTerm}>
+		<input type="hidden" name="thirdTermFull" bind:value={thirdTerm}>
+		<input type="hidden" name="priorAidYearFull" bind:value={priorAidYear}>
+		<input type="hidden" name="priorFallTermFull" bind:value={priorFallTerm}>
+		<input type="hidden" name="priorSpringTermFull" bind:value={priorSpringTerm}>
 		<section class="space-y-2">
 			<div class="flex space-x-2">
 				<span class="flex flex-col space-y-1 w-fit">
@@ -75,14 +111,14 @@
 					<label for="aidYear">Aid Year</label>
 					<select required class="input rounded-md w-full" name="aidYear" bind:value={$aidYear}>
 						<option disabled selected value="">Select one...</option>
-						{#each constants.aidYears as aidYear}
+						{#each aidYears as aidYear}
 							<option value={aidYear.name}>{aidYear.name}</option>
 						{/each}
 					</select>
 				</span>
 				<span class="flex flex-col space-y-1 grow">
-					<label for="termCode">Term Code</label>
-					<select required class="input rounded-md w-full" name="termCode" bind:value={termCode}>
+					<label for="termCodeFull">Term Code</label>
+					<select disabled={$aidYear === ""} required class="input rounded-md w-full" name="termCodeFull" bind:value={termCode}>
 						<option disabled selected value="">Select one...</option>
 						{#each termCodeOptions as termCodeOption}
 							<option value={termCodeOption}>{termCodeOption}</option>
@@ -110,8 +146,8 @@
 					</select>
 				</span>
 				<span class="flex flex-col w-fit space-y-1">
-					<label for="title">Letter Count</label>
-					<input required type="number" name="title" class="input rounded-md" placeholder="Number of letters..." bind:value={letterCount} />
+					<label for="letterCount">Letter Count</label>
+					<input required type="number" name="letterCount" class="input rounded-md" placeholder="Number of letters..." bind:value={letterCount} />
 				</span>
 			</div>
 			<div class="flex space-x-2">
@@ -125,17 +161,27 @@
 					</select>
 				</span>
 				<span class="flex flex-col w-full space-y-1">
-					<label for="addressType">Address Type</label>
-					<select required class="input rounded-md" name="addressType" bind:value={addressType}>
+					<label for="addressTypeFull">Address Type</label>
+					<select required class="input rounded-md" name="addressTypeFull" bind:value={addressType}>
 						<option disabled selected value="">Select one...</option>
 						{#each constants.addressTypes as addressType}
-							<option value={addressType.id}>{addressType.name}</option>
+							<option value={addressType.name}>{addressType.name}</option>
 						{/each}
 					</select>
 				</span>
-				<span class="flex flex-col space-y-1 w-fit">
+			</div>
+			<div class="flex space-x-2">
+				<span class="flex flex-col space-y-1 w-full">
 					<label for="paidDate">Paid Date</label>
-					<input required type="date" name="paidDate" class="input rounded-md" bind:value={paidDate} />
+					<input type="date" name="paidDate" class="input rounded-md" bind:value={paidDate} />
+				</span>
+				<span class="flex flex-col space-y-1 w-full">
+					<label for="paidDateThirty">30 Days Date</label>
+					<input type="date" name="paidDateThirty" class="input rounded-md" bind:value={paidDateThirty} />
+				</span>
+				<span class="flex flex-col space-y-1 w-full">
+					<label for="paidDateSixty">60 Days Date</label>
+					<input type="date" name="paidDateSixty" class="input rounded-md" bind:value={paidDateSixty} />
 				</span>
 			</div>
 			<div class="flex space-x-2">
@@ -193,6 +239,7 @@
 				<label for="chips">Email List</label>
 				<div class="flex">
 					<InputChip
+						on:remove={handleRemove}
 						placeholder="Search names..."
 						class="bg-usfWhite text-black min-h-[150px]"
 						bind:input={emailInput}

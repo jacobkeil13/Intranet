@@ -40,9 +40,9 @@
 
 	$: {
     filteredSourceData = sourceData.filter((referral: any) => {
-      if (referral.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-				referral.uid.toLowerCase().includes(searchQuery.toLowerCase()) ||
-				referral.assignedUser.toLowerCase().includes(searchQuery.toLowerCase())) {
+      if (referral.name.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+				referral.uid.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+				referral.assignedUser.toLowerCase().includes(searchQuery.toLowerCase().trim())) {
 				if (filterCompleted && referral.completed) {
 					return referral;
 				}

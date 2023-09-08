@@ -4,17 +4,23 @@ import {
   getTeamByName,
   getUserProfileByNetId,
 } from '$lib/server/database'
-import { dateAddHours } from '$lib/helpers';
+import { dateAddHours, getLocalISO } from '$lib/helpers';
 import type { AutocompleteOption } from '@skeletonlabs/skeleton';
 
 export const load = async ({ locals }) => {
 	if (locals.user) {
     let masterCalendarItems = await db.masterCalendarItem.findMany({
+      orderBy: {
+        dueDate: "asc"
+      },
       include: {
         type: true,
         primaryOwner: true,
         secondaryOwners: true,
         comments: {
+          orderBy: {
+            createdAt: "desc"
+          },
           include: {
             userProfile: true
           }
@@ -95,14 +101,24 @@ export const actions = {
       dueDate, 
       primaryOwner,
       description,
+      complete,
+      completionDate
      } = Object.fromEntries(await request.formData()) as {
-        id: string
-        title: string
-        type: string
-        dueDate: string
-        primaryOwner: string
-        description: string
+      id: string
+      title: string
+      type: string
+      dueDate: string
+      primaryOwner: string
+      description: string
+      complete: string
+      completionDate: string
     }
+
+    const userInfo = await db.userProfile.findFirst({
+			where: {
+				netid: locals.user.netid
+			}
+		});
 
     try {
       let profile = await getUserProfileByNetId(locals.user.netid);
@@ -116,6 +132,8 @@ export const actions = {
           type: { connect: { type } },
           dueDate: new Date(dateAddHours(dueDate, "12")),
           primaryOwner: { connect: { id: primaryOwner } },
+          completionDate: complete === "on" ? new Date(dateAddHours(completionDate, "12")) : undefined,
+          lastUpdatedBy: userInfo?.first_name + " " + userInfo?.last_name
         }
       })
   

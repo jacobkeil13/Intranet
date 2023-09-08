@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client'
+import type { AutocompleteOption } from '@skeletonlabs/skeleton';
 
 export const db = new PrismaClient();
 
@@ -54,7 +55,9 @@ export async function createPopselQueueItem(data: any) {
       title: data.letterCode,
       requestedBy: { connect: { id: profile?.id } },
       priority: { connect: { name: priority?.name }},
-      emailTo: { connect: data.emailList[0] !== "" ? data.emailList.map((id: string) => { return { id }}) : undefined },
+      emailTo: { connect: data.emailList.length !== 0 ? data.emailList.map((user: AutocompleteOption) => { 
+        return { id: user.meta.id} 
+      }) : undefined },
       requestType: { connect: { name: requestType?.name } },
       dateNeeded: new Date().toISOString(),
       complete: false,
@@ -63,7 +66,7 @@ export async function createPopselQueueItem(data: any) {
 
   await db.queueComment.create({
     data: {
-      content: `<a data-sveltekit-preload-data="hover" class="underline" href="/popsel/${data.popselId}" target="_blank">View Popsel</a>`,
+      content: "Popsel Created",
       userProfile: { connect: { id: profile?.id } },
       queueItem: { connect: { id: newPopselQueueItem.id } }
     }
@@ -71,7 +74,9 @@ export async function createPopselQueueItem(data: any) {
 }
 
 export async function createPopulationSelection(data: any) {
-  let paidDate = new Date(new Date(data.paidDate).setUTCHours(12,0,0,0));
+  let paidDate = data.paidDate === "" ? undefined : new Date(new Date(data.paidDate).setUTCHours(12,0,0,0)).toISOString();
+  let paidDateThirty = data.paidDateThirty === "" ? undefined : new Date(new Date(data.paidDateThirty).setUTCHours(12,0,0,0)).toISOString();
+  let paidDateSixty = data.paidDateSixty === "" ? undefined : new Date(new Date(data.paidDateSixty).setUTCHours(12,0,0,0)).toISOString();
   const newPopsel = await db.populationSelection.create({
     data: {
       aidYear: { connect: { name: data.aidYear }},
@@ -90,7 +95,9 @@ export async function createPopulationSelection(data: any) {
       priorAidYear: data.priorAidYear,
       priorFallTerm: data.priorFallTerm,
       priorSpringTerm: data.priorSpringTerm,
-      paidDate: paidDate.toISOString()
+      paidDate,
+      paidDateThirty,
+      paidDateSixty
     }
   });
 

@@ -56,9 +56,9 @@
       } else if (tabSet === AidYear.NonYear) {
         aidYear = "Non-Year"
       }
-      if ((form.fileName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        form.owner.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        form.rraareqCode.toLowerCase().includes(searchQuery.toLowerCase()))) {
+      if ((form.fileName.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+        form.owner.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+        form.rraareqCode.toLowerCase().includes(searchQuery.toLowerCase().trim()))) {
           if (aidYear === "All") {
             return form;
           }

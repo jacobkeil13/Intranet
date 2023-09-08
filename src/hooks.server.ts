@@ -5,7 +5,7 @@ export const handle: Handle = async ({ event, resolve }) => {
   // let session = event.platform?.req.session.account;
 
   let session = {
-    username: "jacobkeil@usf.edu"
+    username: "brendanunez@usf.edu"
   }
 
 	const profile = await db.userProfile.findFirst({

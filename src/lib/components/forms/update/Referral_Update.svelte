@@ -134,4 +134,10 @@
 		color: black;
 		border-color: #3e4c7a8a;
 	}
+
+	select {
+		color: black;
+		background-color: #ffffff;
+		border-color: #3e4c7a8a;
+	}
 </style>

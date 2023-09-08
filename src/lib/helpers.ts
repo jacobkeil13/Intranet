@@ -2,6 +2,11 @@ import moment from "moment";
 import type { PrivacyForm } from "./types";
 import { modalStore } from "@skeletonlabs/skeleton";
 
+export function dateAddOffset(dateNeeded: string): string {
+  const date = moment(new Date(dateNeeded)).add(4, "hours").toISOString();
+  return date;
+}
+
 export function getUtcDate(wantedDate: string): string {
   const date = new Date(wantedDate).toISOString();
   return date;
@@ -42,6 +47,18 @@ export function getCampusName(campusCode: string | undefined): string {
     return "Sarasota"
   } else {
     return "Not Specified"
+  }
+}
+
+export function getTerm(str: string) {
+  let semester = str.split(' ')[0];
+  let aidYear = str.split(' ')[1]
+  if (semester === "Spring") {
+    return aidYear + "01";
+  } else if (semester === "Summer") {
+    return aidYear + "05";
+  } else if (semester === "Fall") {
+    return aidYear + "08";
   }
 }
 

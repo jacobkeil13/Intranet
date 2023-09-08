@@ -1,4 +1,4 @@
-import { getUtcDate } from "$lib/helpers.js";
+import { dateAddOffset, getUtcDate } from "$lib/helpers.js";
 import { db } from "$lib/server/database";
 import { redirect } from "@sveltejs/kit";
 import moment from "moment";
@@ -20,6 +20,7 @@ export const actions = {
 			studentUid,
 			studentEmail,
 			studentName,
+			studentCampus,
 			reason,
 			submittedDocument
      } = Object.fromEntries(await request.formData()) as {
@@ -27,6 +28,7 @@ export const actions = {
 			studentUid: string
 			studentEmail: string
 			studentName: string
+			studentCampus: string
 			reason: string
 			submittedDocument: string
     }
@@ -37,8 +39,6 @@ export const actions = {
 			}
 		});
 
-		console.log({ studentUid, studentEmail, submittedDocument });
-
     try {
 			const counterVisit = await db.visitCounter.create({
 				data: {
@@ -48,6 +48,7 @@ export const actions = {
 					studentEmail: studentEmail === "" ? null : studentEmail,
 					studentUid: studentUid === "" ? null : studentUid,
 					studentName: studentName === "" ? null : studentName,
+					studentCampus: studentCampus === "" ? null : studentCampus,
 					submittedDocument: submittedDocument === 'true',
 				}
 			});
@@ -64,6 +65,7 @@ export const actions = {
 			studentUid,
 			studentEmail,
 			studentName,
+			studentCampus,
 			reason,
 			appReason,
 			rhacomm,
@@ -78,6 +80,7 @@ export const actions = {
 			studentUid: string
 			studentEmail: string
 			studentName: string
+			studentCampus: string
 			reason: string
 			appReason: string
 			rhacomm: string
@@ -94,8 +97,6 @@ export const actions = {
 			}
 		});
 
-		console.log({ type, visitorType, studentUid, studentEmail, reason, appReason, rhacomm, callbackNumber, advisorRequested, dateTime: date + "T" + time.replace("_", ":") + ":00.000Z", submittedDocument });
-
     try {
       const newAppointment = await db.appointment.create({
         data: {
@@ -105,7 +106,8 @@ export const actions = {
 					studentEmail: studentEmail === "" ? null : studentEmail,
 					studentUid: studentUid === "" ? null : studentUid,
 					studentName: studentName === "" ? null : studentName,
-					dateTime: getUtcDate(date + "T" + time.replace("_", ":") + ":00.000Z"),
+					studentCampus: studentCampus === "" ? null : studentCampus,
+					dateTime: dateAddOffset(getUtcDate(date + "T" + time.replace("_", ":") + ":00.000Z")),
 					reason: appReason,
 					callbackNumber: callbackNumber === "" ? undefined : callbackNumber,
 					rhacomm: rhacomm === 'true',
@@ -121,6 +123,7 @@ export const actions = {
 					studentEmail: studentEmail === "" ? null : studentEmail,
 					studentUid: studentUid === "" ? null : studentUid,
 					studentName: studentName === "" ? null : studentName,
+					studentCampus: studentCampus === "" ? null : studentCampus,
 					submittedDocument: submittedDocument === 'true',
 					appointment: { connect: { id: newAppointment.id } }
 				}
@@ -138,6 +141,7 @@ export const actions = {
 			studentUid,
 			studentEmail,
 			studentName,
+			studentCampus,
 			reason,
 			appReason,
 			referralDetails,
@@ -154,6 +158,7 @@ export const actions = {
 			studentUid: string
 			studentEmail: string
 			studentName: string
+			studentCampus: string
 			reason: string
 			appReason: string
 			referralDetails: string
@@ -189,7 +194,8 @@ export const actions = {
 					studentEmail: studentEmail === "" ? null : studentEmail,
 					studentUid: studentUid === "" ? null : studentUid,
 					studentName: studentName === "" ? null : studentName,
-					bestTimeCallback: getUtcDate(callbackDate.format("YYYY-MM-DD") + "T" + bestTimeCallback + ":00.000Z"),
+					studentCampus: studentCampus === "" ? null : studentCampus,
+					bestTimeCallback: dateAddOffset(getUtcDate(callbackDate.format("YYYY-MM-DD") + "T" + bestTimeCallback + ":00.000Z")),
 					reason: appReason,
 					details: referralDetails,
 					callbackNumber: callbackNumber === "" ? undefined : callbackNumber,
@@ -209,6 +215,7 @@ export const actions = {
 					studentEmail: studentEmail === "" ? null : studentEmail,
 					studentUid: studentUid === "" ? null : studentUid,
 					studentName: studentName === "" ? null : studentName,
+					studentCampus: studentCampus === "" ? null : studentCampus,
 					submittedDocument: submittedDocument === 'true',
 					referral: { connect: { id: newReferral.id } }
 				}

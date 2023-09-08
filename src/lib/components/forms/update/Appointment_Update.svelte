@@ -43,7 +43,30 @@
 					<input readonly required type="text" name="studentUid" class="rounded-md" value={appt.studentUid} />
 				</span>
 			</div>
+			<div class="flex space-x-2">
+				<span class="flex flex-col space-y-1 grow">
+					<label for="reason">Reason</label>
+					<input readonly required type="text" name="reason" class="rounded-md" value={appt.reason} />
+				</span>
+				<span class="flex flex-col w-fit space-y-1">
+					<label for="date">Date</label>
+					<input readonly required type="date" name="date" class="rounded-md border border-[#3e4c7a8a]" placeholder="Title..." value={getDateLocal(appt.createdAt.toISOString(), "YYYY-MM-DD")} />
+				</span>
+        <span class="flex flex-col space-y-1">
+					<label for="studentUid">UID</label>
+					<input readonly required type="text" name="studentUid" class="rounded-md" value={appt.studentUid} />
+				</span>
+			</div>
       <div class="flex space-x-2">
+				<span class="flex flex-col space-y-1 grow">
+					<label for="advisor">Advisor</label>
+					<select required class="input rounded-md w-full" name="advisor" value={appt.advisor ?? ""}>
+						<option disabled selected value="">Select one...</option>
+						{#each constants.users as user}
+							<option value={user.first_name + " " + user.last_name}>{user.first_name} {user.last_name}</option>
+						{/each}
+					</select>
+				</span>
 				<span class="flex flex-col space-y-1">
           <label for="timeIn">Time In</label>
 				  <input required 
@@ -83,6 +106,12 @@
 	input {
 		background-color: #ffffff;
 		color: black;
+		border-color: #3e4c7a8a;
+	}
+
+	select {
+		color: black;
+		background-color: #ffffff;
 		border-color: #3e4c7a8a;
 	}
 </style>

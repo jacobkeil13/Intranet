@@ -1,13 +1,26 @@
 <script lang="ts">
-	import { modalStore } from '@skeletonlabs/skeleton';
+	import { SlideToggle, modalStore } from '@skeletonlabs/skeleton';
 	import Loading from '../../animation/Loading.svelte';
 	import { getDateLocal } from '$lib/helpers';
+	import type { MasterCalendarComment, MasterCalendarItem, MasterCalendarType, UserProfile } from '@prisma/client';
+
+	interface FullCalendarComment extends MasterCalendarComment {
+		userProfile: UserProfile
+	}
+
+	interface FullCalendarItem extends MasterCalendarItem {
+		type: MasterCalendarType
+		primaryOwner: UserProfile
+		secondaryOwners: UserProfile[]
+		comments: FullCalendarComment[]
+	}
 
 	let isLoading = false;
 	let constants = $modalStore[0].meta.constants;
 	
-	let item: any = $modalStore[0].meta.item;
-	console.log(item);
+	let item: FullCalendarItem = $modalStore[0].meta.item;
+	let completed = item.completionDate !== null;
+	let completionDate = item.completionDate !== null ? item.completionDate : "";
 	
 	function closeForm(): void {
 		modalStore.close();
@@ -46,11 +59,11 @@
 					</span>
 					<span class="flex flex-col space-y-1">
 						<label for="dueDate">Due Date</label>
-						<input required type="date" name="dueDate" class="input rounded-md" value={getDateLocal(item.dueDate, "YYYY-MM-DD")} />
+						<input required type="date" name="dueDate" class="input rounded-md" value={getDateLocal(item.dueDate.toISOString(), "YYYY-MM-DD")} />
 					</span>
 				</div>
 				<div class="flex space-x-2">
-					<span class="flex flex-col w-full space-y-1">
+					<span class="flex flex-col space-y-1 min-w-fit">
 						<label for="primaryOwner">Primary Owner</label>
 						<select required class="input rounded-md" name="primaryOwner" value={item.primaryOwner.id}>
 							<option disabled selected value="">Select one...</option>
@@ -59,7 +72,7 @@
 							{/each}
 						</select>
 					</span>
-					<span class="flex flex-col w-full space-y-1">
+					<span class="flex flex-col w-full space-y-1 grow">
 						<label for="type">Type</label>
 						<select required class="input rounded-md" name="type" value={item.type.type}>
 							<option disabled selected value="">Select one...</option>
@@ -80,6 +93,16 @@
 				<div class="flex flex-col space-y-2">
 					<label for="description">Comment</label>
 					<textarea required class="input rounded-md" name="description" cols="20" rows="4" placeholder="Why are you updating this item..." />
+				</div>
+				<div class="flex space-x-2">
+					<span class="flex flex-col space-y-1">
+						<label for="completionDate">Completion Date</label>
+						<input required={completed} type="date" name="completionDate" class="input rounded-md" value={getDateLocal(String(completionDate.toString()), "YYYY-MM-DD")} />
+					</span>
+					<span class="flex flex-col space-y-1">
+						<label for="complete" class="mb-2 text-transparent">Completed</label>
+						<SlideToggle name="complete" size="sm" bind:checked={completed}>Completed</SlideToggle>
+					</span>
 				</div>
 			</section>
 			<footer class="float-right mt-3">

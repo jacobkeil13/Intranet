@@ -1,6 +1,8 @@
 <script lang="ts">
+	import Search from '$lib/components/Search.svelte';
 	import { getDateLocal } from '$lib/helpers.js';
-	import { Table, type PaginationSettings, Paginator, tableMapperValues, type ModalSettings, modalStore, toastStore } from '@skeletonlabs/skeleton';
+	import { Table, type PaginationSettings, Paginator, tableMapperValues, type ModalSettings, modalStore, toastStore, SlideToggle } from '@skeletonlabs/skeleton';
+	import { onMount } from 'svelte';
 	import { fly } from 'svelte/transition';
 	export let data;
 	export let form;
@@ -13,8 +15,6 @@
 	  });
   }
 
-	let sourceData: any = [];
-
 	const isQueueModal: ModalSettings = {
 		type: 'component',
 		component: 'isQueueModal',
@@ -25,27 +25,56 @@
 		}
 	};
 
+	let filterCompleted = false;
+	let sourceData: any[] = [];
+	let filteredSourceData: any[] = [];
+	let searchQuery = "";
 	let queueRequests = data.requests;
 
-	queueRequests.forEach((req) => {
-		let tr = {
-			id: req.id,
-			priority: req.priority.name,
-			title: req.title,
-			dateSubmitted: getDateLocal(req.createdAt.toISOString(), "YYYY-MM-DD"),
-			requestor: req.requestedBy.first_name + " " + req.requestedBy.last_name,
-			assignedUser: req.assignedTo !== null ? req.assignedTo.first_name + " " + req.assignedTo.last_name : "-"
-		}
+	onMount(() => {
+		queueRequests.forEach((req) => {
+			let tr = {
+				id: req.id,
+				priority: req.priority.name,
+				title: req.title,
+				dateSubmitted: getDateLocal(req.createdAt.toISOString(), "YYYY-MM-DD"),
+				requestor: req.requestedBy.first_name + " " + req.requestedBy.last_name,
+				assignedUser: req.assignedTo !== null ? req.assignedTo.first_name + " " + req.assignedTo.last_name : "-",
+				completed: req.complete
+			}
 
-		sourceData.push(tr);
+			sourceData.push(tr);
+		});
+		filteredSourceData = sourceData
 	});
+
+	$: {
+    filteredSourceData = sourceData.filter((item: any) => {
+      if ((item.title.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+				item.requestor.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+				item.assignedUser.toLowerCase().includes(searchQuery.toLowerCase().trim()))) {
+				if (filterCompleted && item.completed) {
+					return item;
+				}
+				if (!filterCompleted && !item.completed) {
+					return item;
+				}
+      }
+    })
+		updatePageSettings(filteredSourceData);
+  }
 
 	const headers: string[] = ['Priority', 'Title', 'Date Submitted', 'Requestor', 'Assigned User'];
 	const body: string[] = ['priority', 'title', 'dateSubmitted', 'requestor', 'assignedUser'];
 	const meta: string[] = ['id'];
-	let page = { offset: 0, limit: 10, size: sourceData.length, amounts: [5, 10, 15] } as PaginationSettings;
+	let pageSettings = { offset: 0, limit: 10, size: sourceData.length, amounts: [5, 10, 15] } as PaginationSettings;
   let state = { firstLast: false, previousNext: true };
-	$: sourceDataSliced = sourceData.slice(page.offset * page.limit, page.offset * page.limit + page.limit);
+	$: sourceDataSliced = filteredSourceData.slice(pageSettings.offset * pageSettings.limit, pageSettings.offset * pageSettings.limit + pageSettings.limit);
+
+	function updatePageSettings(filteredArr: any[]) {
+		pageSettings.size = filteredArr.length;
+		pageSettings.offset = 0
+	}
 
 	function openModal(modal: ModalSettings) {
 		modalStore.trigger(modal);
@@ -70,7 +99,12 @@
 	<span class="flex justify-between items-center">
 		<h1 class="text-2xl text-usfGreen font-semibold">Information Services Queue</h1>
 		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<div class="flex items-center space-x-2">
+		<div class="flex items-center gap-2">
+			<div class="flex items-center space-x-3">
+				<h1 class="font-semibold">Completed</h1>
+				<SlideToggle name="completed" size="sm" bind:checked={filterCompleted} />
+			</div>
+      <Search bind:value={searchQuery} />
 			<div class="flex justify-center items-center bg-accSlate p-[6px] rounded-full cursor-pointer" on:click={() => { openModal(isQueueModal) }}>
 				<box-icon class="fill-white/90" name={'plus'}></box-icon>
 			</div>
@@ -79,5 +113,5 @@
 	<br />
 	<Table on:selected={updateRequest} interactive={true} source={{ head: headers, body: tableMapperValues(sourceDataSliced, body), meta: tableMapperValues(sourceDataSliced, meta)}} regionHeadCell="bg-accSlate text-white/90" />
 	<br />
-	<Paginator buttonClasses="bg-accSlate fill-white"  bind:settings={page} showFirstLastButtons={state.firstLast} showPreviousNextButtons={state.previousNext} />
+	<Paginator buttonClasses="bg-accSlate fill-white"  bind:settings={pageSettings} showFirstLastButtons={state.firstLast} showPreviousNextButtons={state.previousNext} />
 </section>

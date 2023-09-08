@@ -1,4 +1,4 @@
-import { getUtcDate } from "$lib/helpers";
+import { dateAddOffset, getUtcDate } from "$lib/helpers";
 import { db } from "$lib/server/database";
 import { redirect } from "@sveltejs/kit";
 import moment from "moment";
@@ -6,7 +6,9 @@ import moment from "moment";
 export const load = async ({ locals }) => {
 	if (locals.user) {
     let appointments = await db.appointment.findMany();
-    return { appointments, user: locals.user }
+		const appointmentReasons = await db.appointmentReason.findMany();
+		const visitCounterReasons = await db.visitCounterReason.findMany();
+    return { appointments, user: locals.user, appointmentReasons, visitCounterReasons }
 	} else {
 		throw redirect(302, '/dashboard');
 	}
@@ -20,6 +22,7 @@ export const actions = {
 			studentUid,
 			studentEmail,
 			studentName,
+			studentCampus,
 			appReason,
 			rhacomm,
 			callbackNumber,
@@ -33,6 +36,7 @@ export const actions = {
 			studentUid: string
 			studentEmail: string
 			studentName: string
+			studentCampus: string
 			reason: string
 			appReason: string
 			rhacomm: string
@@ -52,7 +56,8 @@ export const actions = {
 					studentEmail: studentEmail === "" ? null : studentEmail,
 					studentUid: studentUid === "" ? null : studentUid,
 					studentName: studentName === "" ? null : studentName,
-					dateTime: getUtcDate(date + "T" + time.replace("_", ":") + ":00.000"),
+					studentCampus: studentCampus === "" ? null : studentCampus,
+					dateTime: dateAddOffset(getUtcDate(date + "T" + time.replace("_", ":") + ":00.000Z")),
 					reason: appReason,
 					callbackNumber: callbackNumber === "" ? undefined : callbackNumber,
 					rhacomm: rhacomm === 'true',
@@ -70,12 +75,14 @@ export const actions = {
       id,
 			timeIn,
 			timeOut,
-			complete
+			complete,
+			advisor
      } = Object.fromEntries(await request.formData()) as {
 			id: string
 			timeIn: string
 			timeOut: string
 			complete: string
+			advisor: string
     }
 
 		const counterUserInfo = await db.userProfile.findFirst({
@@ -95,7 +102,8 @@ export const actions = {
           timeIn: timeIn === "" ? null : getUtcDate(moment().format("YYYY-MM-DD") + "T" + timeIn + ":00.000"),
 					timeOut: timeOut === "" ? null : getUtcDate(moment().format("YYYY-MM-DD") + "T" + timeOut + ":00.000"),
 					completed: complete === "on",
-					lastUpdatedBy: counterUserInfo?.first_name + " " + counterUserInfo?.last_name
+					lastUpdatedBy: counterUserInfo?.first_name + " " + counterUserInfo?.last_name,
+					advisor
         }
       });
 			

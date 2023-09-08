@@ -59,14 +59,14 @@
 
   $: {
     filteredSourceData = sourceData.filter((training: any) => {
-      if ((training.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        training.trainers.toLowerCase().includes(searchQuery.toLowerCase()))) {
+      if ((training.title.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+        training.trainers.toLowerCase().includes(searchQuery.toLowerCase().trim()))) {
           return training;
       }
     })
 
     filteredLibrary = libraryTrainings.filter((training) => {
-      if ((training.name.toLowerCase().includes(searchQuery.toLowerCase()))) {
+      if ((training.name.toLowerCase().includes(searchQuery.toLowerCase().trim()))) {
           return training;
       }
     })

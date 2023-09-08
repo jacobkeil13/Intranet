@@ -49,9 +49,23 @@ export const load = async ({ locals }) => {
 			}
 		});
 
+		let nextTraining = await db.trainingSchedule.findFirst({
+      orderBy: {
+        date: "asc"
+      },
+			where: {
+				date: {
+					gte: new Date()
+				}
+			},
+      include: {
+        trainers: true
+      }
+    });
+
 		return { profile, constants, managementTeam, isTeam, eptTeam, appointments, referrals, 
 			isQueueCount, drQueueCount, formCount, letterCount, procedureCount, counterVisits,
-			appointmentReasons, visitCounterReasons }
+			appointmentReasons, visitCounterReasons, nextTraining }
 	} else {
 		throw redirect(302, '/login')
 	}

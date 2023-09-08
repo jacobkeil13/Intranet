@@ -41,9 +41,9 @@
 
 	$: {
     filteredSourceData = sourceData.filter((user: any) => {
-      if (user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-					user.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-					user.team.toLowerCase().includes(searchQuery.toLowerCase())) {
+      if (user.name.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+					user.title.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+					user.team.toLowerCase().includes(searchQuery.toLowerCase().trim())) {
         return user;
       }
     })
@@ -104,7 +104,7 @@
 </svelte:head>
 
 <section in:fly={{ y: -10, duration: 200 }}>
-	<div class="grid {gridCols} auto-rows-min gap-x-4">
+	<div class="gap-x-4">
 		<div class="flex justify-between items-center">
 			<h1 class="text-2xl text-usfGreen font-semibold">Phone List</h1>
 			<!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -129,7 +129,7 @@
 					<h1 class="font-medium mb-2 text-accApple">Copy Teams:</h1>
 					{#each data.teams as team}
 						<!-- svelte-ignore a11y-click-events-have-key-events -->
-						<div class="flex justify-between items-center space-x-2 group">
+						<div class="flex justify-between items-center group">
 							<h1 class="font-medium text-white/90 cursor-pointer">{team.name}</h1>
 							<div>
 							<box-icon
@@ -139,7 +139,7 @@
 								class="opacity-0 group-hover:opacity-100 duration-150 fill-white/90 hover:fill-accApple cursor-pointer"
 							></box-icon>
 							<box-icon
-							on:click={() => getTeam(team.name)}
+								on:click={() => getTeam(team.name)}
 								name='copy'
 								type='solid'
 								class="opacity-0 group-hover:opacity-100 duration-150 fill-white/90 hover:fill-accApple cursor-pointer"

@@ -39,6 +39,7 @@
 				uid: appt.studentUid,
 				advisor: appt.advisor ?? "-",
 				completed: appt.completed,
+				lastUpdatedBy: appt.lastUpdatedBy ?? "-",
 			}
 			sourceData.push(tr);
 		});
@@ -55,9 +56,9 @@
 			} else if (tabSet === AppointmentType.Walkin) {
 				apptType = "Walk-in"
 			}
-      if ((appt.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-				appt.uid.toLowerCase().includes(searchQuery.toLowerCase()) ||
-				appt.advisor.toLowerCase().includes(searchQuery.toLowerCase())) && 
+      if ((appt.name.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+				appt.uid.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+				appt.advisor.toLowerCase().includes(searchQuery.toLowerCase().trim())) && 
 				appt.type === apptType) {
 				if (filterCompleted && appt.completed) {
 					return appt;
@@ -70,8 +71,8 @@
 		updatePageSettings(filteredSourceData);
   }
 
-  const headers: string[] = ['Date & Time', "Type", 'Name', 'UID', 'Advisor', 'Completed'];
-	const body: string[] = ['dateTime', 'type', 'name', 'uid', 'advisor', 'completed'];
+  const headers: string[] = ['Date & Time', "Type", 'Name', 'UID', 'Advisor', 'Last Updated By'];
+	const body: string[] = ['dateTime', 'type', 'name', 'uid', 'advisor', 'lastUpdatedBy'];
 	const meta: string[] = ['id'];
   let state = { firstLast: false, previousNext: true };
 	let pageSettings = { offset: 0, limit: 10, size: filteredSourceData.length, amounts: [5, 10, 15] } as PaginationSettings;
@@ -88,7 +89,7 @@
     modalStore.trigger({
       type: 'component',
       component: 'updateAppointmentModal',
-      meta: { appt: appointments.find(appt => appt.id === e.detail[0]) }
+      meta: { appt: appointments.find(appt => appt.id === e.detail[0]), constants: data.constants }
     });
   }
 </script>
@@ -108,7 +109,7 @@
       <Search bind:value={searchQuery} />
       <!-- svelte-ignore a11y-click-events-have-key-events -->
 			<div class="flex justify-center items-center bg-accSlate p-[6px] rounded-full cursor-pointer" 
-				on:click={() => { openModal("appointmentModal", { constants: data.constants })
+				on:click={() => { openModal("appointmentModal", { constants: data.constants, appointmentReasons: data.appointmentReasons, visitCounterReasons: data.visitCounterReasons })
 			}}>
 				<box-icon class="fill-white/90" name={"plus"} />
 			</div>

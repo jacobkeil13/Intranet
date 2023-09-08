@@ -106,7 +106,7 @@
 			{/if}
 		</svelte:fragment>
 		<section id="content">
-			<section class="p-8 { $sidebarStore ? "max-w-6xl" : "max-w-[1500px]"} mx-auto min-h-[calc(100vh_-_3.5rem_-_41px)]">
+			<section class="p-8 { $sidebarStore ? "max-w-7xl" : "max-w-[1600px]"} mx-auto min-h-[calc(100vh_-_3.5rem_-_41px)]">
 				<div>
 					<slot />
 				</div>

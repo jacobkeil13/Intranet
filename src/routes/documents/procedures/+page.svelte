@@ -56,9 +56,9 @@
       } else if (tabSet === AidYear.NonYear) {
         aidYear = "Non-Year"
       }
-      if ((procedure.fileName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          procedure.owner.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          procedure.aidYear.toLowerCase().includes(searchQuery.toLowerCase()))) {
+      if ((procedure.fileName.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+          procedure.owner.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+          procedure.aidYear.toLowerCase().includes(searchQuery.toLowerCase().trim()))) {
           if (aidYear === "All") {
             return procedure;
           }

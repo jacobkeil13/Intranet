@@ -107,7 +107,8 @@ export const actions = {
       requestType, 
       dateNeeded,
       assignedToId,
-      description
+      description,
+      complete
      } = Object.fromEntries(await request.formData()) as {
         id: string
         title: string
@@ -116,6 +117,7 @@ export const actions = {
         dateNeeded: string
         assignedToId: string
         description: string
+        complete: string
     }
 
     try {
@@ -131,6 +133,7 @@ export const actions = {
           requestType: { connect: { name: requestType } },
           assignedTo: { connect: { id: assignedToId } },
           dateNeeded: new Date(dateAddHours(dateNeeded, "12")),
+          complete: complete === "on"
         }
       })
 

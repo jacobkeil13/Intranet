@@ -59,10 +59,10 @@
       } else if (tabSet === LetterTypes.Old) {
         letterType = "Old Letters"
       }
-      if ((letter.letterCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        letter.letterType.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        letter.letterGroup.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        letter.owner.toLowerCase().includes(searchQuery.toLowerCase()))) {
+      if ((letter.letterCode.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+        letter.letterType.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+        letter.letterGroup.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+        letter.owner.toLowerCase().includes(searchQuery.toLowerCase().trim()))) {
           if (letterType === "All") {
             return letter;
           }

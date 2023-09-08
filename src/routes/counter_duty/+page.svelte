@@ -46,6 +46,7 @@
     studentUid: "",
     studentEmail: "",
     studentName: "",
+    studentCampus: "",
     reason: "",
     appReason: "",
     referralDetails: "",
@@ -92,6 +93,8 @@
       currentUserForms = undefined;
       $appointmentForm.studentUid = "";
       $appointmentForm.studentEmail = "";
+      $appointmentForm.studentName = "";
+      $appointmentForm.studentCampus = "";
     }
     if (!$appointmentForm.needsFutherAction) {
       $appointmentForm.date = "";
@@ -113,6 +116,7 @@
     let timeTaken = false;
     $appointmentForm.studentEmail = String(currentUser?.email);
     $appointmentForm.studentName = String(currentUser?.first_name + " " + currentUser?.last_name);
+    $appointmentForm.studentCampus = String(getCampusName(currentUser?.campus));
 
     if (!$appointmentForm.studentUid.includes("U") && $appointmentForm.studentUid.length > 7) {
       $appointmentForm.studentUid = "U" + $appointmentForm.studentUid;
@@ -120,6 +124,7 @@
       $appointmentForm.studentUid = "";
       $appointmentForm.studentName = "";
       $appointmentForm.studentEmail = "";
+      $appointmentForm.studentCampus = "";
     }
 
     if (!$appointmentForm.needsFutherAction) {
@@ -128,6 +133,7 @@
       formData.append('studentUid', $appointmentForm.studentUid);
       formData.append('studentEmail', $appointmentForm.studentEmail);
       formData.append('studentName', $appointmentForm.studentName);
+      formData.append('studentCampus', $appointmentForm.studentCampus);
       formData.append('reason', $appointmentForm.reason);
       formData.append('submittedDocument', String($appointmentForm.submittedDocument));
       fetch('/counter_duty?/createVisit', {
@@ -221,6 +227,7 @@
     formData.append('studentUid', $appointmentForm.studentUid);
     formData.append('studentEmail', $appointmentForm.studentEmail);
     formData.append('studentName', $appointmentForm.studentName);
+    formData.append('studentCampus', $appointmentForm.studentCampus);
     formData.append('reason', $appointmentForm.reason);
     formData.append('appReason', $appointmentForm.appReason);
     formData.append('referralDetails', $appointmentForm.referralDetails);

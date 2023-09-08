@@ -57,7 +57,7 @@
 
   $: {
     filteredSourceData = sourceData.filter((visit: any) => {
-      if ((visit.date.toLowerCase().includes(searchQuery.toLowerCase()))) {
+      if ((visit.date.toLowerCase().includes(searchQuery.toLowerCase().trim()))) {
         return visit;
       }
     })
