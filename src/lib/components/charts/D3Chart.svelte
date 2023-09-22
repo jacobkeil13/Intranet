@@ -32,7 +32,6 @@
     .y((d) => yScale(d.visits));
 
   const uniqueHours = new Set(data.map(d => moment(d.date).hour())).size * 2;
-  console.log(uniqueHours);
 </script>
 
 <svg

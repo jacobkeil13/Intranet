@@ -35,10 +35,10 @@
 
 	let currentAppts: Appointment[] = [];
 
+	$: totalForDay = 0;
 	$: currentDate, updateTimes();
 	$: requestedAdvisor, updateTimes();
 	$: currentAppts, updateTimes();
-	// $: timeChosen, console.log(timeChosen);
 
 	const takenTimes = writable<string[]>([]);
 
@@ -55,11 +55,13 @@
 
 	function updateTimes() {
 		$takenTimes = [];
+		totalForDay = 0;
 		currentAppts.forEach((appt) => {
 			let date = appt.date.split('T')[0];
 			let time = appt.date.split('T')[1].split('.')[0];
 			if (date === currentDate && requestedAdvisor === appt.advisor) {
 				$takenTimes.push(time);
+				totalForDay++;
 			}
 			if (requestedAdvisor === '') {
 				$takenTimes = [];
@@ -69,24 +71,30 @@
 	}
 </script>
 
-<div class="grid w-[500px] grid-cols-5 gap-2">
-  {#each $counter_time_slots as time}
-    <input
-      required={!$takenTimes.includes(time)}
-      disabled={$takenTimes.includes(time) || moment(currentDate).weekday() === 6 || moment(currentDate).weekday() === 0}
-      type="radio"
-      name="time"
-      id={time.split(':')[0] + '_' + time.split(':')[1]}
-      value={time.split(':')[0] + '_' + time.split(':')[1]}
-      bind:group={timeChosen}
-    />
-    <label
-      class="flex justify-center rounded-sm bg-[#D7DAE6] border border-accSlate/50 p-2"
-      for={time.split(':')[0] + '_' + time.split(':')[1]}
-      >{parseTime(time)}</label
-    >
-  {/each}
-</div>
+{#if totalForDay < 2}
+	<div class="grid w-[500px] grid-cols-5 gap-2">
+		{#each $counter_time_slots as time}
+			<input
+				required={!$takenTimes.includes(time)}
+				disabled={$takenTimes.includes(time) || moment(currentDate).weekday() === 6 || moment(currentDate).weekday() === 0}
+				type="radio"
+				name="time"
+				id={time.split(':')[0] + '_' + time.split(':')[1]}
+				value={time.split(':')[0] + '_' + time.split(':')[1]}
+				bind:group={timeChosen}
+			/>
+			<label
+				class="flex justify-center rounded-sm bg-transparent border border-accSlate/50 p-2"
+				for={time.split(':')[0] + '_' + time.split(':')[1]}
+				>{parseTime(time)}</label
+			>
+		{/each}
+	</div>
+{:else}
+	<section class="card bg-transparent flex items-center p-3 w-fit border border-red-700">
+		<h1 class="font-medium">{requestedAdvisor} already has 2 appointments scheduled for this day!</h1>
+	</section>
+{/if}
 
 <style>
 	input[type='radio'] {

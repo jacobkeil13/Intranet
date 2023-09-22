@@ -48,7 +48,6 @@ export const actions = {
 
       return { success: true, message: "Form created successfully!", data: newForm }
     } catch (error) {
-      console.log(error);
       return { success: false, message: "Form creation failed." }
     }
   },
@@ -89,7 +88,6 @@ export const actions = {
 
       return { success: true, message: "Form updated successfully!", data: newForm }
     } catch (error) {
-      console.log(error);
       return { success: false, message: "Form update failed." }
     }
   }

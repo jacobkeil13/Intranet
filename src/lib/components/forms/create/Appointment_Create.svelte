@@ -1,18 +1,21 @@
 <script lang="ts">
   import { fly } from 'svelte/transition';
-  import { RadioGroup, RadioItem, SlideToggle, Step, Stepper, modalStore, toastStore  } from '@skeletonlabs/skeleton';
+  import { RadioGroup, RadioItem, SlideToggle, Step, Stepper, getModalStore, getToastStore  } from '@skeletonlabs/skeleton';
 	import { getCampusName, getDateLocal } from '$lib/helpers';
 	import type { BannerUser, PrivacyForm } from '$lib/types';
 	import Spinner from '$lib/components/animation/Spinner.svelte';
-	import { actions, getPrivacyInfo, getUidInfo } from '$lib/stores/counter_duty';
+	import { actions, getCurrentAppts, getPrivacyInfo, getUidInfo } from '$lib/stores/counter_duty';
 	import moment from 'moment';
 	import TimePickerAdvisor from '$lib/components/TimePickerAdvisor.svelte';
 	import TimePicker from '$lib/components/TimePicker.svelte';
 	import { writable } from 'svelte/store';
 	import * as devalue from 'devalue';
 	import SuccessCheck from '$lib/components/animation/SuccessCheck.svelte';
-	import type { Appointment } from '@prisma/client';
+	import type { Appointment, Referral } from '@prisma/client';
+	import TextareaCopy from '$lib/components/TextareaCopy.svelte';
 
+  let modalStore = getModalStore();
+  let toastStore = getToastStore();
   let data = $modalStore[0].meta;
   console.log(data);
   
@@ -37,10 +40,14 @@
   function errorToast(msg: string) {
     showError = true;
     errorMessage = msg;
-    setTimeout(() => {
-      showError = false
-    }, 5000)
+    var errorToast = document.getElementById("error-toast");
+    if (errorToast?.scrollTop !== undefined) {
+      errorToast.scrollTop = errorToast?.scrollHeight;
+    }
   }
+
+  let currentAppts: Appointment[] = [];
+  let currentReferrals: Referral[] = [];
 
   let appointmentForm = writable({
     type: "",
@@ -59,8 +66,8 @@
     advisorRequested: "",
     date: "",
     time: "",
-    bestTimeCallback: "",
-    preferredContactMethod: "Phone",
+    bestTimeCallback: "12:00",
+    preferredContactMethod: "ROAMESG",
     source: ""
   })
 
@@ -76,10 +83,14 @@
       isLoading = true;
       getUidInfo($appointmentForm.studentUid).then(res => {
         currentUser = res;
-      })
+      });
       getPrivacyInfo($appointmentForm.studentUid).then(res => {
         currentUserForms = res;
-      })
+      });
+      getCurrentAppts($appointmentForm.studentUid).then(res => {
+        currentAppts = res.appointments;
+        currentReferrals = res.referrals;
+      });
       setTimeout(() => {
         isLoading = false;
       }, 2000);
@@ -103,6 +114,10 @@
       $appointmentForm.studentCampus = "";
     }
 
+    if (action === Actions.Walkin) {
+      $appointmentForm.advisorRequested = "";
+    }
+
     if (action !== "" && (action !== Actions.Referral && action !== Actions.Walkin) && $appointmentForm.advisorRequested === "") {
       errorToast("Please pick an advisor!");
       return
@@ -117,11 +132,11 @@
     }
     if (($appointmentForm.date === "" || $appointmentForm.time === "") && action !== Actions.Referral) {
       if ($appointmentForm.date === "") {
-        errorToast("Please pick a date");
+        errorToast("Please pick a date!");
         return
       }
       if ($appointmentForm.time === "") {
-        errorToast("Please pick a time");
+        errorToast("Please pick a time!");
         return
       }
     }
@@ -145,15 +160,18 @@
       errorToast("Please pick an escalated user!");
       return
     }
-    if (action === Actions.Referral && $appointmentForm.referralType === "Research Referral" && $appointmentForm.researchUser === "") {
-      errorToast("Please pick a research user!");
+    if (action === Actions.Referral && $appointmentForm.referralType === "Collaboration Referral" && $appointmentForm.researchUser === "") {
+      errorToast("Please pick a collaborator!");
+      return
+    }
+    if (!$appointmentForm.rhacomm) {
+      errorToast("Please annotate RHACOMM!");
       return
     }
 
     await fetch(`/api/counter_duty?type=${action}`).then(async (res) => {
       let response = await res.json();
       response.appointments.forEach((appt: Appointment) => {
-        console.log(appt);
         let existingApptDate =  moment(appt.dateTime).local().format("YYYY-MM-DDThh:mm:ss") + ".000";
         if (action === Actions.Phone || action === Actions.InPerson) {
           if (appt.advisor === $appointmentForm.advisorRequested 
@@ -213,6 +231,11 @@
   function closeForm(): void {
 		modalStore.close();
 	}
+
+  function toUpperCase(event: Event) {
+    const inputElement = event.target as HTMLInputElement;
+    inputElement.value = inputElement.value.toUpperCase();
+  }
 </script>
 
 <section 
@@ -222,7 +245,7 @@
   <div class="flex justify-between items-center">
     <h1 class="text-xl text-usfGreen font-medium">Create Appointment / Referral</h1>
     <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <box-icon class="fill-black cursor-pointer" name="x" on:click={closeForm} />
+    <i class="fa-solid fa-xmark fa-lg text-black cursor-pointer" on:click={closeForm}></i>
   </div>
   <br>
   <section>
@@ -239,14 +262,10 @@
         <Step locked={isLoading || (!matchesUIDForm && hasUID) || (currentUser === undefined && hasUID)}>
           <svelte:fragment slot="header">Identification</svelte:fragment>
           <section class="space-x-2">
-            <RadioGroup active="bg-accSlate text-white/90" class="mt-0" rounded="rounded-md">
+            <RadioGroup background="bg-white" active="bg-accSlate text-white/90" class="mt-0 bg-white" rounded="rounded-md">
               <RadioItem  bind:group={$appointmentForm.visitorType} name="visitorType" value="Student">Student</RadioItem>
               <RadioItem bind:group={$appointmentForm.visitorType} name="visitorType" value="Parent">Parent</RadioItem>
             </RadioGroup>
-            <!-- <RadioGroup active="bg-accSlate text-white/90" rounded="rounded-md">
-              <RadioItem bind:group={hasUID} name="uid_status" value={true}>Has U#</RadioItem>
-              <RadioItem bind:group={hasUID} name="uid_status" value={false}>No U#</RadioItem>
-            </RadioGroup> -->
           </section>
           {#if hasUID}
             <section class="flex items-center space-x-3">
@@ -254,20 +273,21 @@
                 <div 
                   class="input-group input-group-divider rounded-md grid-cols-[auto_1fr_auto]" 
                 >
-                  <div class="input-group-shim font-semibold">UID</div>
-                  <input type="text" class="w-fit font-semibold" name="uid" placeholder="Student UID..." minlength="8" maxlength="9" bind:value={$appointmentForm.studentUid}>
+                  <div class="input-group-shim font-semibold bg-white">UID</div>
+                  <input autocomplete="off" type="text" class="w-fit font-semibold" name="uid" placeholder="Student UID..." minlength="8" maxlength="9" 
+                    bind:value={$appointmentForm.studentUid} on:input={toUpperCase}>
                   {#if !isLoading}
-                    <div class="input-group-shim">
+                    <div class="input-group-shim bg-white">
                       {#if matchesUIDForm && currentUser != undefined}
-                        <box-icon name='check' class="fill-green-700 cursor-pointer" ></box-icon>
+                        <i class="fa-solid fa-check fa-lg text-usfGreen cursor-pointer"></i>
                       {:else if matchesUIDForm && currentUser === undefined}
-                        <box-icon name='x' class="fill-red-700 cursor-pointer" ></box-icon>
+                        <i class="fa-solid fa-xmark fa-lg text-red-700 cursor-pointer"></i>
                       {:else}
-                        <box-icon type='solid' name='x-circle' class="fill-black/50"></box-icon>
+                        <i class="fa-solid fa-circle-xmark fa-lg text-black/50 cursor-pointer"></i>
                       {/if}
                     </div>
                   {:else}
-                    <div class="input-group-shim"> 
+                    <div class="input-group-shim bg-white"> 
                       <Spinner />
                     </div>
                   {/if}
@@ -280,7 +300,7 @@
           {/if}
           {#if hasUID && currentUser !== undefined && !isLoading}
             <section class="flex space-x-4">
-              <section class="card flex flex-col justify-center p-4 w-fit border border-accSlate/50">
+              <section class="card flex flex-col justify-center p-4 w-fit border bg-white border-accSlate/50">
                 <h1><span class="pr-2 font-semibold">Name:</span> {currentUser.first_name} {currentUser.last_name}</h1>
                 <h1><span class="pr-2 font-semibold">Email:</span> {currentUser.email}</h1>
                 <h1><span class="pr-2 font-semibold">Campus:</span> {getCampusName(currentUser?.campus)}</h1>
@@ -302,7 +322,7 @@
                     {/each}
                   </table>
                 {:else}
-                  <section class="card flex items-center p-4 w-fit border border-red-700">
+                  <section class="card bg-white flex items-center p-4 w-fit border border-red-700">
                     <h1 class="font-semibold">No privacy forms were found.</h1>
                   </section>
                 {/if}
@@ -312,6 +332,20 @@
         </Step>
         <Step locked={action === ""}>
           <svelte:fragment slot="header">Pick Action</svelte:fragment>
+          {#if currentAppts.length > 0}
+            {#each currentAppts as appt}
+              <section class="card bg-transparent flex items-center p-3 w-fit border border-red-700">
+                <h1 class="font-medium">{currentUser?.first_name} has a pending appointment: <span class="font-bold">{appt.reason}</span>.</h1>
+              </section>
+            {/each}
+          {/if}
+          {#if currentReferrals.length > 0}
+            {#each currentReferrals as ref}
+              <section class="card bg-transparent flex items-center p-3 w-fit border border-red-700">
+                <h1 class="font-medium">{currentUser?.first_name} has a referral: <span class="font-bold">{ref.reason}</span></h1>
+              </section>
+            {/each}
+          {/if}
           <ul class="grid w-full gap-2 grid-cols-2">
             {#each $actions as act}
               <li>
@@ -326,7 +360,7 @@
                 />
                 <label
                   for={act.name}
-                  class="inline-flex items-center justify-between w-full p-5 text-accSlate bg-[#DFE2EB] border border-accSlate/50 rounded-lg cursor-pointer peer-checked:bg-accSlate peer-checked:border-accSlate peer-checked:text-usfWhite/90"
+                  class="inline-flex items-center justify-between w-full p-5 text-accSlate bg-white border border-accSlate/50 rounded-lg cursor-pointer peer-checked:bg-accSlate peer-checked:border-accSlate peer-checked:text-usfWhite/90"
                 >
                   <div class="block">
                     <div class="w-full text-lg font-semibold">{act.name}</div>
@@ -342,18 +376,18 @@
             {#if currentUser !== undefined}
               <section class="flex space-x-2">
                 <div class="input-group input-group-divider grid-cols-[auto_1fr] rounded-md w-fit">
-                  <div class="input-group-shim">Name</div>
+                  <div class="input-group-shim bg-white">Name</div>
                   <input disabled type="search" value={currentUser.first_name + " " + currentUser.last_name} />
                 </div>
                 <div class="input-group input-group-divider grid-cols-[auto_1fr] rounded-md w-fit">
-                  <div class="input-group-shim">UID</div>
+                  <div class="input-group-shim bg-white">UID</div>
                   <input disabled type="search" value={currentUser.uid.includes("U") ? currentUser.uid : "U" + currentUser.uid } />
                 </div>
               </section>
             {/if}
             {#if action !== Actions.Walkin && action !== Actions.Referral}
               <h1 class="text-semibold text-xl">Pick Advisor</h1>
-              <select name="advisor" id="advisor" class="select w-fit" bind:value={$appointmentForm.advisorRequested}>
+              <select name="advisor" id="advisor" class="input rounded-md w-fit" bind:value={$appointmentForm.advisorRequested}>
                 <option disabled selected value="">Select one...</option>
                 {#each data.constants.users as user}
                   {#if user.uidRange !== null}
@@ -365,7 +399,7 @@
             {#if action !== Actions.Referral}
               <h1 class="text-semibold text-xl">Time & Date</h1>
             {:else}
-              <h1 class="text-semibold text-xl">Best Callback Time & Preferred Contact Method</h1>
+              <h1 class="text-semibold text-xl">Contact Method</h1>
             {/if}
             <div class="flex space-x-2">
               {#if action !== Actions.Referral}
@@ -375,15 +409,11 @@
                   bind:value={$appointmentForm.date}
                 >
               {:else}
-                <RadioGroup active="bg-accSlate text-white/90 w-fit block" rounded="rounded-md">
+                <RadioGroup background="bg-white" active="bg-accSlate text-white/90 w-fit block" rounded="rounded-md">
+                  <RadioItem bind:group={$appointmentForm.preferredContactMethod} name="preferredContactMethod" value="ROAMESG">ROAMESG</RadioItem>
                   <RadioItem bind:group={$appointmentForm.preferredContactMethod} name="preferredContactMethod" value="Phone">Phone</RadioItem>
                   <RadioItem bind:group={$appointmentForm.preferredContactMethod} name="preferredContactMethod" value="Email">Email</RadioItem>
                 </RadioGroup>
-                <input class="input rounded-md w-fit block" type="time" name="time" id="time"
-                  min={minDate}
-                  max={maxDate}
-                  bind:value={$appointmentForm.bestTimeCallback}
-                >
               {/if}
             </div>
             {#if action === Actions.InPerson || action === Actions.Phone}
@@ -404,7 +434,7 @@
               {/if}
               <div class="space-y-1">
                 <label for="reasons">Reason</label>
-                <select class="select w-fit" name="reasons" id="reasons" bind:value={$appointmentForm.appReason}>
+                <select class="input rounded-md w-fit" name="reasons" id="reasons" bind:value={$appointmentForm.appReason}>
                   <option disabled selected value="">Select one...</option>
                   {#each data.appointmentReasons as appointmentReason}
                     <option value={appointmentReason.name}>{appointmentReason.name}</option>
@@ -416,33 +446,43 @@
               <div class="flex space-x-2">
                 <div class="space-y-1">
                   <label for="description">Description</label>
-                  <textarea required class="input rounded-md min-h-[100px] max-h-[150px] w-full" name="description" cols="100" rows="4" placeholder="Why are you making this request..." bind:value={$appointmentForm.referralDetails} />
+                  <TextareaCopy bind:content={$appointmentForm.referralDetails}>
+                    <svelte:fragment slot="textarea">
+                      <textarea required class="input rounded-md max-h-[100px] w-full" name="description" cols="100" rows="4" placeholder="Why are you making this referral..." bind:value={$appointmentForm.referralDetails} />
+                    </svelte:fragment>
+                  </TextareaCopy>
                 </div>
               </div>
             {/if}
             <div class="flex space-x-2">
               <div class="space-y-1">
                 <label for="source">Source</label>
-                <select class="select w-fit" name="source" id="source" bind:value={$appointmentForm.source}>
+                <select class="input rounded-md w-fit" name="source" id="source" bind:value={$appointmentForm.source}>
                   <option disabled selected value="">Select one...</option>
                   <option value="Counter Duty">Counter Duty</option>
                   <option value="Phone Duty">Phone Duty</option>
+                  <option value="Phone Appointment">Phone Appt.</option>
+                  <option value="In-person Appointment">In-person Appt.</option>
+                  <option value="Walk-in Appointment">Walk-in Appt.</option>
+                  <option value="Referral">Referral</option>
                 </select>
               </div>
+            </div>
+            <div class="flex space-x-2">
               {#if action === Actions.Referral}
                 <div class="space-y-1">
                   <label for="referralType">Referral Type</label>
-                  <select class="select w-fit" name="referralType" id="referralType" bind:value={$appointmentForm.referralType}>
+                  <select class="input rounded-md w-fit" name="referralType" id="referralType" bind:value={$appointmentForm.referralType}>
                     <option disabled selected value="">Select one...</option>
                     <option value="Self Referral">Self Referral</option>
-                    <option value="Research Referral">Research Referral</option>
+                    <option value="Collaboration Referral">Collaboration Referral</option>
                     <option value="Escalated Referral">Escalated Referral</option>
                   </select>
                 </div>
-                {#if $appointmentForm.referralType === "Research Referral"}
+                {#if $appointmentForm.referralType === "Collaboration Referral"}
                   <div class="space-y-1">
-                    <label for="researchUser">Research User</label>
-                    <select class="select w-fit" name="researchUser" id="researchUser" bind:value={$appointmentForm.researchUser}>
+                    <label for="researchUser">Collaborator</label>
+                    <select class="input rounded-md w-fit" name="researchUser" id="researchUser" bind:value={$appointmentForm.researchUser}>
                       <option disabled selected value="">Select one...</option>
                       {#each data.constants.users as user}
                         <option value={user.first_name + " " + user.last_name}>{user.first_name + " " + user.last_name}</option>
@@ -453,9 +493,9 @@
                 {#if $appointmentForm.referralType === "Escalated Referral"}
                   <div class="space-y-1">
                     <label for="escalatedUser">Escalated User</label>
-                    <select class="select w-fit" name="escalatedUser" id="escalatedUser" bind:value={$appointmentForm.escalatedUser}>
+                    <select class="input rounded-md w-fit" name="escalatedUser" id="escalatedUser" bind:value={$appointmentForm.escalatedUser}>
                       <option disabled selected value="">Select one...</option>
-                      {#each data.constants.users as user}
+                      {#each data.managementTeam as user}
                         <option value={user.first_name + " " + user.last_name}>{user.first_name + " " + user.last_name}</option>
                       {/each}
                     </select>
@@ -466,15 +506,16 @@
             <div class="flex space-x-2">
               <div 
                 class:border-usfGreen={$appointmentForm.rhacomm}
-                class="card flex items-center space-x-3 p-4 w-fit border border-accSlate/50"
+                class="card flex items-center space-x-3 p-4 w-fit border border-accSlate/50 bg-transparent"
               >
                 <h1>RHACOMM Annotated</h1>
                 <SlideToggle name="document" size="sm" bind:checked={$appointmentForm.rhacomm} />
               </div>
             </div>
             {#if showError}
-              <div 
-                class="card flex items-center space-x-3 p-4 w-full border border-red-700"
+              <div
+                id="error-toast"
+                class="card bg-white flex items-center space-x-3 p-4 w-full border border-red-700"
               >
               <h1>{errorMessage}</h1>
               </div>
@@ -487,7 +528,7 @@
       <section class="flex flex-col justify-center items-center p-6 rounded-md space-y-4">
         {#if !visitError}
           <div class="flex items-center space-x-4">
-            <h1 class="text-2xl font-bold text-usfGreen">Successfully Created {$appointmentForm.type === "" ? "Visit" : $appointmentForm.type}</h1>
+            <h1 class="text-2xl font-bold text-usfGreen">Created {$appointmentForm.type === "" ? "Visit" : $appointmentForm.type}</h1>
             <SuccessCheck />
           </div>
         {:else}
@@ -517,5 +558,18 @@
   }
   tr {
     background: #2e354c15;
+  }
+  input {
+		background-color: #ffffff;
+		color: black;
+		border-color: #3e4c7a8a;
+	}
+  select {
+    background-color: #ffffff;
+		color: black;
+		border-color: #3e4c7a8a;
+  }
+  textarea {
+    background: transparent;
   }
 </style>

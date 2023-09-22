@@ -61,6 +61,7 @@ export async function createPopselQueueItem(data: any) {
       requestType: { connect: { name: requestType?.name } },
       dateNeeded: new Date().toISOString(),
       complete: false,
+      populationSelection: { connect: { id: data.popselId } }
     }
   });
 
@@ -102,6 +103,40 @@ export async function createPopulationSelection(data: any) {
   });
 
   return newPopsel;
+}
+
+export async function updatePopulationSelection(data: any) {
+  let paidDate = data.paidDate === "" ? undefined : new Date(new Date(data.paidDate).setUTCHours(12,0,0,0)).toISOString();
+  let paidDateThirty = data.paidDateThirty === "" ? undefined : new Date(new Date(data.paidDateThirty).setUTCHours(12,0,0,0)).toISOString();
+  let paidDateSixty = data.paidDateSixty === "" ? undefined : new Date(new Date(data.paidDateSixty).setUTCHours(12,0,0,0)).toISOString();
+  const updatedPopsel = await db.populationSelection.update({
+    where: {
+      id: data.id
+    },
+    data: {
+      aidYear: { connect: { name: data.aidYear }},
+      termCode: data.termCode,
+      application: { connect: { name: data.application }},
+      letterCode: { connect: { name: data.letterCode }},
+      selectionId: data.selectionId,
+      bannerCreatorId: data.bannerCreatorId,
+      bannerUserId: data.bannerUserId,
+      letterCount: Number(data.letterCount),
+      addressType: { connect: { name: data.addressType === "1ML" ? "Local Address" : "Permanent Address" }},
+      requestedBy: { connect: { id: data.requestor }},
+      firstTerm: data.firstTerm,
+      secondTerm: data.secondTerm,
+      thirdTerm: data.thirdTerm,
+      priorAidYear: data.priorAidYear,
+      priorFallTerm: data.priorFallTerm,
+      priorSpringTerm: data.priorSpringTerm,
+      paidDate,
+      paidDateThirty,
+      paidDateSixty
+    }
+  });
+
+  return updatedPopsel;
 }
 
 export async function getTeamByName(teamName: string) {

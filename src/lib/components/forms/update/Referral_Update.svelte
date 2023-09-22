@@ -1,19 +1,33 @@
 <script lang="ts">
-	import { SlideToggle, modalStore } from '@skeletonlabs/skeleton';
+	import { SlideToggle, getModalStore } from '@skeletonlabs/skeleton';
 	import Loading from '$lib/components/animation/Loading.svelte';
 	import type { Referral, ReferralComment } from '@prisma/client';
 	import { getDateLocal } from '$lib/helpers';
+	import TextareaCopy from '$lib/components/TextareaCopy.svelte';
 
 	interface FullReferral extends Referral {
 		comments: ReferralComment[]
 	}
 
+	let modalStore = getModalStore();
 	let isLoading = false;
   let referral: FullReferral = $modalStore[0].meta.referral;
 	let completed = referral.completed;
+	let rhacomm = referral.completed;
+	let content = "";
 
 	function closeForm(): void {
 		modalStore.close();
+	}
+
+	function validateRhacomm() {
+		if (!rhacomm) {
+			let rhacommEl = document.getElementById("rhacomm");
+			rhacommEl?.classList.add("shake")
+			setTimeout(() => {
+				rhacommEl?.classList.remove('shake');
+			}, 200);
+		}
 	}
 </script>
 
@@ -21,7 +35,7 @@
 	<div class="flex justify-between items-center">
 		<h1 class="text-xl text-usfGreen font-medium">Update Referral</h1>
 		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<box-icon class="fill-black cursor-pointer" name="x" on:click={closeForm} />
+		<i class="fa-solid fa-xmark fa-lg text-black cursor-pointer" on:click={closeForm}></i>
 	</div>
 	<br />
 	<section class="grid grid-cols-[1fr_2fr] gap-4">
@@ -29,12 +43,12 @@
 			<h1>Comments</h1>
 			<div class="space-y-1 max-h-[400px] overflow-auto">
 				{#each referral.comments as comment}
-					<div class="card rounded-sm px-2 py-1">
-						<h1>
+					<div class="rounded p-2 border border-accSlate/20 shadow-sm">
+						<h1 class="text-sm">
 							<span class="text-usfGreen font-semibold">
 								{comment.user}
-							</span> - {getDateLocal(comment.createdAt.toISOString(), "MMMM Do h:mmA")}</h1>
-						<p>{comment.content}</p>
+							</span> - {getDateLocal(comment.createdAt.toISOString(), "MMM Do h:mmA")}</h1>
+						<p class="text-sm">{comment.content}</p>
 					</div>
 				{/each}
 			</div>
@@ -59,8 +73,8 @@
 				</div>
 				<div class="flex space-x-2">
 					<span class="flex flex-col space-y-1">
-						<label for="counterUser">Counter User</label>
-						<input readonly required type="text" name="counterUser" class="rounded-md" value={referral.counterUser} />
+						<label for="counterUser">Referral Owner</label>
+						<input readonly required type="text" name="counterUser" class="rounded-md" value={referral.escalationUser === null ? referral.counterUser : referral.escalationUser} />
 					</span>
 					<span class="flex flex-col space-y-1">
 						<label for="bestTimeCallback">Best Time Callback</label>
@@ -81,39 +95,65 @@
 						<input readonly required type="text" name="preferredContactMethod" class="rounded-md" placeholder="Title..." value={referral.preferredContactMethod} />
 					</span>
 				</div>
-				<div class="flex flex-col space-y-2">
+				<div class="flex flex-col space-y-1">
 					<label for="description">Comment</label>
-					<textarea required class="rounded-md" name="description" cols="20" rows="4" placeholder="Why are you updating this..." />
+					<TextareaCopy bind:content={content}>
+						<svelte:fragment slot="textarea">
+							<textarea required class="rounded-md w-full" name="description" cols="20" rows="4" placeholder="Why are you updating this..." bind:value={content} />
+						</svelte:fragment>
+					</TextareaCopy>
 				</div>
+				{#if referral.escalationUser || referral.researchUser}
+					<div class="flex space-x-2">
+						{#if referral.escalationUser}
+							<span class="flex flex-col space-y-1 w-fit">
+								<label for="counterUser">Escalated By</label>
+								<input readonly required type="text" name="counterUser" class="rounded-md" value={referral.counterUser} />
+							</span>
+							<span class="flex flex-col space-y-1 w-fit">
+								<label for="reason">Escalated Referral</label>
+								<input readonly required type="text" name="reason" class="rounded-md" placeholder="Title..." value={referral.escalationUser} />
+							</span>
+						{/if}
+						{#if referral.researchUser}
+							<span class="flex flex-col space-y-1 w-fit">
+								<label for="reason">Collaborator</label>
+								<input readonly required type="text" name="reason" class="rounded-md" placeholder="Title..." value={referral.researchUser} />
+							</span>
+						{/if}
+					</div>
+				{/if}
 				<div class="flex space-x-2">
-					{#if referral.escalationUser}
-						<span class="flex flex-col space-y-1 w-fit">
-							<label for="reason">Escalated Referral</label>
-							<input readonly required type="text" name="reason" class="rounded-md" placeholder="Title..." value={referral.escalationUser} />
-						</span>
-					{/if}
-					{#if referral.researchUser}
-						<span class="flex flex-col space-y-1 w-fit">
-							<label for="reason">Research Referral</label>
-							<input readonly required type="text" name="reason" class="rounded-md" placeholder="Title..." value={referral.researchUser} />
-						</span>
-					{/if}
 					<span class="flex flex-col space-y-1 w-fit">
 						<label for="preferredContactMethod">Response Method</label>
-						<select required={completed} class="input rounded-md" name="responseMethod" value={referral.responseMethod ?? ""}>
+						<select required={completed} class="input rounded-md w-fit" name="responseMethod" value={referral.responseMethod ?? ""}>
 							<option disabled selected value="">Select one...</option>
+							<option value="ROAMESG">ROAMESG</option>
 							<option value="Phone">Phone</option>
 							<option value="Email">Email</option>
 						</select>
 					</span>
-					<span class="flex flex-col space-y-1">
-						<label for="complete" class="mb-2 text-transparent">Completed</label>
-						<SlideToggle name="complete" size="sm" bind:checked={completed}>Completed</SlideToggle>
-					</span>
 				</div>
+				{#if completed}
+					<div
+						id="rhacomm"
+						class:border-usfGreen={rhacomm}
+						class="card flex items-center space-x-3 p-4 w-fit border border-red-700 bg-transparent"
+					>
+						<SlideToggle required={completed} name="rhacomm" size="sm" bind:checked={rhacomm} />
+						{#if rhacomm}
+							<h1>Annotated RHACOMM!</h1>
+						{:else}
+							<h1>Annotate RHACOMM before you can complete!</h1>
+						{/if}
+					</div>
+				{/if}
 			</section>
-			<footer class="float-right mt-3">
-				<button type="submit" class="btn bg-accSlate text-white/90 rounded-md">
+			<footer class="flex items-center gap-4 float-right mt-3">
+				<span class="flex flex-col space-y-1">
+					<SlideToggle name="complete" size="sm" bind:checked={completed}>Completed</SlideToggle>
+				</span>
+				<button on:click={validateRhacomm} type="submit" class="btn bg-accSlate text-white/90 rounded-md">
 					{#if isLoading}
 						<div class="flex space-x-6">
 							<Loading />
@@ -136,6 +176,12 @@
 	}
 
 	select {
+		color: black;
+		background-color: #ffffff;
+		border-color: #3e4c7a8a;
+	}
+
+	textarea {
 		color: black;
 		background-color: #ffffff;
 		border-color: #3e4c7a8a;

@@ -1,15 +1,19 @@
 <script lang="ts">
-	import { modalStore } from '@skeletonlabs/skeleton';
+	import { getModalStore } from '@skeletonlabs/skeleton';
 	import Loading from '$lib/components/animation/Loading.svelte';
 	import type { GeneralLibrary, UserProfile } from '@prisma/client';
+	import UserPicker from '$lib/components/UserPicker.svelte';
 
   interface FullGeneralLibrary extends GeneralLibrary {
     trainers: UserProfile[];
   }
 
+	let modalStore = getModalStore();
 	let isLoading = false;
-	// let constants = $modalStore[0].meta.constants;
+	let constants = $modalStore[0].meta.constants;
   let library: FullGeneralLibrary = $modalStore[0].meta.library;
+
+	let stringEmailList = '';
 
 	function closeForm(): void {
 		modalStore.close();
@@ -20,11 +24,12 @@
 	<div class="flex justify-between items-center">
 		<h1 class="text-xl text-usfGreen font-medium">Update General Library Video</h1>
 		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<box-icon class="fill-black cursor-pointer" name="x" on:click={closeForm} />
+		<i class="fa-solid fa-xmark fa-lg text-black cursor-pointer" on:click={closeForm}></i>
 	</div>
 	<br />
 	<form method="POST" action="/training?/updateLibrary" enctype="multipart/form-data">
     <input type="hidden" name="id" value={library.id} />
+		<input type="hidden" name="emailList" bind:value={stringEmailList} />
 		<section class="space-y-2">
 			<div class="flex space-x-2">
 				<span class="flex flex-col w-full space-y-1">
@@ -36,14 +41,7 @@
 					<input required type="date" name="date" class="input rounded-md" value={library.date.toISOString().split("T")[0]} />
 				</span>
 			</div>
-      <div class="space-y-2">
-				<label for="chips">Trainer(s)</label>
-				<div class="flex flex-wrap gap-1">
-          {#each library.trainers as trainer}
-            <span class="badge bg-accSlate text-white/90 rounded-md">{trainer.first_name} {trainer.last_name}</span>
-          {/each}
-        </div>
-			</div>
+      <UserPicker team={library.trainers} users={constants.users} bind:stringEmailList={stringEmailList} />
 			<div class="space-y-2">
 				<div class="flex items-center space-x-2">
 					<label for="chips">Training Video</label>

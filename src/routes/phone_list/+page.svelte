@@ -1,54 +1,63 @@
-<script context="module">
-	import { localStorageStore, modalStore } from '@skeletonlabs/skeleton';
-	let phoneBar = localStorageStore("phoneBar", true);
-</script>
-
 <script lang="ts">
 	import Search from '$lib/components/Search.svelte';
-	import { Table, type PaginationSettings, Paginator, tableMapperValues, toastStore } from '@skeletonlabs/skeleton';
-	import { onMount } from 'svelte';
+	import {	type PaginationSettings, type ModalSettings, getModalStore, getToastStore } from '@skeletonlabs/skeleton';
 	import { fly } from 'svelte/transition';
+	import TableWrapper from '$lib/components/TableWrapper.svelte';
+	import PageWrapper from '$lib/components/PageWrapper.svelte';
 	export let data;
 
-	let sourceData: any[] = [];
-	let filteredSourceData: any[] = [];
+	let modalStore = getModalStore();
+	let toastStore = getToastStore();
 	let searchQuery =	'';
-	let users = data.users;
-	$: gridCols = $phoneBar ? 'grid-cols-[auto_250px]' : 'grid-cols-1';
-
-	onMount(() => {
-		users.forEach((user) => {
-			let uidRange = " - " + `<span class="font-semibold">(${user.uidRange})</span>`
-			let teams = user.team.map(t => {
-				return user.uidRange === null ? t.name : t.name + uidRange
-			})
-			let tr = {
-				id: user.id,
-				name: user.first_name + " " + user.last_name,
-				email: user.netid,
-				title: user.title.name,
-				team: teams.join("<br>"),
-				extension: user.phone
-			}
-			sourceData.push(tr);
-		});
-		filteredSourceData = sourceData
-	});
-	
-	function toggleKey() {
-		$phoneBar = !$phoneBar;
-	}
+	let phoneBar = false;
+	let teamFilter = "";
+	$: users = data.users;
+	let filteredUsers = data.users;
+	$: gridCols = phoneBar ? 'grid-cols-[auto_250px]' : 'grid-cols-1';
 
 	$: {
-    filteredSourceData = sourceData.filter((user: any) => {
-      if (user.name.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
-					user.title.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
-					user.team.toLowerCase().includes(searchQuery.toLowerCase().trim())) {
-        return user;
-      }
+    filteredUsers = users.filter((user) => {
+			let name = user.first_name + " " + user.last_name;
+			let teams = user.team.map(t => {
+				return t.name
+			})
+			if (teamFilter !== "") {
+				if (name.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+						user.title.name.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+						user.netid.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+						teams.join(" ").toLowerCase().includes(searchQuery.toLowerCase().trim())) {
+						if (teams.includes(teamFilter)) {
+							return user;
+						}
+				}
+			} else {
+				if (name.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+						user.title.name.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+						user.netid.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+						teams.join(" ").toLowerCase().includes(searchQuery.toLowerCase().trim())) {
+					return user;
+				}
+			}
     })
-		updatePageSettings(filteredSourceData);
+		updatePageSettings(filteredUsers);
+		teamFilter = "";
   }
+
+	let paginationSettings = {
+		page: 0,
+		limit: 10,
+		size: filteredUsers.length,
+		amounts: [5, 10, 15],
+	} satisfies PaginationSettings;
+
+	$: paginatedSource = filteredUsers.slice(
+		paginationSettings.page * paginationSettings.limit,
+		paginationSettings.page * paginationSettings.limit + paginationSettings.limit
+	);
+
+	function updatePageSettings(filteredArr: any[]) {
+		paginationSettings.size = filteredArr.length;
+	}
 
 	function getTeam(name: string) {
 		let filteredUsers = users.map((user) => {
@@ -73,30 +82,48 @@
 		navigator.clipboard.writeText(teamUsers.map(user => user.netid + "@usf.edu").join(";") + ";");
 	}
 
-	function sortByTeam(team: string) {
-		searchQuery = team;
-	}
-
-	const headers: string[] = ['Name', 'Email', 'Title', 'Team', 'Extension'];
-	const body: string[] = ['name', 'email', 'title', 'team', 'extension'];
-	const meta: string[] = ['id'];
-  let state = { firstLast: false, previousNext: true };
-	let page = { offset: 0, limit: 10, size: filteredSourceData.length, amounts: [5, 10, 15] } as PaginationSettings;
-	$: sourceDataSliced = filteredSourceData.slice(page.offset * page.limit, page.offset * page.limit + page.limit);
-
-	function updatePageSettings(filteredArr: any[]) {
-		page.size = filteredArr.length;
-		page.offset = 0
-	}
-
-	function updateUser(e: CustomEvent) {
+	function updateUser(id: string) {
 		if (data.user.role !== "ADMIN") return;
     modalStore.trigger({
       type: 'component',
       component: 'updateUserProfileModal',
-      meta: { userProfile: users.find(user => user.id === e.detail[0]) }
+      meta: { userProfile: users.find(user => user.id === id), constants: data.constants,
+				response: async (action: "delete" | "update") => {
+					if (action === "delete") {
+						users = users.filter(user => user.id !== id);
+						modalStore.close();
+						toastStore.trigger({
+							message: String("User deleted successfully!"),
+							background: "bg-accTeal",
+							classes: "text-white/90 font-medium"
+						});
+						return;
+					};
+
+					toastStore.trigger({
+						message: "User updated successfully!",
+						background: "bg-accTeal",
+						classes: "text-white/90 font-medium"
+					});
+
+					let res = await fetch('/api/user?id=' + id);
+					let resp = await res.json();
+					let newUser = resp.users;
+
+					users = users.map(user => user.id === newUser.id ? newUser : user);
+      }}
     });
   }
+
+	function openModal(modal: ModalSettings) {
+		modalStore.trigger(modal);
+	}
+
+	const userProfileModal: ModalSettings = {
+		type: 'component',
+		component: 'userProfileModal',
+		meta: { constants: data.constants }
+	}
 </script>
 
 <svelte:head>
@@ -104,50 +131,81 @@
 </svelte:head>
 
 <section in:fly={{ y: -10, duration: 200 }}>
-	<div class="gap-x-4">
-		<div class="flex justify-between items-center">
+	<PageWrapper>
+		<svelte:fragment slot="title">
 			<h1 class="text-2xl text-usfGreen font-semibold">Phone List</h1>
+		</svelte:fragment>
+		<svelte:fragment slot="title-right">
+      <Search bind:value={searchQuery} />
 			<!-- svelte-ignore a11y-click-events-have-key-events -->
-			<div class="flex justify-center items-center space-x-4">
-				<Search bind:value={searchQuery} />
-				<!-- svelte-ignore a11y-click-events-have-key-events -->
-				<div class="flex justify-center items-center bg-accSlate p-[6px] rounded-full cursor-pointer" on:click={toggleKey}>
-					<box-icon class="fill-white/90" name={$phoneBar ? 'x' : 'list-check'} />
-				</div>
-			</div>
-		</div>
-	</div>
-	<br />
-	<div class="grid {gridCols} auto-rows-min gap-x-4 gap-y-0" style="align-items: flex-start;">
-		<section>
-			<Table on:selected={updateUser} interactive={true} source={{ head: headers, body: tableMapperValues(sourceDataSliced, body), meta: tableMapperValues(sourceDataSliced, meta)}} regionHeadCell="bg-accSlate text-white/90" />
-			<br />
-			<Paginator buttonClasses="bg-accSlate fill-white"  bind:settings={page} showFirstLastButtons={state.firstLast} showPreviousNextButtons={state.previousNext} />
-		</section>
-		{#if $phoneBar}
-				<div class="bg-accSlate rounded-lg p-3 text-white/90">
-					<h1 class="font-medium mb-2 text-accApple">Copy Teams:</h1>
-					{#each data.teams as team}
-						<!-- svelte-ignore a11y-click-events-have-key-events -->
-						<div class="flex justify-between items-center group">
-							<h1 class="font-medium text-white/90 cursor-pointer">{team.name}</h1>
-							<div>
-							<box-icon
-								on:click={() => sortByTeam(team.name)}
-								name='sort-alt'
-								type='solid'
-								class="opacity-0 group-hover:opacity-100 duration-150 fill-white/90 hover:fill-accApple cursor-pointer"
-							></box-icon>
-							<box-icon
-								on:click={() => getTeam(team.name)}
-								name='copy'
-								type='solid'
-								class="opacity-0 group-hover:opacity-100 duration-150 fill-white/90 hover:fill-accApple cursor-pointer"
-							></box-icon>
-							</div>
-						</div>
-					{/each}
+			{#if data.profile?.role.name === "ADMIN"}
+				<div class="flex justify-center items-center bg-accSlate w-10 h-10 rounded-full cursor-pointer" on:click={() => { openModal(userProfileModal) }}>
+					<i class="fa-solid fa-plus fa-lg text-white/90"></i>
 				</div>
 			{/if}
-	</div>
+			<!-- svelte-ignore a11y-click-events-have-key-events -->
+			<div class="flex justify-center items-center bg-accSlate w-10 h-10 rounded-full cursor-pointer" on:click={() => { phoneBar = !phoneBar }}>
+				<i class="text-white/90 fa-solid {phoneBar ? 'fa-xmark fa-lg' : 'fa-ellipsis'}"></i>
+			</div>
+		</svelte:fragment>
+		<svelte:fragment slot="content">
+			<div class="grid {gridCols} auto-rows-min gap-x-4 gap-y-0" style="align-items: flex-start;">
+				<section>
+					<TableWrapper arrLength={filteredUsers.length} bind:paginationSettings={paginationSettings}>
+						<svelte:fragment slot="header">
+							<thead>
+								<tr class="bg-accSlate text-white/90">
+									<th>Name</th>
+									<th>Net ID</th>
+									<th>Title</th>
+									<th>Team</th>
+									<th>Extension</th>
+								</tr>
+							</thead>
+						</svelte:fragment>
+						<svelte:fragment slot="body">
+							<tbody>
+								{#each paginatedSource as user}
+									<tr on:click={() => updateUser(user.id)} class="cursor-pointer">
+										<td>{user.first_name + " " + user.last_name}</td>
+										<td>{user.netid}</td>
+										<td>{user.title.name}</td>
+										<td>{@html user.team.map(t => {
+											return t.name
+										}).join("<br>")} <span class="font-semibold">{user.uidRange ? `- (${user.uidRange})` : ""}</span></td>
+										<td>{user.phone}</td>
+									</tr>
+								{/each}
+							</tbody>
+						</svelte:fragment>
+						<svelte:fragment slot="none">
+							<p>There are no referrals that match your search.</p>
+						</svelte:fragment>
+					</TableWrapper>
+				</section>
+				{#if phoneBar}
+						<div class="bg-accSlate rounded-lg p-3 text-white/90">
+							<h1 class="font-medium mb-2 text-accApple">Copy Teams:</h1>
+							{#each data.teams as team}
+								<!-- svelte-ignore a11y-click-events-have-key-events -->
+								<div class="flex justify-between items-center group">
+									<h1 class="font-medium text-white/90 cursor-pointer">{team.name}</h1>
+									<div>
+									<i class="fa-solid fa-filter opacity-0 group-hover:opacity-100 duration-150 text-white/90 hover:text-accApple cursor-pointer"
+										on:click={() => {
+											teamFilter = team.name;
+											filteredUsers = users;
+										}}
+									></i>
+									<i class="fa-solid fa-copy opacity-0 group-hover:opacity-100 duration-150 text-white/90 hover:text-accApple cursor-pointer"
+										on:click={() => getTeam(team.name)}
+									></i>
+									</div>
+								</div>
+							{/each}
+						</div>
+					{/if}
+			</div>
+		</svelte:fragment>
+	</PageWrapper>
 </section>

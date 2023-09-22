@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { page } from '$app/stores';
+	import PageWrapper from '$lib/components/PageWrapper.svelte';
   import Search from '$lib/components/Search.svelte';
+	import TableWrapper from '$lib/components/TableWrapper.svelte';
 	import { getDateLocal } from '$lib/helpers.js';
-  import { toastStore, type ModalSettings, modalStore, type PaginationSettings, TabGroup, Tab, Table, Paginator, tableMapperValues } from '@skeletonlabs/skeleton';
-	import moment from 'moment';
-	import { onMount } from 'svelte';
+  import { getToastStore, type ModalSettings, getModalStore, type PaginationSettings, TabGroup, Tab, RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
   import { fly } from 'svelte/transition';
   export let form;
   export let data;
@@ -26,13 +26,14 @@
     meta: { constants: data.constants }
   }
 
+  let modalStore = getModalStore();
+	let toastStore = getToastStore();
   let trainings = data.trainings;
+  let filterTrainings = data.trainings;
   let libraryTrainings = data.library;
   let filteredLibrary = data.library;
   let tabSet: number = 0;
-  let searchQuery =	$page.url.searchParams.get("search") === null ? '' : String($page.url.searchParams.get("search"));
-	let sourceData: any[] = [];
-	let filteredSourceData: any[] = [];
+  let searchQuery =	'';
   
   if (form) {
     toastStore.trigger({
@@ -42,25 +43,11 @@
 	  });
   }
 
-  onMount(() => {
-		trainings.forEach((training) => {
-      let trainers = training.trainers.map(trainer => trainer.first_name + " " + trainer.last_name)
-			let tr = {
-				id: training.id,
-        date: training.weekday + ", " + getDateLocal(training.date.toISOString(), "MMMM Do"),
-				title: training.name,
-				trainers: trainers.join(", "),
-				lastUpdated: getDateLocal(training.updatedAt.toISOString(), "MMMM Do, h:mmA")
-			}
-			sourceData.push(tr);
-		});
-		filteredSourceData = sourceData
-	});
-
   $: {
-    filteredSourceData = sourceData.filter((training: any) => {
-      if ((training.title.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
-        training.trainers.toLowerCase().includes(searchQuery.toLowerCase().trim()))) {
+    filterTrainings = trainings.filter((training) => {
+      let trainers = training.trainers.map(t => { return t.first_name + " " + t.last_name }).join(" ");
+      if ((training.name.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+          trainers.toLowerCase().includes(searchQuery.toLowerCase().trim()))) {
           return training;
       }
     })
@@ -71,24 +58,28 @@
       }
     })
 
-    updatePageSettings(filteredSourceData);
+    updatePageSettings(filterTrainings);
   }
 
-  const headers: string[] = ['Date', 'Title', 'Trainers', 'Last Updated'];
-	const body: string[] = ['date', 'title', 'trainers', 'lastUpdated'];
-	const meta: string[] = ['id'];
-  let state = { firstLast: false, previousNext: true };
-	let pageSettings = { offset: 0, limit: 10, size: filteredSourceData.length, amounts: [5, 10, 15] } as PaginationSettings;
-	$: sourceDataSliced = filteredSourceData.slice(pageSettings.offset * pageSettings.limit, pageSettings.offset * pageSettings.limit + pageSettings.limit);
+  let paginationSettings = {
+		page: 0,
+		limit: 10,
+		size: filterTrainings.length,
+		amounts: [1, 5, 10, 15],
+	} satisfies PaginationSettings;
 
-  function openModal(modal: ModalSettings) {
-		modalStore.trigger(modal);
-	}
+	$: paginatedSource = filterTrainings.slice(
+		paginationSettings.page * paginationSettings.limit,
+		paginationSettings.page * paginationSettings.limit + paginationSettings.limit
+	);
 
 	function updatePageSettings(filteredArr: any[]) {
-		pageSettings.size = filteredArr.length;
-		pageSettings.offset = 0
+		paginationSettings.size = filteredArr.length;
 	}
+  
+  function openModal(modal: ModalSettings) {
+    modalStore.trigger(modal);
+  }
 
   function updateLibrary(idx: number) {
     modalStore.trigger({
@@ -98,12 +89,12 @@
     });
   }
 
-  function updateTrainingSchedule(e: CustomEvent) {
+  function updateTrainingSchedule(id: string) {
     if (data.user.role !== "ADMIN") return;
     modalStore.trigger({
       type: 'component',
       component: 'updateTrainingModal',
-      meta: { training: trainings.find(training => training.id === e.detail[0]), constants: data.constants }
+      meta: { training: trainings.find(training => training.id === id), constants: data.constants }
     });
   }
 
@@ -121,67 +112,102 @@
 </svelte:head>
 
 <section in:fly={{ y: -10, duration: 200 }}>
-  <div class="flex justify-between items-center">
-    <h1 class="text-2xl text-usfGreen font-semibold">Training Schedule & Library</h1>
-    <div class="flex justify-center items-center space-x-4">
+  <PageWrapper>
+		<svelte:fragment slot="title">
+			<h1 class="text-2xl text-usfGreen font-semibold">Training Schedule & Library</h1>
+		</svelte:fragment>
+		<svelte:fragment slot="title-right">
       <Search bind:value={searchQuery} />
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       {#if data.profile?.role.name === "ADMIN"}
-        <div class="flex justify-center items-center bg-accSlate p-[6px] rounded-full cursor-pointer" on:click={() => { 
+        <div class="flex justify-center items-center bg-accSlate w-10 h-10 rounded-full cursor-pointer" on:click={() => { 
             openModal(tabSet === Training.Schedule ? trainingModal : libraryModal)
           }}>
-          <box-icon class="fill-white/90" name={"plus"} />
+          <i class="fa-solid fa-plus fa-lg text-white/90"></i>
         </div>
       {/if}
-    </div>
-  </div>
-  <br>
-  <TabGroup>
-    <Tab bind:group={tabSet} name="all" value={0}>Schedule</Tab>
-    <Tab bind:group={tabSet} name="current" value={1}>Library</Tab>
-    <svelte:fragment slot="panel">
-      {#if tabSet === Training.Schedule}
-        {#if filteredSourceData.length > 0}
-          <section>
-            <Table on:selected={updateTrainingSchedule} interactive={true} source={{ head: headers, body: tableMapperValues(sourceDataSliced, body), meta: tableMapperValues(sourceDataSliced, meta)}} regionHeadCell="bg-accSlate text-white/90" />
-            <br />
-            <Paginator buttonClasses="bg-accSlate fill-white"  bind:settings={pageSettings} showFirstLastButtons={state.firstLast} showPreviousNextButtons={state.previousNext} />
-          </section>
-        {:else}
-          <p>No upcoming trainings found.</p>
-        {/if}
-      {:else if tabSet === Training.Library}
-        {#if filteredLibrary.length > 0 }
-          <section class="grid grid-cols-3 gap-2">
-            {#each filteredLibrary as training, i}
-              <!-- svelte-ignore a11y-click-events-have-key-events -->
-              <div class="flex flex-col group relative justify-between card p-3 cursor-pointer">
-                <div class="mb-2">
-                  <h1 class="flex items-center font-medium">{training.name} ({moment(new Date(training.date)).add(1, "days").format("dddd").slice(0, 3)})</h1>
-                  <h1>{moment(new Date(training.date)).add(1, "days").format("MMMM D, YYYY")}</h1>
-                </div>
-                <div class="flex flex-wrap gap-1">
-                  {#each training.trainers as trainer}
-                    <span class="badge bg-accSlate text-white/90 rounded-md">{trainer.first_name} {trainer.last_name}</span>
+		</svelte:fragment>
+		<svelte:fragment slot="content">
+      <TabGroup>
+        <Tab bind:group={tabSet} name="all" value={0}>Schedule</Tab>
+        <Tab bind:group={tabSet} name="current" value={1}>Library</Tab>
+        <svelte:fragment slot="panel">
+          {#if tabSet === Training.Schedule}
+            <TableWrapper arrLength={filterTrainings.length} bind:paginationSettings={paginationSettings}>
+              <svelte:fragment slot="header">
+                <thead>
+                  <tr class="bg-accSlate text-white/90">
+                    <th>Date</th>
+                    <th>Title</th>
+                    <th>Trainers</th>
+                    <th>Last Updated By</th>
+                  </tr>
+                </thead>
+              </svelte:fragment>
+              <svelte:fragment slot="body">
+                <tbody>
+                  {#each paginatedSource as training}
+                    <tr on:click={() => updateTrainingSchedule(training.id)} class="cursor-pointer">
+                      <td>{training.weekday + ", " + getDateLocal(training.date.toISOString(), "MMMM Do")}</td>
+                      <td>{training.name}</td>
+                      <td>{@html training.trainers.map(t => {
+                        return t.first_name + " " + t.last_name
+                      }).join("<br>")}</td>
+                      <td>{getDateLocal(training.updatedAt.toISOString(), "MMMM Do, h:mmA")}</td>
+                    </tr>
                   {/each}
-                </div>
-                <div class="flex justify-center items-center absolute opacity-0 group-hover:opacity-100 duration-200 bg-[#dfe2eb]/90 top-0 right-0 left-0 bottom-0 rounded-lg h-full">
-                  <div class="flex items-center">
-                    {#if data.user.role === "ADMIN"}
-                      <box-icon type='solid' name='edit' class="duration-200 hover:fill-blue-600 h-6 w-6" on:click={() => updateLibrary(i)}></box-icon>
-                    {/if}
-                    <box-icon name='play' class="duration-100 hover:fill-green-700 h-8 w-8" 
-                      on:click={() => openTraining(training.name, training.url) }
-                    ></box-icon>
+                </tbody>
+              </svelte:fragment>
+              <svelte:fragment slot="none">
+                <p>There are no trainings that match your search.</p>
+              </svelte:fragment>
+            </TableWrapper>
+          {:else if tabSet === Training.Library}
+            {#if filteredLibrary.length > 0 }
+              <section class="grid grid-cols-3 gap-2">
+                {#each filteredLibrary as training, i}
+                  <!-- svelte-ignore a11y-click-events-have-key-events -->
+                  <div class="block rounded relative p-4 border border-accSlate/20 shadow-lg group">
+                    <div class="mb-2">
+                      <h1 class="flex items-center font-medium">{training.name} ({getDateLocal(training.date.toISOString(), "ddd")})</h1>
+                      <h1>{getDateLocal(training.date.toISOString(), "MMMM Do, YYYY")}</h1>
+                    </div>
+                    <div class="flex flex-wrap gap-1">
+                      {#each training.trainers as trainer}
+                        <span class="badge bg-accSlate text-white/90 rounded-md">{trainer.first_name} {trainer.last_name}</span>
+                      {/each}
+                    </div>
+                    <div class="flex justify-center items-center absolute opacity-0 group-hover:opacity-100 duration-200 bg-white/80 top-0 right-0 left-0 bottom-0 rounded-lg h-full">
+                      <div class="flex items-center gap-2">
+                        {#if data.user.role === "ADMIN"}
+                          <i class="fa-solid fa-pen-to-square fa-lg duration-200 hover:text-blue-600 cursor-pointer" on:click={() => updateLibrary(i)}></i>
+                        {/if}
+                        <i class="fa-solid fa-play fa-lg duration-200 hover:text-green-700 cursor-pointer" on:click={() => openTraining(training.name, training.url) }></i>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            {/each}
-          </section>
-        {:else}
-          <p>No trainings match this search.</p>
-        {/if}
-      {/if}
-    </svelte:fragment>
-  </TabGroup>
+                {/each}
+              </section>
+            {:else}
+              <p>No trainings match this search.</p>
+            {/if}
+          {/if}
+        </svelte:fragment>
+      </TabGroup>
+		</svelte:fragment>
+	</PageWrapper>
 </section>
+
+<style>
+  th {
+    border: none;
+  }
+
+  tr:nth-last-child(1) {
+    border: none;
+  }
+
+	tbody tr:nth-child(n):hover {
+		background-color: rgba(167, 167, 167, 0.298)
+	}
+</style>

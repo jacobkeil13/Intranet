@@ -1,12 +1,15 @@
 <script lang="ts">
 	import Search from '$lib/components/Search.svelte';
-	import { Table, type PaginationSettings, Paginator, tableMapperValues, toastStore, modalStore } from '@skeletonlabs/skeleton';
-	import { onMount } from 'svelte';
+	import { type PaginationSettings, getToastStore, getModalStore } from '@skeletonlabs/skeleton';
 	import { fly } from 'svelte/transition';
-	import { getDateLocal, openModal } from '$lib/helpers.js';
+	import { getDateLocal } from '$lib/helpers.js';
+	import TableWrapper from '$lib/components/TableWrapper.svelte';
+	import PageWrapper from '$lib/components/PageWrapper.svelte';
 	export let form;
 	export let data;
 
+	let modalStore = getModalStore();
+	let toastStore = getToastStore();
 	if (form) {
     toastStore.trigger({
 		  message: String(form?.message),
@@ -15,77 +18,78 @@
 	  });
   }
 
-	let sourceData: any[] = [];
-	let filteredSourceData: any[] = [];
 	let searchQuery =	'';
-	let popsels = data.popsels;
-
-	onMount(() => {
-		popsels.forEach((popsel) => {
-			let tr = {
-				id: popsel.id,
-				letterCode: popsel.letterCode.name,
-				selectionId: popsel.selectionId,
-				letterCount: popsel.letterCount,
-				requestedBy: popsel.requestedBy.first_name + " " + popsel.requestedBy.last_name,
-				requestedOn: getDateLocal(popsel.createdAt.toISOString(), "LLL")
-			}
-			sourceData.push(tr);
-		});
-		filteredSourceData = sourceData
-	});
+	$: popsels = data.popsels;
+	let filteredPopsels = data.popsels;
 
 	$: {
-    filteredSourceData = sourceData.filter((popsel: any) => {
-      if (popsel.letterCode.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+    filteredPopsels = popsels.filter((popsel) => {
+			let requestedBy = popsel.requestedBy.first_name + " " + popsel.requestedBy.last_name;
+      if (popsel.letterCode.name.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
 					popsel.selectionId.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
-					popsel.letterCount.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
-					popsel.requestedBy.toLowerCase().includes(searchQuery.toLowerCase().trim())) {
+					popsel.letterCount.toString().toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+					requestedBy.toLowerCase().includes(searchQuery.toLowerCase().trim())) {
         return popsel;
       }
     })
-		updatePageSettings(filteredSourceData);
+		updatePageSettings(filteredPopsels);
   }
 
-	const headers: string[] = ['Letter Code', 'Selection ID', 'Letter Count', 'Requested By', 'Requested Date'];
-	const body: string[] = ['letterCode', 'selectionId', 'letterCount', 'requestedBy', 'requestedOn'];
-	const meta: string[] = ['id'];
-  let state = { firstLast: false, previousNext: true };
-	let page = { offset: 0, limit: 10, size: filteredSourceData.length, amounts: [5, 10, 256] } as PaginationSettings;
-	$: sourceDataSliced = filteredSourceData.slice(page.offset * page.limit, page.offset * page.limit + page.limit);
+	let paginationSettings = {
+		page: 0,
+		limit: 10,
+		size: filteredPopsels.length,
+		amounts: [5, 10, 15],
+	} satisfies PaginationSettings;
+
+	$: paginatedSource = filteredPopsels.slice(
+		paginationSettings.page * paginationSettings.limit,
+		paginationSettings.page * paginationSettings.limit + paginationSettings.limit
+	);
 
 	function updatePageSettings(filteredArr: any[]) {
-		page.size = filteredArr.length;
-		page.offset = 0
+		paginationSettings.size = filteredArr.length;
 	}
 
-  function deletePopsel(e: CustomEvent) {
-    if (data.user.role !== "ADMIN") return;
-    console.log(e.detail[0]);
+  function updatePopsel(id: string) {
     modalStore.trigger({
       type: 'component',
-      component: "confirmDeleteModal",
-      meta: { response: async (r: boolean) => {
-        if (!r) {
-          return;
-        };
-        const formData = new FormData();
-        formData.append('id', e.detail[0]);
-        await fetch("/popsel?/delete", {
-          method: 'POST',
-          body: formData,
-        })
+      component: "updatePopselModal",
+      meta: { popsel: popsels.find(popsel => popsel.id === id), constants: data.constants,
+				response: async (action: "delete" | "update") => {
+					if (action === "delete") {
+						popsels = popsels.filter(popsel => popsel.id !== id);
+						modalStore.close();
+						toastStore.trigger({
+							message: String("Popsel deleted successfully!"),
+							background: "bg-accTeal",
+							classes: "text-white/90 font-medium"
+						});
+						return;
+					};
 
-        toastStore.trigger({
-          message: String("Popsel deleted successfully!"),
-          background: "bg-accTeal",
-          classes: "text-white/90 font-medium"
-        });
+					toastStore.trigger({
+						message: "Popsel updated successfully!",
+						background: "bg-accTeal",
+						classes: "text-white/90 font-medium"
+					});
 
-        sourceData = sourceData.filter(popsel => popsel.id !== e.detail[0]);
+					let res = await fetch('/api/popsel?id=' + id);
+					let resp = await res.json();
+					let newPopsel = resp.popsels;
+
+					popsels = popsels.map(popsel => popsel.id === newPopsel.id ? newPopsel : popsel);
       }}
     })
   }
+
+	function openModal(modal: string, meta: object) {
+		modalStore.trigger({
+			type: 'component',
+			component: modal,
+			meta
+		})
+	}
 </script>
 
 <svelte:head>
@@ -93,27 +97,49 @@
 </svelte:head>
 
 <section in:fly={{ y: -10, duration: 200 }}>
-		<div class="flex justify-between items-center">
+	<PageWrapper>
+		<svelte:fragment slot="title">
 			<h1 class="text-2xl text-usfGreen font-semibold">Population Selections</h1>
+		</svelte:fragment>
+		<svelte:fragment slot="title-right">
+      <Search bind:value={searchQuery} />
 			<!-- svelte-ignore a11y-click-events-have-key-events -->
-			<div class="flex justify-center items-center space-x-4">
-				<Search bind:value={searchQuery} />
-				<!-- svelte-ignore a11y-click-events-have-key-events -->
-				<div class="flex justify-center items-center bg-accSlate p-[6px] rounded-full cursor-pointer" on:click={() => { 
-            openModal("popselModal", { constants: data.constants, isTeam: data.isTeam }) 
-          }}>
-          <box-icon class="fill-white/90" name={"plus"} />
-        </div>
+			<div class="flex justify-center items-center bg-accSlate w-10 h-10 rounded-full cursor-pointer" 
+				on:click={() => { openModal("popselModal", { constants: data.constants, isTeam: data.isTeam }) }}
+			>
+				<i class="fa-solid fa-plus fa-lg text-white/90"></i>
 			</div>
-	</div>
-	<br />
-  {#if filteredSourceData.length > 0}
-    <section>
-      <Table on:selected={deletePopsel} interactive={true} source={{ head: headers, body: tableMapperValues(sourceDataSliced, body), meta: tableMapperValues(sourceDataSliced, meta)}} regionHeadCell="bg-accSlate text-white/90" />
-      <br />
-      <Paginator buttonClasses="bg-accSlate fill-white"  bind:settings={page} showFirstLastButtons={state.firstLast} showPreviousNextButtons={state.previousNext} />
-    </section>
-  {:else}
-  <p>No population selections match this search.</p>
-  {/if}
+		</svelte:fragment>
+		<svelte:fragment slot="content">
+			<TableWrapper arrLength={filteredPopsels.length} bind:paginationSettings={paginationSettings}>
+				<svelte:fragment slot="header">
+					<thead>
+						<tr class="bg-accSlate text-white/90">
+							<th>Letter Code</th>
+							<th>Selection ID</th>
+							<th>Letter Count</th>
+							<th>Requested By</th>
+							<th>Requested Date</th>
+						</tr>
+					</thead>
+				</svelte:fragment>
+				<svelte:fragment slot="body">
+					<tbody>
+						{#each paginatedSource as popsel}
+							<tr on:click={() => updatePopsel(popsel.id)} class="cursor-pointer">
+								<td>{popsel.letterCode.name}</td>
+								<td>{popsel.selectionId}</td>
+								<td>{popsel.letterCount}</td>
+								<td>{popsel.requestedBy.first_name + " " + popsel.requestedBy.last_name}</td>
+								<td>{getDateLocal(popsel.createdAt.toISOString(), "LLL")}</td>
+							</tr>
+						{/each}
+					</tbody>
+				</svelte:fragment>
+				<svelte:fragment slot="none">
+					<p>There are no population selections that match this search.</p>
+				</svelte:fragment>
+			</TableWrapper>
+		</svelte:fragment>
+	</PageWrapper>
 </section>

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { SlideToggle, modalStore } from '@skeletonlabs/skeleton';
+	import { SlideToggle, getModalStore } from '@skeletonlabs/skeleton';
 	import Loading from '$lib/components/animation/Loading.svelte';
 	import type { AidYear, Form, UserProfile } from '@prisma/client';
 
@@ -8,12 +8,10 @@
 		aidYear: AidYear
 	}
 
+	let modalStore = getModalStore();
 	let isLoading = false;
 	let constants = $modalStore[0].meta.constants;
 	let form: FullForm = $modalStore[0].meta.form;
-
-  console.log(form);
-  
 
 	function closeForm(): void {
 		modalStore.close();
@@ -24,7 +22,7 @@
 	<div class="flex justify-between items-center">
 		<h1 class="text-xl text-usfGreen font-medium">Update Form</h1>
 		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<box-icon class="fill-black cursor-pointer" name="x" on:click={closeForm} />
+		<i class="fa-solid fa-xmark fa-lg text-black cursor-pointer" on:click={closeForm}></i>
 	</div>
 	<br />
 	<form method="POST" action="/documents/forms?/update" enctype="multipart/form-data">

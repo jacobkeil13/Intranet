@@ -1,30 +1,31 @@
 <script lang="ts">
-	import { SlideToggle, modalStore } from '@skeletonlabs/skeleton';
+	import { SlideToggle, getModalStore, type AutocompleteOption, Autocomplete, InputChip } from '@skeletonlabs/skeleton';
 	import Loading from '../../animation/Loading.svelte';
 	import { getDateLocal } from '$lib/helpers';
-	import type { Priority, QueueComment, QueueItem, RequestType, UserProfile } from '@prisma/client';
+	import type { DataQueueComment, DataQueueItem, DataRequestType, Priority, UserProfile } from '@prisma/client';
+	import UserPicker from '$lib/components/UserPicker.svelte';
 
-  interface FullComment extends QueueComment {
+  interface FullComment extends DataQueueComment {
     userProfile: UserProfile
   }
 
-  interface FullRequest extends QueueItem {
+  interface FullRequest extends DataQueueItem {
     priority: Priority
     requestedBy: UserProfile
     assignedTo: UserProfile
     approvedBy: UserProfile
-    requestType: RequestType
+    requestType: DataRequestType
     emailTo: UserProfile[]
     comments: FullComment[]
   }
 
+  let modalStore = getModalStore();
 	let isLoading = false;
 	let constants = $modalStore[0].meta.constants;
 	let eptTeam = $modalStore[0].meta.eptTeam;
-
-  console.log(eptTeam);
-
   let request: FullRequest = $modalStore[0].meta.request;
+
+	let stringEmailList: string = '';
 
 	function closeForm(): void {
 		modalStore.close();
@@ -35,7 +36,7 @@
 	<div class="flex justify-between items-center">
 		<h1 class="text-xl text-usfGreen font-medium">Update DR Queue Request</h1>
 		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<box-icon class="fill-black cursor-pointer" name="x" on:click={closeForm} />
+		<i class="fa-solid fa-xmark fa-lg text-black cursor-pointer" on:click={closeForm}></i>
 	</div>
 	<br />
   <section class="grid grid-cols-[1fr_2fr] gap-4">
@@ -43,18 +44,19 @@
 			<h1>Comments</h1>
 			<div class="space-y-1 max-h-[400px] overflow-auto">
 				{#each request.comments as comment}
-					<div class="card rounded-sm px-2 py-1">
-						<h1>
-							<span class="text-usfGreen font-semibold">
-								{comment.userProfile.first_name} {comment.userProfile.last_name}
-							</span> - {getDateLocal(comment.createdAt.toISOString(), "MMMM Do h:mmA")}</h1>
-						<p>{comment.content}</p>
-					</div>
+        <div class="rounded p-2 border border-accSlate/20 shadow-sm">
+          <h1 class="text-sm">
+            <span class="text-usfGreen font-semibold">
+              {comment.userProfile.first_name} {comment.userProfile.last_name}
+            </span> - {getDateLocal(comment.createdAt.toISOString(), "MMM Do h:mmA")}</h1>
+          <p class="text-sm">{comment.content}</p>
+        </div>
 				{/each}
 			</div>
 		</div>
     <form method="POST" action="/dr_queue?/update" enctype="multipart/form-data">
       <input type="hidden" name="id" value={request.id} />
+      <input type="hidden" name="emailList" bind:value={stringEmailList} />
       <section class="space-y-2">
         <div class="flex space-x-2">
           <span class="flex flex-col w-full space-y-1">
@@ -95,24 +97,16 @@
             </select>
           </span>
         </div>
-        <div class="space-y-2">
-          <label for="chips">Email List</label>
-          <div class="flex flex-wrap gap-1">
-            {#each request.emailTo as user}
-              <span class="badge bg-accSlate text-white/90 rounded-md">{user.first_name} {user.last_name}</span>
-            {/each}
-          </div>
-        </div>
+        <UserPicker team={request.emailTo} users={constants.users} bind:stringEmailList={stringEmailList} />
         <div class="flex flex-col">
-          <label for="description">Description</label>
+          <label for="description">Comment</label>
           <textarea required class="input rounded-md" name="description" cols="20" rows="4" placeholder="Why are you making this request..." />
         </div>
+      </section>
+      <footer class="flex items-center gap-4 float-right mt-3">
         <span class="flex flex-col space-y-1">
-          <label for="complete" class="mb-2 text-transparent">Completed</label>
           <SlideToggle name="complete" size="sm" checked={request.complete}>Completed</SlideToggle>
         </span>
-      </section>
-      <footer class="float-right mt-3">
         <button type="submit" class="btn bg-accSlate text-white/90 rounded-md">
           {#if isLoading}
             <div class="flex space-x-6">

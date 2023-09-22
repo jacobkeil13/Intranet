@@ -1,5 +1,5 @@
 import { dateAddOffset, getUtcDate } from "$lib/helpers.js";
-import { db } from "$lib/server/database";
+import { db, getTeamByName } from "$lib/server/database";
 import { redirect } from "@sveltejs/kit";
 import moment from "moment";
 
@@ -7,7 +7,8 @@ export const load = async ({ locals }) => {
 	if (locals.user) {
 		const appointmentReasons = await db.appointmentReason.findMany();
 		const visitCounterReasons = await db.visitCounterReason.findMany();
-    return { constants: locals.constants, appointmentReasons, visitCounterReasons }
+		const managementTeam = await getTeamByName("Management");
+    return { constants: locals.constants, appointmentReasons, visitCounterReasons, managementTeam }
 	} else {
 		throw redirect(302, '/dashboard');
 	}
@@ -111,7 +112,8 @@ export const actions = {
 					reason: appReason,
 					callbackNumber: callbackNumber === "" ? undefined : callbackNumber,
 					rhacomm: rhacomm === 'true',
-					source: "Counter Duty"
+					source: "Counter Duty",
+					scheduledBy: counterUserInfo?.first_name + " " + counterUserInfo?.last_name
         }
       });
 
@@ -182,9 +184,6 @@ export const actions = {
 			callbackDate = moment(callbackDate).add(2, "days");
 		}
 
-		console.log(bestTimeCallback);
-		
-
     try {
       const newReferral = await db.referral.create({
         data: {
@@ -202,7 +201,7 @@ export const actions = {
 					preferredContactMethod,
 					referralType,
 					escalationUser: referralType === "Escalated Referral" ? escalatedUser : null,
-					researchUser: referralType === "Research Referral" ? researchUser : null,
+					researchUser: referralType === "Collaboration Referral" ? researchUser : null,
 					source: "Counter Duty"
         }
       });

@@ -1,50 +1,20 @@
 <script lang="ts">
 	import type { UserProfile } from '@prisma/client';
-	import { Autocomplete, InputChip, modalStore, type AutocompleteOption } from '@skeletonlabs/skeleton';
+	import { Autocomplete, InputChip, getModalStore, type AutocompleteOption } from '@skeletonlabs/skeleton';
 	import Loading from '../../animation/Loading.svelte';
+	import UserPicker from '$lib/components/UserPicker.svelte';
 
+	let modalStore = getModalStore();
 	let isLoading = false;
 	let delayPost = false;
 	let constants = $modalStore[0].meta.constants;
 	let isTeam = $modalStore[0].meta.isTeam;
 	let managementTeam: UserProfile[] = $modalStore[0].meta.managementTeam[0].userProfile;
 
-	let emailInput = '';
 	let stringEmailList: string = '';
-	let userEmails: AutocompleteOption[] = [];
-	let emailList: string[] = isTeam[0].userProfile.map((user: UserProfile) => { return user.first_name + ' ' + user.last_name })
-
-	$: {
-		let list	= userEmails.filter((tr: AutocompleteOption) => {
-			return emailList.includes(String(tr.label));
-		})
-		stringEmailList = JSON.stringify(list);
-	}
-
-	constants.users.forEach((user: UserProfile) => {
-		let userName = user.first_name + ' ' + user.last_name;
-		let tempObj = {
-			label: userName,
-			value: userName,
-			meta: { id: user.id }
-		};
-		userEmails.push(tempObj);
-	});
 
 	function closeForm(): void {
 		modalStore.close();
-	}
-
-	function onEmailInput(event: any): void {
-		if (emailList.includes(event.detail.label) === false) {
-			emailList = [...emailList, event.detail.label];
-			emailInput = '';
-		}
-	}
-
-	function handleRemove(event: any) {
-		console.log(event.detail);
-		userEmails = userEmails
 	}
 </script>
 
@@ -52,7 +22,7 @@
 	<div class="flex justify-between items-center">
 		<h1 class="text-xl text-usfGreen font-medium">Create IS Queue Request</h1>
 		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<box-icon class="fill-black cursor-pointer" name="x" on:click={closeForm} />
+		<i class="fa-solid fa-xmark fa-lg text-black cursor-pointer" on:click={closeForm}></i>
 	</div>
 	<br />
 	<form method="POST" action="/is_queue?/create" enctype="multipart/form-data">
@@ -120,23 +90,7 @@
 					</span>
 				{/if}
 			</div>
-			<div class="space-y-2">
-				<label for="chips">Email List</label>
-				<div class="flex">
-					<InputChip
-						on:remove={handleRemove}
-						placeholder="Search names..."
-						class="bg-usfWhite border-[#3e4c7a8a] min-h-[150px]"
-						bind:input={emailInput}
-						bind:value={emailList}
-						name="chips"
-						chips="rounded bg-accSlate/90 text-white/90"
-					/>
-					<div class="card w-full max-h-40 px-1 overflow-y-auto bg-usfWhite text-black min-h-[150px]" tabindex="-1">
-						<Autocomplete emptyState="No users found..." regionItem="bg-white" bind:input={emailInput} options={userEmails} denylist={emailList} on:selection={onEmailInput} />
-					</div>
-				</div>
-			</div>
+			<UserPicker team={isTeam[0].userProfile} users={constants.users} bind:stringEmailList={stringEmailList} />
 			<div class="flex flex-col space-y-2">
 				<label for="description">Description</label>
 				<textarea required class="input rounded-md" name="description" cols="20" rows="4" placeholder="Why are you making this request..." />

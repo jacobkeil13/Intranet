@@ -8,6 +8,7 @@ import { dateAddHours, getLocalISO } from '$lib/helpers';
 import type { AutocompleteOption } from '@skeletonlabs/skeleton';
 
 export const load = async ({ locals }) => {
+  const profile = await getUserProfileByNetId(locals.user.netid);
 	if (locals.user) {
     let masterCalendarItems = await db.masterCalendarItem.findMany({
       orderBy: {
@@ -15,7 +16,11 @@ export const load = async ({ locals }) => {
       },
       include: {
         type: true,
-        primaryOwner: true,
+        primaryOwner: {
+          include: {
+            directReport: true
+          }
+        },
         secondaryOwners: true,
         comments: {
           orderBy: {
@@ -27,9 +32,9 @@ export const load = async ({ locals }) => {
         }
       }
     });
-    let masterCalendarTypes = await db.masterCalendarType.findMany();
+    let masterCalendarTypes = await db.masterCalendarType.findMany({ orderBy: { type: "asc" } });
     const managementTeam = await getTeamByName("Management");
-    return { masterCalendarItems, managementTeam, masterCalendarTypes }
+    return { masterCalendarItems, managementTeam, masterCalendarTypes, profile }
 	} else {
 		throw redirect(302, '/dashboard');
 	}
@@ -89,7 +94,6 @@ export const actions = {
 
       return { success: true, message: "Calendar item created successfully!" }
     } catch (error) {
-      console.log(error);
       return { success: false, message: "Calendar item creation failed." }
     }
   },
@@ -101,8 +105,8 @@ export const actions = {
       dueDate, 
       primaryOwner,
       description,
-      complete,
-      completionDate
+      completionDate,
+      secondaryOwners
      } = Object.fromEntries(await request.formData()) as {
       id: string
       title: string
@@ -110,8 +114,8 @@ export const actions = {
       dueDate: string
       primaryOwner: string
       description: string
-      complete: string
       completionDate: string
+      secondaryOwners: string
     }
 
     const userInfo = await db.userProfile.findFirst({
@@ -119,6 +123,8 @@ export const actions = {
 				netid: locals.user.netid
 			}
 		});
+
+    let secondaryOwnersArr = JSON.parse(secondaryOwners);
 
     try {
       let profile = await getUserProfileByNetId(locals.user.netid);
@@ -132,7 +138,10 @@ export const actions = {
           type: { connect: { type } },
           dueDate: new Date(dateAddHours(dueDate, "12")),
           primaryOwner: { connect: { id: primaryOwner } },
-          completionDate: complete === "on" ? new Date(dateAddHours(completionDate, "12")) : undefined,
+          secondaryOwners: {
+            set: secondaryOwnersArr.length !== 0 ? secondaryOwnersArr.map((user: AutocompleteOption) => ({ id: user.meta.id })) : []
+          },
+          completionDate: completionDate !== "" ? new Date(dateAddHours(completionDate, "12")) : undefined,
           lastUpdatedBy: userInfo?.first_name + " " + userInfo?.last_name
         }
       })
@@ -156,7 +165,29 @@ export const actions = {
 
       return { success: true, message: "Calendar item updated successfully!" }
     } catch (error) {
-      console.log(error);
+      return { success: false, message: "Calendar item update failed." }
+    }
+  },
+  delete: async ({ locals, request }) => {
+    const {
+      id
+     } = Object.fromEntries(await request.formData()) as {
+      id: string
+    }
+
+    try {
+      await db.masterCalendarComment.deleteMany({
+        where: {
+          masterCalendarId: id
+        }
+      })
+      
+      await db.masterCalendarItem.delete({
+        where: { id }
+      })
+
+      return { success: true, message: "Calendar item updated successfully!" }
+    } catch (error) {
       return { success: false, message: "Calendar item update failed." }
     }
   }

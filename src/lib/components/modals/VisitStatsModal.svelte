@@ -1,19 +1,23 @@
 <script lang="ts">
 	import { getDateLocal } from "$lib/helpers";
 	import type { Appointment, Referral, VisitCounter } from "@prisma/client";
-	import { SlideToggle, Tab, TabGroup, modalStore } from "@skeletonlabs/skeleton";
+	import { SlideToggle, Tab, TabGroup, getModalStore, type PaginationSettings, Paginator } from "@skeletonlabs/skeleton";
 	import moment from "moment";
 	import { onMount } from "svelte";
 	import Search from "$lib/components/Search.svelte";
 	import D3Chart from "../charts/D3Chart.svelte";
 	import { fly } from "svelte/transition";
+	import Popup from "../Popup.svelte";
+	import TableWrapper from "../TableWrapper.svelte";
 
   enum Stat {
     Visits = 0,
     Phone = 1,
     InPerson = 2,
     Walkin = 3,
-    Referral = 4
+    Referral = 4,
+    Staff = 5,
+    Reasons = 6
   }
 
   interface FullVisit extends VisitCounter {
@@ -26,18 +30,18 @@
     visits: number
   }
 
+  let modalStore = getModalStore();
   let graphView = false;
   let graphData: ChartData[] = [];
   let tabSet: number = 0;
   let searchQuery: string = "";
-  let timePicked: string;
+  $: timePicked = "";
+  let staffVisits: { name: string, visits: number }[] = [];
   let times: { time: string, visits: number }[] = [];
   let visits: FullVisit[] = $modalStore[0].meta.visits.sort((a: VisitCounter, b: VisitCounter) => 
     a.createdAt.toISOString().localeCompare(b.createdAt.toISOString()));
   let filteredVisits = visits;
   let date = $modalStore[0].meta.date;
-
-  // console.log(visits);
 
   onMount(() => {
     let visitsPerHour: { [key: string]: { visits: number, iso: string } } = {};
@@ -58,54 +62,43 @@
         visits: visitsPerHour[time].visits
       })
     })
-
-    console.log(times);
-    
-
     timePicked = "All";
   });
 
   $: {
     filteredVisits = visits.filter(visit => {
       if (tabSet === Stat.Visits) {
-        if (timePicked === "All") {
-          if (visit.studentUid?.toLowerCase().includes(searchQuery.toLowerCase().trim()) || 
-              visit.studentName?.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
-              visit.counterUser?.toLowerCase().includes(searchQuery.toLowerCase().trim())) {
-            return visit
-          }
-        }
-        if (timePicked && getDateLocal(visit.createdAt.toISOString(), "hA") === timePicked) {
-          if (visit.studentUid?.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
-              visit.studentName?.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
-              visit.counterUser?.toLowerCase().includes(searchQuery.toLowerCase().trim())) {
-            return visit
-          }
-        }
-      } else if (tabSet === Stat.Phone || tabSet === Stat.InPerson || tabSet === Stat.Walkin) {
-        if (visit.appointment !== null) {
+        if (visit.studentUid?.toLowerCase().includes(searchQuery.toLowerCase().trim()) || 
+            visit.studentName?.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+            visit.counterUser?.toLowerCase().includes(searchQuery.toLowerCase().trim()))
+        {
           if (timePicked === "All") {
-            if (visit.studentUid?.toLowerCase().includes(searchQuery.toLowerCase().trim())) {
-              if (visit.appointment.advisor?.toLowerCase().includes(searchQuery.toLowerCase().trim())) {
-                if (tabSet === Stat.Phone && visit.appointment.type === "Phone Appointment") {
-                  return visit
-                } else if (tabSet === Stat.InPerson && visit.appointment.type === "In-person Appointment") {
-                  return visit
-                } else if (tabSet === Stat.Walkin && visit.appointment.type === "Walk-in Appointment") {
-                  return visit
-                }
-              }
+              return visit;
+            } else if (timePicked && getDateLocal(visit.createdAt.toISOString(), "hA") === timePicked) {
+              return visit;
             }
           }
-          if (timePicked && getDateLocal(visit.createdAt.toISOString(), "hA") === timePicked) {
-            if (visit.studentUid?.toLowerCase().includes(searchQuery.toLowerCase().trim())) {
-              if (visit.appointment.advisor?.toLowerCase().includes(searchQuery.toLowerCase().trim())) {
-                if (tabSet === Stat.Phone && visit.appointment.type === "Phone Appointment") {
-                  return visit
-                } else if (tabSet === Stat.InPerson && visit.appointment.type === "In-person Appointment") {
-                  return visit
-                } else if (tabSet === Stat.Walkin && visit.appointment.type === "Walk-in Appointment") {
-                  return visit
+      } else if (tabSet === Stat.Phone || tabSet === Stat.InPerson || tabSet === Stat.Walkin) {
+        if (visit.appointment !== null) {
+          if (visit.studentUid?.toLowerCase().includes(searchQuery.toLowerCase().trim())) {
+            if (visit.appointment.advisor?.toLowerCase().includes(searchQuery.toLowerCase().trim())) {
+              if (tabSet === Stat.Phone && visit.appointment.type === "Phone Appointment") {
+                if (timePicked === "All") {
+                  return visit;
+                } else if (timePicked && getDateLocal(visit.createdAt.toISOString(), "hA") === timePicked) {
+                  return visit;
+                }
+              } else if (tabSet === Stat.InPerson && visit.appointment.type === "In-person Appointment") {
+                if (timePicked === "All") {
+                  return visit;
+                } else if (timePicked && getDateLocal(visit.createdAt.toISOString(), "hA") === timePicked) {
+                  return visit;
+                }
+              } else if (tabSet === Stat.Walkin && visit.appointment.type === "Walk-in Appointment") {
+                if (timePicked === "All") {
+                  return visit;
+                } else if (timePicked && getDateLocal(visit.createdAt.toISOString(), "hA") === timePicked) {
+                  return visit;
                 }
               }
             }
@@ -113,27 +106,63 @@
         }
       } else if (tabSet === Stat.Referral) {
         if (visit.referral !== null) {
-          if (timePicked === "All") {
-            if (visit.studentUid?.toLowerCase().includes(searchQuery.toLowerCase().trim())) {
-              if (visit.referral.counterUser?.toLowerCase().includes(searchQuery.toLowerCase().trim())) {
-                return visit
-              }
-            }
-          }
-          if (timePicked && getDateLocal(visit.createdAt.toISOString(), "hA") === timePicked) {
-            if (visit.studentUid?.toLowerCase().includes(searchQuery.toLowerCase().trim())) {
-              if (visit.referral.counterUser?.toLowerCase().includes(searchQuery.toLowerCase().trim())) {
-                return visit
+          if (visit.studentUid?.toLowerCase().includes(searchQuery.toLowerCase().trim())) {
+            if (visit.referral.counterUser?.toLowerCase().includes(searchQuery.toLowerCase().trim())) {
+              if (timePicked === "All") {
+                return visit;
+              } else if (timePicked && getDateLocal(visit.createdAt.toISOString(), "hA") === timePicked) {
+                return visit;
               }
             }
           }
         }
       }
     })
+
+    updatePageSettings(filteredVisits)
+  }
+
+  $: {
+    staffVisits = []
+    for (let visit of visits) {
+      let hourCreated = getDateLocal(visit.createdAt.toISOString(), "hA");
+      let user = staffVisits.find(user => user.name === visit.counterUser);
+      if (user === undefined) {
+        staffVisits.push({ name: visit.counterUser, visits: 0 });
+      }
+      if (timePicked === "All") {
+        let visitUser = staffVisits.find(user => user.name === visit.counterUser);
+        if (visitUser !== undefined) visitUser.visits++;
+      } else {
+        if (timePicked === hourCreated) {
+          let visitUser = staffVisits.find(user => user.name === visit.counterUser);
+          if (visitUser !== undefined) visitUser.visits++;
+        }
+      }
+    }
+
+    staffVisits = staffVisits.filter(user => user.visits !== 0);
   }
   
   function closeForm(): void {
 		modalStore.close();
+	}
+
+  let paginationSettings = {
+		page: 0,
+		limit: 5,
+		size: filteredVisits.length,
+		amounts: [5, 10],
+	} satisfies PaginationSettings;
+
+	$: paginatedSource = filteredVisits.slice(
+		paginationSettings.page * paginationSettings.limit,
+		paginationSettings.page * paginationSettings.limit + paginationSettings.limit
+	);
+
+	function updatePageSettings(filteredArr: any[]) {
+		paginationSettings.size = filteredArr.length;
+    paginationSettings.page = 0
 	}
 
   function downloadCSV() {
@@ -144,10 +173,10 @@
 
     visits.forEach(visit => {
       let row: any = [];
-      row.push(String(visit.studentUid ?? "-"));
+      row.push(String(visit.studentUid === null || visit.studentUid.includes("#") ? "-" : visit.studentUid));
       row.push(String(visit.studentName ?? "-"));
       row.push(String(visit.studentEmail ?? "-"));
-      row.push(String(visit.reason));
+      row.push(String(visit.reason.replaceAll(", ", " / ")));
       row.push(String(visit.visitorType));
       row.push(String(visit.counterUser));
       row.push(String(visit.submittedDocument));
@@ -173,10 +202,15 @@
 	<div class="flex justify-between items-center">
     <div class="flex items-center space-x-2">
       <h1 class="text-xl text-usfGreen font-medium">{moment(date).format("MMMM Do, YYYY")}</h1>
-      <!-- svelte-ignore a11y-click-events-have-key-events -->
-      <box-icon type='solid' name='file-export' class="w-5 h-5 fill-usfGreen/50 hover:fill-usfGreen cursor-pointer duration-150" 
-        on:click={downloadCSV}
-      ></box-icon>
+      <Popup pointer="" offset={0} placement="right">
+        <svelte:fragment slot="content">
+          <!-- svelte-ignore a11y-click-events-have-key-events -->
+          <i class="fa-solid fa-file-export text-usfGreen/50 hover:text-usfGreen fa-lg cursor-pointer" on:click={downloadCSV}></i>
+        </svelte:fragment>
+        <svelte:fragment slot="popup">
+          <p class="text-white/80 font-semibold">Download as CSV</p>
+        </svelte:fragment>
+      </Popup>
     </div>
     <div class="flex justify-center items-center space-x-4">
       <div class="flex items-center space-x-3">
@@ -185,7 +219,7 @@
 			</div>
       <Search bind:value={searchQuery} />
       <!-- svelte-ignore a11y-click-events-have-key-events -->
-      <box-icon class="fill-black cursor-pointer" name="x" on:click={closeForm} />
+      <i class="fa-solid fa-xmark fa-lg text-black cursor-pointer" on:click={closeForm}></i>
     </div>
 	</div>
 	<br />
@@ -195,11 +229,12 @@
     <Tab bind:group={tabSet} name="inperson" value={2}>In-person Appts</Tab>
     <Tab bind:group={tabSet} name="walkin" value={3}>Walk-in Appts</Tab>
     <Tab bind:group={tabSet} name="referrals" value={4}>Referrals</Tab>
+    <Tab bind:group={tabSet} name="staff" value={5}>Staff</Tab>
     <svelte:fragment slot="panel">
       <section class="grid grid-cols-[200px_2fr] gap-4">
         <div class="space-y-1">
-          <!-- <h1 class="font-semibold">Visits by Time</h1> -->
-          <div class="space-y-1 max-h-[400px] overflow-auto">
+          <h1 class="font-semibold">Visits by Time</h1>
+          <div class="space-y-1 max-h-[430px] overflow-auto">
             <ul class="flex flex-col gap-1">
               <li>
                 <input type="radio" id="All" value="All" class="hidden peer" bind:group={timePicked} />
@@ -228,10 +263,7 @@
             </ul>
           </div>
         </div>
-        <div class:flex={filteredVisits.length === 0 || graphData.length < 3} 
-             class:justify-center={filteredVisits.length === 0 || graphData.length < 3} 
-             class:items-center={filteredVisits.length === 0 || graphData.length < 3}
-        >
+        <div>
           {#if graphView}
             {#if graphData.length > 2 }
               <section in:fly={{ y: -10, duration: 250 }}>
@@ -242,71 +274,129 @@
             {/if}
           {:else}
             <section in:fly={{ y: -10, duration: 250 }}>
-              {#if filteredVisits.length > 0}
-                {#if tabSet === Stat.Visits}
-                  <div class="grid grid-cols-[120px_220px_150px_75px_auto] gap-3 w-full rounded px-4 py-2 border border-accSlate/20 shadow-sm mb-1">
-                    <h1 class="font-medium">UID</h1>
-                    <h1 class="font-medium">Student Name</h1>
-                    <h1 class="font-medium">Counter User</h1>
-                    <h1 class="font-medium">Appt.</h1>
-                    <h1 class="font-medium">Referral</h1>
-                  </div>
-                {:else if tabSet === Stat.Phone || tabSet === Stat.InPerson || tabSet === Stat.Walkin}
-                  <div class="grid grid-cols-[120px_220px_150px_150px] gap-3 w-full rounded px-4 py-2 border border-accSlate/20 shadow-sm mb-1">
-                    <h1 class="font-medium">UID</h1>
-                    <h1 class="font-medium">Reason</h1>
-                    <h1 class="font-medium">Advisor</h1>
-                    <h1 class="font-medium">Source</h1>
-                  </div>
-                {:else if tabSet === Stat.Referral}
-                  <div class="grid grid-cols-[120px_220px_150px_150px] gap-3 w-full rounded px-4 py-2 border border-accSlate/20 shadow-sm mb-1">
-                    <h1 class="font-medium">UID</h1>
-                    <h1 class="font-medium">Reason</h1>
-                    <h1 class="font-medium">Owner</h1>
-                    <h1 class="font-medium">Source</h1>
-                  </div>
-                {/if}
-                <section class="flex flex-col gap-1 max-h-[328px] overflow-auto">
-                  {#if tabSet === Stat.Visits}
-                    {#each filteredVisits as visit}
-                      <div class="grid grid-cols-[120px_220px_150px_75px_auto] gap-3 w-full rounded px-4 py-2 border border-accSlate/20 shadow-sm">
-                        <h1 class="font-medium">{visit.studentUid ?? "-"}</h1>
-                        <h1>{visit.studentName ?? "-"}</h1>
-                        <h1>{visit.counterUser}</h1>
-                        {#if visit.appointment !== null}
-                          <box-icon name='check' class="fill-usfGreen" ></box-icon>
-                        {:else}
-                          <box-icon name='x' class="fill-black/50" ></box-icon>
-                        {/if}
-                        {#if visit.referral !== null}
-                          <box-icon name='check' class="fill-usfGreen" ></box-icon>
-                        {:else}
-                          <box-icon name='x' class="fill-black/50" ></box-icon>
-                        {/if}
-                      </div>
-                    {/each}
-                  {:else if tabSet === Stat.Phone || tabSet === Stat.InPerson || tabSet === Stat.Walkin}
-                    {#each filteredVisits as visit}
-                      <div class="grid grid-cols-[120px_220px_150px_150px] gap-3 w-full rounded px-4 py-2 border border-accSlate/20 shadow-sm">
-                        <h1 class="font-medium">{visit.studentUid ?? "-"}</h1>
-                        <h1>{visit.appointment?.reason}</h1>
-                        <h1>{visit.appointment?.advisor ?? "-"}</h1>
-                        <h1>{visit.appointment?.source}</h1>
-                      </div>
-                    {/each}
-                  {:else if tabSet === Stat.Referral}
-                    {#each filteredVisits as visit}
-                      <div class="grid grid-cols-[120px_220px_150px_150px] gap-3 w-full rounded px-4 py-2 border border-accSlate/20 shadow-sm">
-                        <h1 class="font-medium">{visit.studentUid ?? "-"}</h1>
-                        <h1>{visit.referral?.reason}</h1>
-                        <h1>{visit.referral?.counterUser}</h1>
-                        <h1>{visit.referral?.source}</h1>
-                      </div>
-                    {/each}
-                  {/if}
-                </section>
+              {#if tabSet !== Stat.Staff}
+                <TableWrapper arrLength={filteredVisits.length} bind:paginationSettings={paginationSettings}>
+                  <svelte:fragment slot="header">
+                    {#if tabSet === Stat.Visits}
+                    <tr class="bg-accSlate/10 text-black/70">
+                      <th>UID</th>
+                      <th>Student Name</th>
+                      <th>Counter User</th>
+                      <th>Appt.</th>
+                      <th>Referral</th>
+                    </tr>
+                    {:else if tabSet === Stat.Phone || tabSet === Stat.InPerson || tabSet === Stat.Walkin}
+                      <tr class="bg-accSlate/10 text-black/70">
+                        <th>UID</th>
+                        <th>Reason</th>
+                        <th>Advisor</th>
+                        <th>Source</th>
+                      </tr>
+                    {:else if tabSet === Stat.Referral}
+                      <tr class="bg-accSlate/10 text-black/70">
+                        <th>UID</th>
+                        <th>Reason</th>
+                        <th>Owner</th>
+                        <th>Source</th>
+                      </tr>
+                    {/if}
+                  </svelte:fragment>
+                  <svelte:fragment slot="body">
+                    {#if tabSet === Stat.Visits}
+                      {#each paginatedSource as visit}
+                        <tr>
+                          <td>{visit.studentUid ?? "-"}</td>
+                          <td>{visit.studentName ?? "-"}</td>
+                          <td>{visit.counterUser}</td>
+                          <td>
+                            {#if visit.appointment !== null}
+                              <Popup bgColor="bg-accSlate" eventType="click">
+                                <svelte:fragment slot="content">
+                                  <i class="fa-solid fa-check fa-lg text-usfGreen"></i>
+                                </svelte:fragment>
+                                <svelte:fragment slot="popup">
+                                  <p class="text-white/80 font-semibold">{visit.appointment.advisor}</p>
+                                  <p class="flex items-center font-semibold {visit.appointment.completed ? "text-green-500" : "text-orange-300"}">
+                                    {visit.appointment.completed ? "Completed" : "Pending"}
+                                  </p>
+                                  <p class="text-white/80 font-semibold">{getDateLocal(visit.appointment.createdAt.toISOString(), "MMMM Do, YYYY")}</p>
+                                  <hr class="!border-dashed my-2" />
+                                  <p class="text-white/80 font-semibold">{visit.appointment.studentName}</p>
+                                  <p class="text-white/80 font-semibold">{visit.appointment.type}</p>
+                                </svelte:fragment>
+                              </Popup>
+                            {:else}
+                              <i class="fa-solid fa-xmark fa-lg text-black/50"></i>
+                            {/if}
+                          </td>
+                          <td>
+                            {#if visit.referral !== null}
+                              <Popup bgColor="bg-accSlate" width="max-w-xs" eventType="click">
+                                <svelte:fragment slot="content">
+                                  <i class="fa-solid fa-check fa-lg text-usfGreen"></i>
+                                </svelte:fragment>
+                                <svelte:fragment slot="popup">
+                                  <p class="text-white/80 font-semibold">{visit.referral.counterUser}</p>
+                                  <p class="flex items-center font-semibold {visit.referral.completed ? "text-green-400" : "text-orange-300"}">
+                                    {visit.referral.completed ? "Completed" : "Pending"}
+                                  </p>
+                                  <p class="text-white/80 font-semibold">{getDateLocal(visit.referral.bestTimeCallback.toISOString(), "MMMM Do, YYYY")}</p>
+                                  <hr class="!border-dashed my-2" />
+                                  <p class="text-white/80 font-semibold">{visit.referral.details}</p>
+                                  <hr class="!border-dashed my-2" />
+                                  <p class="text-white/80 font-semibold">{visit.referral.referralType}</p>
+                                </svelte:fragment>
+                              </Popup>
+                            {:else}
+                              <i class="fa-solid fa-xmark fa-lg text-black/50"></i>
+                            {/if}
+                          </td>
+                        </tr>
+                      {/each}
+                    {:else if tabSet === Stat.Phone || tabSet === Stat.InPerson || tabSet === Stat.Walkin}
+                      {#each paginatedSource as visit}
+                        <tr>
+                          <td>{visit.studentUid ?? "-"}</td>
+                          <td>{visit.reason}</td>
+                          <td>{visit.appointment?.advisor}</td>
+                          <td>{visit.appointment?.source}</td>
+                        </tr>
+                      {/each}
+                    {:else if tabSet === Stat.Referral}
+                      {#each paginatedSource as visit}
+                        <tr>
+                          <td>{visit.studentUid ?? "-"}</td>
+                          <td>{visit.reason}</td>
+                          <td>{visit.referral?.counterUser}</td>
+                          <td>{visit.referral?.source}</td>
+                        </tr>
+                      {/each}
+                    {/if}
+                  </svelte:fragment>
+                  <svelte:fragment slot="none">
+                    <p>There are no visits that match this search.</p>
+                  </svelte:fragment>
+                </TableWrapper>
               {:else}
-                <h1>There are no records that match this criteria.</h1>
+                <TableWrapper arrLength={staffVisits.length} bind:paginationSettings={paginationSettings}>
+                  <svelte:fragment slot="header">
+                    <tr class="bg-accSlate/10 text-black/70">
+                      <th>Counter User</th>
+                      <th>Visits</th>
+                    </tr>
+                  </svelte:fragment>
+                  <svelte:fragment slot="body">
+                    {#each staffVisits as user}
+                      <tr>
+                        <td>{user.name}</td>
+                        <td>{user.visits}</td>
+                      </tr>
+                    {/each}
+                  </svelte:fragment>
+                  <svelte:fragment slot="none">
+                    <p>There are no staff that match this search.</p>
+                  </svelte:fragment>
+                </TableWrapper>
               {/if}
             </section>
           {/if}
@@ -315,3 +405,29 @@
     </svelte:fragment>
   </TabGroup>
 </section>
+
+<style>
+  th {
+    text-align: left;
+		background: white;
+		color: #293a40;
+		padding: 10px 20px;
+    border: 1px #293A40 solid;
+    border-color: #293A40;
+	}
+
+  td {
+    padding: 10px 20px;
+  }
+
+	tr {
+    border-bottom: 1px #293A40 solid;
+    border-color: #293a402a;
+		padding: 10px 20px;
+	}
+
+  tr:nth-last-child(1) {
+		border: none;
+    border-color: white;
+	}
+</style>

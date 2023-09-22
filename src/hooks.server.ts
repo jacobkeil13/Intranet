@@ -5,7 +5,7 @@ export const handle: Handle = async ({ event, resolve }) => {
   // let session = event.platform?.req.session.account;
 
   let session = {
-    username: "brendanunez@usf.edu"
+    username: "jacobkeil@usf.edu"
   }
 
 	const profile = await db.userProfile.findFirst({
@@ -51,7 +51,7 @@ export const handle: Handle = async ({ event, resolve }) => {
     addressTypes: await db.addressType.findMany(),
     requestTypes: await db.requestType.findMany(),
     dataRequestTypes: await db.dataRequestType.findMany(),
-    masterCalendarTypes: await db.masterCalendarType.findMany(),
+    masterCalendarTypes: await db.masterCalendarType.findMany({ orderBy: { type: "asc" } }),
   }
 
 	return await resolve(event)

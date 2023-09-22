@@ -41,7 +41,6 @@ export const actions = {
 
       return { success: true, message: "Procedure created successfully!", data: newForm }
     } catch (error) {
-      console.log(error);
       return { success: false, message: "Procedure creation failed." }
     }
   },
@@ -75,7 +74,6 @@ export const actions = {
 
       return { success: true, message: "Procedure updated successfully!" }
     } catch (error) {
-      console.log(error);
       return { success: false, message: "Procedure update failed." }
     }
   }

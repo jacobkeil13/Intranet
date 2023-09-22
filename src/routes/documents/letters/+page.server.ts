@@ -34,13 +34,13 @@ export const actions = {
       owner,
       description
      } = Object.fromEntries(await request.formData()) as {
-        letterCode: string
-        letterType: string
-        letterGroup: string
-        tape: string
-        ruamail: string
-        owner: string
-        description: string
+      letterCode: string
+      letterType: string
+      letterGroup: string
+      tape: string
+      ruamail: string
+      owner: string
+      description: string
     }
 
     try {
@@ -54,7 +54,7 @@ export const actions = {
         data: {
           letterCode: { connect: { name: newLetterCode.name } },
           letterType: { connect: { name: letterType } },
-          letterGroup: { connect: { name: letterGroup } },
+          letterGroup: { connect: { name: letterGroup }},
           weeklyTapeLoad: tape === 'on',
           staffInRuamail: ruamail === 'on',
           owner: { connect: { id: owner } },
@@ -65,6 +65,7 @@ export const actions = {
       return { success: true, message: "Letter created successfully!", data: newLetter }
     } catch (error) {
       console.log(error);
+      
       return { success: false, message: "Letter creation failed." }
     }
   },
@@ -94,7 +95,7 @@ export const actions = {
         },
         data: {
           letterType: { connect: { name: letterType } },
-          letterGroup: { connect: { name: letterGroup } },
+          letterGroup: { connect: { name: letterGroup }},
           weeklyTapeLoad: tape === 'on',
           staffInRuamail: ruamail === 'on',
           owner: { connect: { id: owner } },
@@ -104,7 +105,6 @@ export const actions = {
 
       return { success: true, message: "Letter updated successfully!" }
     } catch (error) {
-      // console.log(error);
       return { success: false, message: "Letter update failed." }
     }
   }

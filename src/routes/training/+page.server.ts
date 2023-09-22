@@ -2,6 +2,7 @@ import { db } from "$lib/server/database";
 import { redirect } from "@sveltejs/kit";
 import moment from "moment";
 import type { AutocompleteOption } from "@skeletonlabs/skeleton";
+import { dateAddHours } from "$lib/helpers";
 
 export const load = async ({ locals }) => {
 	if (locals.user) {
@@ -9,6 +10,11 @@ export const load = async ({ locals }) => {
       orderBy: {
         date: "asc"
       },
+      // where: {
+      //   date: {
+      //     gte: moment().toISOString()
+      //   }
+      // },
       include: {
         trainers: true
       }
@@ -40,14 +46,11 @@ export const actions = {
     }
 
     let trainerListArr = JSON.parse(trainerList);
-    console.log(moment.utc(new Date(date)));
-    console.log(moment.utc(new Date(date)).format('dddd'));
     
     try {
-      let dateDueConvert = moment.utc(new Date(date)).toISOString(false);
-      let weekday = moment.utc(new Date(date)).format('dddd');
-      console.log(moment.utc(new Date(date)).local().day());
-  
+      let dateDueConvert = new Date(dateAddHours(date, "12"));
+      let weekday = moment(new Date(dateAddHours(date, "12"))).format('dddd');
+
       const newTrainingSechedule = await db.trainingSchedule.create({
         data: {
           name: title,
@@ -68,16 +71,20 @@ export const actions = {
     const {
       id,
       title, 
-      date
+      date,
+      trainerList
      } = Object.fromEntries(await request.formData()) as {
       id: string
       title: string
       date: string
+      trainerList: string
     }
+
+    let trainerListArr = JSON.parse(trainerList);
     
     try {
-      let dateDueConvert = moment.utc(new Date(date)).toISOString(false);
-      let weekday = moment.utc(new Date(date)).format('dddd');
+      let dateDueConvert = new Date(dateAddHours(date, "12"));
+      let weekday = moment(new Date(dateAddHours(date, "12"))).format('dddd');
   
       const updatedTraining = await db.trainingSchedule.update({
         where: {
@@ -86,13 +93,15 @@ export const actions = {
         data: {
           name: title,
           date: dateDueConvert,
+          trainers: {
+            set: trainerListArr.length !== 0 ? trainerListArr.map((user: AutocompleteOption) => ({ id: user.meta.id })) : []
+          },
           weekday,
         }
       })
 
       return { success: true, message: "Training updated successfully!" }      
     } catch (error) {
-      console.log(error);
       return { success: false, message: "Training update failed." }
     }
   },
@@ -110,13 +119,10 @@ export const actions = {
     }
 
     let trainerListArr = JSON.parse(trainerList);
-    console.log(moment.utc(new Date(date)));
-    console.log(moment.utc(new Date(date)).format('dddd'));
     
     try {
-      let dateDueConvert = moment.utc(new Date(date)).toISOString(false);
-      let weekday = moment.utc(new Date(date)).format('dddd');
-      console.log(moment.utc(new Date(date)).local().day());
+      let dateDueConvert = new Date(dateAddHours(date, "12"));
+      let weekday = moment(new Date(dateAddHours(date, "12"))).format('dddd');
   
       const newLibrary = await db.generalLibrary.create({
         data: {
@@ -140,17 +146,21 @@ export const actions = {
       id,
       title, 
       date,
-      url
+      url,
+      trainerList
      } = Object.fromEntries(await request.formData()) as {
       id: string
       title: string
       date: string
       url: string
+      trainerList: string
     }
+
+    let trainerListArr = JSON.parse(trainerList);
     
     try {
-      let dateDueConvert = moment.utc(new Date(date)).toISOString(false);
-      let weekday = moment.utc(new Date(date)).format('dddd');
+      let dateDueConvert = new Date(dateAddHours(date, "12"));
+      let weekday = moment(new Date(dateAddHours(date, "12"))).format('dddd');
   
       const updatedLibrary = await db.generalLibrary.update({
         where: {
@@ -159,6 +169,9 @@ export const actions = {
         data: {
           name: title,
           date: dateDueConvert,
+          trainers: {
+            set: trainerListArr.length !== 0 ? trainerListArr.map((user: AutocompleteOption) => ({ id: user.meta.id })) : []
+          },
           weekday,
           url
         }
@@ -166,7 +179,6 @@ export const actions = {
 
       return { success: true, message: "Library video updated successfully!" }      
     } catch (error) {
-      console.log(error);
       return { success: false, message: "Library video update failed." }
     }
   }

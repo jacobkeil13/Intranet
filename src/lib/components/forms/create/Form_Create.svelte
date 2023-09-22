@@ -1,7 +1,8 @@
 <script lang="ts">
-	import { SlideToggle, modalStore } from '@skeletonlabs/skeleton';
+	import { SlideToggle, getModalStore } from '@skeletonlabs/skeleton';
 	import Loading from '$lib/components/animation/Loading.svelte';
 
+	let modalStore = getModalStore();
 	let isLoading = false;
 	let constants = $modalStore[0].meta.constants;
 
@@ -14,7 +15,7 @@
 	<div class="flex justify-between items-center">
 		<h1 class="text-xl text-usfGreen font-medium">Create Form</h1>
 		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<box-icon class="fill-black cursor-pointer" name="x" on:click={closeForm} />
+		<i class="fa-solid fa-xmark fa-lg text-black cursor-pointer" on:click={closeForm}></i>
 	</div>
 	<br />
 	<form method="POST" action="/documents/forms?/create" enctype="multipart/form-data">

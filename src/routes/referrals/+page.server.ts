@@ -6,8 +6,15 @@ import moment from "moment";
 export const load = async ({ locals }) => {
 	if (locals.user) {
     let referrals = await db.referral.findMany({
+			orderBy: {
+				bestTimeCallback: "asc"
+			},
 			include: {
-				comments: true
+				comments: {
+					orderBy: {
+						createdAt: "desc"
+					}
+				}
 			}
 		});
 		const appointmentReasons = await db.appointmentReason.findMany();
@@ -83,7 +90,7 @@ export const actions = {
 					source,
 					referralType,
 					escalationUser: referralType === "Escalated Referral" ? escalatedUser : null,
-					researchUser: referralType === "Research Referral" ? researchUser : null
+					researchUser: referralType === "Collaboration Referral" ? researchUser : null
         }
       });
 
@@ -141,8 +148,6 @@ export const actions = {
 			
       return { success: true, message: "Referral updated successfully!" }
     } catch (error) {
-			console.log(error);
-			
       return { success: false, message: "Referral update failed." }
     }
 	}

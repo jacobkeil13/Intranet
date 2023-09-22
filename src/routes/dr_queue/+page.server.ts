@@ -13,6 +13,9 @@ export const load = async ({ locals }) => {
         requestType: true,
         assignedTo: true,
         comments: {
+          orderBy: {
+            createdAt: "desc"
+          },
           include: {
             userProfile: true
           }
@@ -50,7 +53,21 @@ export const actions = {
         emailList: string
     }
 
-    let emailListArr = JSON.parse(emailList);
+    let emailListArr: AutocompleteOption[] = JSON.parse(emailList);
+    const eptTeam = await getTeamByName("Electronic Processes");
+
+    eptTeam[0].userProfile.forEach(eptUser => {
+      if (!emailListArr.map(user => user.meta.id).includes(eptUser.id)) {
+        let addUser: AutocompleteOption = {
+          label: eptUser.first_name + ' ' + eptUser.last_name,
+          value: eptUser.first_name + ' ' + eptUser.last_name,
+          meta: {
+            id: eptUser.id
+          }
+        }
+        emailListArr.push(addUser);
+      }
+    });
     
     try {
       let profile = await getUserProfileByNetId(locals.user.netid);
@@ -92,17 +109,35 @@ export const actions = {
       dateNeeded,
       assignedToId,
       description,
-      complete
+      complete,
+      emailList
      } = Object.fromEntries(await request.formData()) as {
-        id: string
-        title: string
-        priority: string
-        requestType: string
-        dateNeeded: string
-        assignedToId: string
-        description: string
-        complete: string
+      id: string
+      title: string
+      priority: string
+      requestType: string
+      dateNeeded: string
+      assignedToId: string
+      description: string
+      complete: string
+      emailList: string
     }
+
+    let emailListArr: AutocompleteOption[] = JSON.parse(emailList);
+    const eptTeam = await getTeamByName("Electronic Processes");
+
+    eptTeam[0].userProfile.forEach(eptUser => {
+      if (!emailListArr.map(user => user.meta.id).includes(eptUser.id)) {
+        let addUser: AutocompleteOption = {
+          label: eptUser.first_name + ' ' + eptUser.last_name,
+          value: eptUser.first_name + ' ' + eptUser.last_name,
+          meta: {
+            id: eptUser.id
+          }
+        }
+        emailListArr.push(addUser);
+      }
+    });
 
     try {
       let profile = await getUserProfileByNetId(locals.user.netid);
@@ -116,6 +151,9 @@ export const actions = {
           priority: { connect: { name: priority } },
           requestType: { connect: { name: requestType } },
           assignedTo: { connect: { id: assignedToId } },
+          emailTo: {
+            set: emailListArr.length !== 0 ? emailListArr.map((user: AutocompleteOption) => ({ id: user.meta.id })) : [] 
+          },
           dateNeeded: new Date(dateAddHours(dateNeeded, "12")),
           complete: complete === "on"
         }

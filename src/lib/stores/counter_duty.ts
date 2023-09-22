@@ -1,3 +1,4 @@
+import moment from "moment";
 import { readable } from "svelte/store";
 
 export const actions = readable([
@@ -56,7 +57,7 @@ export const counter_time_slots = readable([
 // }
 
 export async function getUidInfo(uid: string) {
-  let parsedUID = uid.includes('U') ? uid : "U" + uid
+  let parsedUID = uid.includes('U') ? uid : "U" + uid;
   let res = await fetch("/api/banner?uid=" + parsedUID, {
     method: "GET"
   });
@@ -65,7 +66,7 @@ export async function getUidInfo(uid: string) {
 }
 
 export async function getPrivacyInfo(uid: string) {
-  let parsedUID = uid.includes('U') ? uid : "U" + uid
+  let parsedUID = uid.includes('U') ? uid : "U" + uid;
   let res = await fetch("/api/banner/privacy?uid=" + parsedUID, {
     method: "GET"
   });
@@ -73,6 +74,29 @@ export async function getPrivacyInfo(uid: string) {
   return response;
 }
 
-export async function getAppointmentsByType(type: string) {
-  console.log("GOT APPOINTMENTS: " + type);
+export async function getCurrentAppts(uid: string) {
+  let parsedUID = uid.includes('U') ? uid : "U" + uid;
+  let res = await fetch("/api/current_appt?uid=" + parsedUID, {
+    method: "GET"
+  });
+  let response = await res.json();
+  return response;
+}
+
+export async function getFiveNineDirs() {
+  // let date = moment().format();
+  let res = await fetch("/api/five_nine", {
+    method: "GET"
+  });
+  let response = await res.json();
+  return response;
+}
+
+export async function getFiveNineDir(dirName: string) {
+  // let date = moment().format();
+  let res = await fetch("/api/five_nine/" + dirName, {
+    method: "GET"
+  });
+  let response = await res.json();
+  return response;
 }

@@ -1,10 +1,12 @@
 <script lang="ts">
 	import Search from '$lib/components/Search.svelte';
   import { fly } from 'svelte/transition';
-  import { toastStore, Tab, TabGroup, modalStore, type ModalSettings, Paginator, Table, tableMapperValues, type PaginationSettings } from '@skeletonlabs/skeleton';
+  import { getToastStore, Tab, TabGroup, getModalStore, type ModalSettings, type PaginationSettings, RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
 	import { getDateLocal } from '$lib/helpers.js';
-	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
+	import TableWrapper from '$lib/components/TableWrapper.svelte';
+	import PageWrapper from '$lib/components/PageWrapper.svelte';
+	import moment from 'moment';
   export let form;
   export let data;
 
@@ -15,6 +17,8 @@
     NonYear = 3
   }
 
+  let modalStore = getModalStore();
+	let toastStore = getToastStore();
   if (form) {
     toastStore.trigger({
 		  message: String(form?.message),
@@ -23,63 +27,53 @@
 	  });
   }
 
+  let filter = $page.url.searchParams.get("filter") === null ? "all" : $page.url.searchParams.get("filter");
   let procedures = data.procedures;
+  let filteredProcedures = data.procedures;
   let tabSet: number = 0;
   let searchQuery =	$page.url.searchParams.get("search") === null ? '' : String($page.url.searchParams.get("search"));
-	let sourceData: any[] = [];
-	let filteredSourceData: any[] = [];
-
-  onMount(() => {
-		procedures.forEach((procedure) => {
-			let tr = {
-				id: procedure.id,
-        extension: procedure.extension,
-        fileName: procedure.fileName,
-				aidYear: procedure.aidYear.name,
-				owner: procedure.owner.first_name + " " + procedure.owner.last_name,
-				lastUpdated: getDateLocal(procedure.updatedAt.toISOString(), "MMMM Do, h:mmA"),
-			}
-			sourceData.push(tr);
-		});
-		filteredSourceData = sourceData
-	});
 
   $: {
-    filteredSourceData = sourceData.filter((procedure: any) => {
+    filteredProcedures = procedures.filter((procedure) => {
+      let owner = procedure.owner.first_name + " " + procedure.owner.last_name;
       let aidYear = '';
       if (tabSet === AidYear.All) {
         aidYear = "All"
       } else if (tabSet === AidYear.Current) {
-        aidYear = "2223"
+        aidYear = moment().subtract(1, "years").format("YY") + moment().format("YY");
       } else if (tabSet === AidYear.Next) {
-        aidYear = "2324"
+        aidYear = moment().format("YY") + moment().add(1, "years").format("YY");
       } else if (tabSet === AidYear.NonYear) {
         aidYear = "Non-Year"
       }
       if ((procedure.fileName.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
-          procedure.owner.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
-          procedure.aidYear.toLowerCase().includes(searchQuery.toLowerCase().trim()))) {
+          owner.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+          procedure.aidYear.name.toLowerCase().includes(searchQuery.toLowerCase().trim()))) {
           if (aidYear === "All") {
             return procedure;
           }
-          if (procedure.aidYear === aidYear) {
+          if (procedure.aidYear.name === aidYear) {
             return procedure;
           }
       }
     })
-    updatePageSettings(filteredSourceData);
+    updatePageSettings(filteredProcedures);
   }
 
-  const headers: string[] = ['Extension', 'File Name', 'Aid Year', 'Owner', 'Last Updated'];
-	const body: string[] = ['extension', 'fileName', 'aidYear', 'owner', 'lastUpdated'];
-	const meta: string[] = ['id'];
-  let state = { firstLast: false, previousNext: true };
-	let pageSettings = { offset: 0, limit: 10, size: filteredSourceData.length, amounts: [5, 10, 15] } as PaginationSettings;
-	$: sourceDataSliced = filteredSourceData.slice(pageSettings.offset * pageSettings.limit, pageSettings.offset * pageSettings.limit + pageSettings.limit);
+  let paginationSettings = {
+		page: 0,
+		limit: 10,
+		size: filteredProcedures.length,
+		amounts: [5, 10, 15],
+	} satisfies PaginationSettings;
+
+	$: paginatedSource = filteredProcedures.slice(
+		paginationSettings.page * paginationSettings.limit,
+		paginationSettings.page * paginationSettings.limit + paginationSettings.limit
+	);
 
 	function updatePageSettings(filteredArr: any[]) {
-		pageSettings.size = filteredArr.length;
-		pageSettings.offset = 0
+		paginationSettings.size = filteredArr.length;
 	}
 
   const procedureModal: ModalSettings = {
@@ -92,9 +86,9 @@
 		modalStore.trigger(modal);
 	}
 
-  function updateProcedure(e: CustomEvent) {
+  function updateProcedure(id: string) {
     if (data.profile?.role.name !== "ADMIN") {
-      let proc = procedures.find(procedure => procedure.id === e.detail[0]);
+      let proc = procedures.find(procedure => procedure.id === id);
       window.open(`
         https://tup-ofa.forest.usf.edu/files/procedures/${proc?.aidYear.name}/${proc?.aidYear.name} ${proc?.fileName}.${proc?.extension}
       `,'_newtab');
@@ -104,9 +98,14 @@
     modalStore.trigger({
       type: 'component',
       component: 'updateStandardProcedureModal',
-      meta: { procedure: procedures.find(procedure => procedure.id === e.detail[0]), constants: data.constants }
+      meta: { procedure: procedures.find(procedure => procedure.id === id), constants: data.constants }
     });
   }
+
+  function resetFilters() {
+		filter = 'all';
+		searchQuery = '';
+	}
 </script>
 
 <svelte:head>
@@ -114,35 +113,69 @@
 </svelte:head>
 
 <section in:fly={{ y: -10, duration: 200 }}>
-  <div class="flex justify-between items-center">
-    <h1 class="text-2xl text-usfGreen font-semibold">Standards & Procedures</h1>
-    <div class="flex justify-center items-center space-x-4">
+  <PageWrapper>
+		<svelte:fragment slot="title">
+			<h1 class="text-2xl text-usfGreen font-semibold">{filter === "my" ? "My" : ""} Standards & Procedures</h1>
+		</svelte:fragment>
+		<svelte:fragment slot="title-right">
       <Search bind:value={searchQuery} />
       <!-- svelte-ignore a11y-click-events-have-key-events -->
-      {#if data.profile?.role.name === "ADMIN"}
-        <div class="flex justify-center items-center bg-accSlate p-[6px] rounded-full cursor-pointer" on:click={() => { openModal(procedureModal) }}>
-          <box-icon class="fill-white/90" name={"plus"} />
+			{#if data.profile?.role.name === "ADMIN"}
+        <div class="flex justify-center items-center bg-accSlate w-10 h-10 rounded-full cursor-pointer" on:click={() => { openModal(procedureModal) }}>
+          <i class="fa-solid fa-plus fa-lg text-white/90"></i>
         </div>
       {/if}
-    </div>
-  </div>
-  <br>
-  <TabGroup>
-    <Tab bind:group={tabSet} name="all" value={0}>All</Tab>
-    <Tab bind:group={tabSet} name="current" value={1}>2022-2023</Tab>
-    <Tab bind:group={tabSet} name="next" value={2}>2023-2024</Tab>
-    <Tab bind:group={tabSet} name="nonyear" value={3}>Non-Year</Tab>
-    <!-- Tab Panels --->
-    <svelte:fragment slot="panel">
-      {#if filteredSourceData.length >= 1}
-				<section>
-					<Table on:selected={updateProcedure} interactive={true} source={{ head: headers, body: tableMapperValues(sourceDataSliced, body), meta: tableMapperValues(sourceDataSliced, meta)}} regionHeadCell="bg-accSlate text-white/90" />
-					<br />
-					<Paginator buttonClasses="bg-accSlate fill-white"  bind:settings={pageSettings} showFirstLastButtons={state.firstLast} showPreviousNextButtons={state.previousNext} />
-				</section>
-			{:else}
-				<p>No procedures match this search.</p>
-			{/if}
-    </svelte:fragment>
-  </TabGroup>
+		</svelte:fragment>
+		<svelte:fragment slot="filters">
+			<RadioGroup background="bg-transparent" active="bg-accSlate text-white/90" class="mt-0" rounded="rounded-md">
+				<RadioItem bind:group={filter} name="visitorType" value="all">All</RadioItem>
+				<RadioItem bind:group={filter} name="visitorType" value="my">My S&P's</RadioItem>
+			</RadioGroup>
+			<button class="bg-accSlate/80 text-white/90 font-medium rounded-md px-4 py-2"
+				on:click={resetFilters}
+			>
+				Reset Filters
+			</button>
+		</svelte:fragment>
+		<svelte:fragment slot="content">
+			<TabGroup>
+        <Tab bind:group={tabSet} name="all" value={0}>All</Tab>
+        <Tab bind:group={tabSet} name="current" value={1}>2022-2023</Tab>
+        <Tab bind:group={tabSet} name="next" value={2}>2023-2024</Tab>
+        <Tab bind:group={tabSet} name="nonyear" value={3}>Non-Year</Tab>
+        <!-- Tab Panels --->
+        <svelte:fragment slot="panel">
+          <TableWrapper arrLength={filteredProcedures.length} bind:paginationSettings={paginationSettings}>
+            <svelte:fragment slot="header">
+              <thead>
+                <tr class="bg-accSlate text-white/90">
+                  <th>Extension</th>
+                  <th>File Name</th>
+                  <th>Aid Year</th>
+                  <th>Owner</th>
+                  <th>Last Updated</th>
+                </tr>
+              </thead>
+            </svelte:fragment>
+            <svelte:fragment slot="body">
+              <tbody>
+                {#each paginatedSource as procedure}
+                    <tr on:click={() => updateProcedure(procedure.id)} class="cursor-pointer">
+                      <td>{procedure.extension}</td>
+                      <td>{procedure.fileName}</td>
+                      <td>{procedure.aidYear.name}</td>
+                      <td>{procedure.owner.first_name + " " + procedure.owner.last_name}</td>
+                      <td>{getDateLocal(procedure.updatedAt.toISOString(), "MMMM Do, YYYY")}</td>
+                    </tr>
+                  {/each}
+              </tbody>
+            </svelte:fragment>
+            <svelte:fragment slot="none">
+              <p>There are no procedures that match your search.</p>
+            </svelte:fragment>
+          </TableWrapper>
+        </svelte:fragment>
+      </TabGroup>
+		</svelte:fragment>
+	</PageWrapper>
 </section>

@@ -1,13 +1,11 @@
 <script lang="ts">
-	import { modalStore } from '@skeletonlabs/skeleton';
+	import { getModalStore } from '@skeletonlabs/skeleton';
 
+	let modalStore = getModalStore();
 	let src: string = $modalStore[0].meta.src;
 	let title: string = $modalStore[0].meta.title;
 
-	console.log(src);
-	
-
-	const cBase = 'relative w-modal-wide h-[calc(100vh_-_10rem)] shadow-xl';
+	const cBase = 'relative w-modal-wide h-[calc(100vh_-_5rem)] shadow-xl';
 	const cButton = 'absolute -top-3 -right-3 z-1 btn-icon variant-filled';
 	const cIframe = 'bg-black w-full h-full rounded-container-token overflow-hidden';
 

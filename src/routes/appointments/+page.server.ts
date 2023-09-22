@@ -1,5 +1,5 @@
 import { dateAddOffset, getUtcDate } from "$lib/helpers";
-import { db } from "$lib/server/database";
+import { db, getTeamByName } from "$lib/server/database";
 import { redirect } from "@sveltejs/kit";
 import moment from "moment";
 
@@ -8,14 +8,15 @@ export const load = async ({ locals }) => {
     let appointments = await db.appointment.findMany();
 		const appointmentReasons = await db.appointmentReason.findMany();
 		const visitCounterReasons = await db.visitCounterReason.findMany();
-    return { appointments, user: locals.user, appointmentReasons, visitCounterReasons }
+		const managementTeam = await getTeamByName("Management");
+    return { appointments, user: locals.user, appointmentReasons, visitCounterReasons, managementTeam }
 	} else {
 		throw redirect(302, '/dashboard');
 	}
 }
 
 export const actions = {
-	create: async ({ request }) => {
+	create: async ({ locals, request }) => {
     const {
       type,
 			visitorType,
@@ -47,6 +48,12 @@ export const actions = {
 			source: string
     }
 
+		const counterUserInfo = await db.userProfile.findFirst({
+			where: {
+				netid: locals.user.netid
+			}
+		});
+
     try {
       const newAppointment = await db.appointment.create({
         data: {
@@ -61,7 +68,8 @@ export const actions = {
 					reason: appReason,
 					callbackNumber: callbackNumber === "" ? undefined : callbackNumber,
 					rhacomm: rhacomm === 'true',
-					source
+					source,
+					scheduledBy: counterUserInfo?.first_name + " " + counterUserInfo?.last_name
         }
       });
 
@@ -91,8 +99,6 @@ export const actions = {
 			}
 		});
 
-		console.log({id, timeIn, timeOut, complete});
-
     try {
       const updatedAppointment = await db.appointment.update({
 				where: {
@@ -108,9 +114,7 @@ export const actions = {
       });
 			
       return { success: true, message: "Appointment updated successfully!" }
-    } catch (error) {
-			console.log(error);
-			
+    } catch (error) {			
       return { success: false, message: "Appointment update failed." }
     }
   }

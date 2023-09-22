@@ -12,6 +12,9 @@ export const load = async ({ locals }) => {
       include: {
         assignedTo: true,
         comments: {
+          orderBy: {
+            createdAt: "desc"
+          },
           include: {
             userProfile: true
           }
@@ -19,7 +22,16 @@ export const load = async ({ locals }) => {
         emailTo: true,
         priority: true,
         requestedBy: true,
-        requestType: true
+        requestType: true,
+        populationSelection: {
+          include: {
+            addressType: true,
+            aidYear: true,
+            application: true,
+            letterCode: true,
+            requestedBy: true
+          }
+        }
       }
     });
     const managementTeam = await getTeamByName("Management");
@@ -43,18 +55,32 @@ export const actions = {
       description,
       emailList
      } = Object.fromEntries(await request.formData()) as {
-        title: string
-        priority: string
-        approvingManagerId: string
-        requestType: string
-        dateNeeded: string
-        delayPostDate: string
-        postTo: string
-        description: string
-        emailList: string
+      title: string
+      priority: string
+      approvingManagerId: string
+      requestType: string
+      dateNeeded: string
+      delayPostDate: string
+      postTo: string
+      description: string
+      emailList: string
     }
   
-    let emailListArr = JSON.parse(emailList);
+    let emailListArr: AutocompleteOption[] = JSON.parse(emailList);
+    const isTeam = await getTeamByName("Information Systems");
+
+    isTeam[0].userProfile.forEach(isUser => {
+      if (!emailListArr.map(user => user.meta.id).includes(isUser.id)) {
+        let addUser: AutocompleteOption = {
+          label: isUser.first_name + ' ' + isUser.last_name,
+          value: isUser.first_name + ' ' + isUser.last_name,
+          meta: {
+            id: isUser.id
+          }
+        }
+        emailListArr.push(addUser);
+      }
+    });
   
     try {
       let profile = await getUserProfileByNetId(locals.user.netid);
@@ -95,7 +121,6 @@ export const actions = {
 
       return { success: true, message: "Request created successfully!" }
     } catch (error) {
-      console.log(error);
       return { success: false, message: "Request creation failed." }
     }
   },
@@ -108,7 +133,9 @@ export const actions = {
       dateNeeded,
       assignedToId,
       description,
-      complete
+      complete,
+      locked,
+      emailList
      } = Object.fromEntries(await request.formData()) as {
         id: string
         title: string
@@ -118,7 +145,25 @@ export const actions = {
         assignedToId: string
         description: string
         complete: string
+        locked: string
+        emailList: string
     }
+
+    let emailListArr: AutocompleteOption[] = JSON.parse(emailList);
+    const isTeam = await getTeamByName("Information Systems");
+
+    isTeam[0].userProfile.forEach(isUser => {
+      if (!emailListArr.map(user => user.meta.id).includes(isUser.id)) {
+        let addUser: AutocompleteOption = {
+          label: isUser.first_name + ' ' + isUser.last_name,
+          value: isUser.first_name + ' ' + isUser.last_name,
+          meta: {
+            id: isUser.id
+          }
+        }
+        emailListArr.push(addUser);
+      }
+    });
 
     try {
       let profile = await getUserProfileByNetId(locals.user.netid);
@@ -133,7 +178,11 @@ export const actions = {
           requestType: { connect: { name: requestType } },
           assignedTo: { connect: { id: assignedToId } },
           dateNeeded: new Date(dateAddHours(dateNeeded, "12")),
-          complete: complete === "on"
+          emailTo: {
+            set: emailListArr.length !== 0 ? emailListArr.map((user: AutocompleteOption) => ({ id: user.meta.id })) : [] 
+          },
+          complete: complete === "on",
+          locked: locked === "on"
         }
       })
 
@@ -155,8 +204,66 @@ export const actions = {
 
       return { success: true, message: "Request updated successfully!" }
     } catch (error) {
-      console.log(error);
       return { success: false, message: "Request update failed." }
+    }
+  },
+  delete: async ({ request }) => {
+    const {
+      id
+     } = Object.fromEntries(await request.formData()) as {
+      id: string
+    }
+
+    try {
+      await db.queueComment.deleteMany({
+        where: {
+          id
+        }
+      });
+
+      await db.queueItem.delete({
+        where: {
+          id
+        }
+      });
+
+      return { success: true, message: "Request deleted successfully!" }
+    } catch (error) {
+      return { success: false, message: "Request deletion failed." }
+    }
+  },
+  deletePopsel: async ({ request }) => {
+    const {
+      id
+     } = Object.fromEntries(await request.formData()) as {
+      id: string
+    }
+
+    try {
+      let popsel = await db.populationSelection.findFirst({
+        where: {
+          id
+        },
+        include: {
+          QueueItem: true
+        }
+      });
+
+      await db.queueComment.deleteMany({
+        where: {
+          id: popsel?.QueueItem[0].id
+        }
+      });
+
+      await db.populationSelection.delete({
+        where: {
+          id
+        }
+      });
+
+      return { success: true, message: "Request deleted successfully!" }
+    } catch (error) {
+      return { success: false, message: "Request deletion failed." }
     }
   }
 }

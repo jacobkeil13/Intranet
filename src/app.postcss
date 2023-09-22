@@ -1,4 +1,8 @@
-/*place global styles here */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@tailwind variants;
+
 html,
 body {
 	@apply h-full overflow-hidden;
@@ -11,3 +15,39 @@ body {
 /* aside {
 	transition: all 0.1s ease-in-out;
 } */
+
+@keyframes shake {
+	0% {
+		margin-left: 0rem;
+	}
+	25% {
+		margin-left: 0.2rem;
+	}
+	75% {
+		margin-left: -0.2rem;
+	}
+	100% {
+		margin-left: 0rem;
+	}
+}
+
+.shake {
+	animation-name: shake;
+	animation-duration: 0.2s;
+	animation-timing-function: ease;
+	animation-iteration-count: 1;
+}
+
+#tableWrapper {
+	th {
+		border: none;
+	}
+
+	tr:nth-last-child(1) {
+		border: none;
+	}
+
+	tbody tr:nth-child(n):hover {
+		background-color: rgba(167, 167, 167, 0.298);
+	}
+}

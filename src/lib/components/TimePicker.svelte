@@ -34,7 +34,6 @@
 		let appointments = await fetch("/api/counter_duty?type=Walk-in Appointment");
 		let res = await appointments.json();
 		res.appointments.forEach((appt: any) => {
-			// console.log(moment.utc(appt.dateTime).local().format("YYYY-MM-DDTHH:mm:ss") + ".000Z");
 			currentAppts.push(moment.utc(appt.dateTime).local().format("YYYY-MM-DDTHH:mm:ss") + ".000Z");
 		})
 	})
@@ -69,7 +68,7 @@
       bind:group={timeChosen}
     />
     <label
-      class="flex justify-center rounded-sm bg-[#D7DAE6] border border-accSlate/50 p-2"
+      class="flex justify-center rounded-sm bg-transparent border border-accSlate/50 p-2"
       for={time.split(':')[0] + '_' + time.split(':')[1]}
       >{parseTime(time)}</label
     >

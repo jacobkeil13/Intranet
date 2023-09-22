@@ -1,6 +1,5 @@
 import moment from "moment";
 import type { PrivacyForm } from "./types";
-import { modalStore } from "@skeletonlabs/skeleton";
 
 export function dateAddOffset(dateNeeded: string): string {
   const date = moment(new Date(dateNeeded)).add(4, "hours").toISOString();
@@ -27,8 +26,6 @@ export function dateAddHours(date: string, hours: string) {
 }
 
 export async function email(template: string, data: any) {
-  console.log(data);
-  
   await fetch(`http://localhost:3000/${template}`, {
     method: "POST",
     headers: {
@@ -73,12 +70,4 @@ export function checkPrivacyForms(forms: PrivacyForm[]) {
     }
   })
   return parentHasAccess;
-}
-
-export function openModal(modal: string, meta: object) {
-  modalStore.trigger({
-    type: 'component',
-    component: modal,
-    meta
-  })
 }

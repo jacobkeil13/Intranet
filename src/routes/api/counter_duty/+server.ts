@@ -2,12 +2,8 @@ import { db } from '$lib/server/database.js';
 import { json } from '@sveltejs/kit';
 
 export async function GET({ url }) {
-  console.log(String(url.searchParams.get("type")));
-
   let appointments;
-
   let todaysDate = new Date().toISOString();
-  console.log(todaysDate.split("T")[0] + "T" + "00:00:00.000Z");
   
   if (String(url.searchParams.get("type")) === "Phone Appointment" || String(url.searchParams.get("type")) === "In-person Appointment") {
     appointments = await db.appointment.findMany({

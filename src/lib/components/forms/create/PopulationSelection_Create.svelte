@@ -1,34 +1,16 @@
 <script lang="ts">
 	import { writable } from 'svelte/store';
-	import type { AidYear, UserProfile } from '@prisma/client';
-	import { Autocomplete, InputChip, modalStore, type AutocompleteOption } from '@skeletonlabs/skeleton';
+	import type { AidYear } from '@prisma/client';
+	import { getModalStore } from '@skeletonlabs/skeleton';
 	import { getDateLocal } from '$lib/helpers';
+	import UserPicker from '$lib/components/UserPicker.svelte';
 
+	let modalStore = getModalStore();
 	let constants = $modalStore[0].meta.constants;
 	let isTeam = $modalStore[0].meta.isTeam;
 	let aidYears = $modalStore[0].meta.constants.aidYears.filter((year: AidYear) => year.name !== "Non-Year")
 	
-	let emailInput = '';
 	let stringEmailList: string = '';
-	let userEmails: AutocompleteOption[] = [];
-	let emailList: string[] = isTeam[0].userProfile.map((user: UserProfile) => { return user.first_name + ' ' + user.last_name })
-
-	$: {
-		let list	= userEmails.filter((tr: AutocompleteOption) => {
-			return emailList.includes(String(tr.label));
-		})
-		stringEmailList = JSON.stringify(list);
-	}
-
-	constants.users.forEach((user: UserProfile) => {
-		let userName = user.first_name + ' ' + user.last_name;
-		let tempObj = {
-			label: userName,
-			value: userName,
-			meta: { id: user.id }
-		};
-		userEmails.push(tempObj);
-	});
 
 	let aidYear = writable<string>('');
 	let date: string = getDateLocal(new Date().toISOString(), "YYYY-MM-DD");
@@ -71,25 +53,13 @@
 	function closeForm(): void {
 		modalStore.close();
 	}
-
-	function onEmailInput(event: any): void {
-		if (emailList.includes(event.detail.label) === false) {
-			emailList = [...emailList, event.detail.label];
-			emailInput = '';
-		}
-	}
-
-	function handleRemove(event: any) {
-		console.log(event.detail);
-		userEmails = userEmails
-	}
 </script>
 
 <section class="w-[40rem] max-h-[calc(100%_-_5rem)] overflow-y-auto bg-usfWhite p-4 rounded-md">
 	<div class="flex justify-between items-center">
 		<h1 class="text-xl text-usfGreen font-medium">Create Population Selection</h1>
 		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<box-icon class="fill-black cursor-pointer" name="x" on:click={closeForm} />
+		<i class="fa-solid fa-xmark fa-lg text-black cursor-pointer" on:click={closeForm}></i>
 	</div>
 	<br />
 	<form method="POST" action="/popsel?/create" enctype="multipart/form-data">
@@ -235,30 +205,7 @@
 					</span>
 				</div>
 			{/if}
-			<div class="space-y-2">
-				<label for="chips">Email List</label>
-				<div class="flex">
-					<InputChip
-						on:remove={handleRemove}
-						placeholder="Search names..."
-						class="bg-usfWhite text-black min-h-[150px]"
-						bind:input={emailInput}
-						bind:value={emailList}
-						name="chips"
-						chips="rounded bg-accSlate text-white/90"
-					/>
-					<div class="card w-full max-h-40 px-1 overflow-y-auto bg-usfWhite text-black min-h-[150px]" tabindex="-1">
-						<Autocomplete
-							emptyState="No users found..."
-							regionItem="bg-white"
-							bind:input={emailInput}
-							options={userEmails}
-							denylist={emailList}
-							on:selection={onEmailInput}
-						/>
-					</div>
-				</div>
-			</div>
+			<UserPicker team={isTeam[0].userProfile} users={constants.users} bind:stringEmailList={stringEmailList} />
 		</section>
 		<footer class="float-right mt-3">
 			<button type="submit" class="btn bg-accSlate text-white/90 rounded-md">Create request</button>

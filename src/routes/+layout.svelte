@@ -1,42 +1,51 @@
 <script context="module">
-	import { localStorageStore } from '@skeletonlabs/skeleton';
-	const sidebarStore = localStorageStore("sidebarStore", true);
+	import { getDrawerStore, localStorageStore } from '@skeletonlabs/skeleton';
+	import { initializeStores } from '@skeletonlabs/skeleton';
+	// const sidebarStore = localStorageStore("sidebarStore", true);
 </script>
 
 <script lang="ts">
-	import '@skeletonlabs/skeleton/styles/skeleton.css';
-	import '../theme.postcss';
 	import '../app.postcss';
-
-	import { AppShell, AppBar, Accordion, AccordionItem, Avatar, Modal, Toast } from '@skeletonlabs/skeleton';
+	
+	import { AppShell, AppBar, Avatar, Modal, Toast, Drawer } from '@skeletonlabs/skeleton';
+	import { computePosition, autoUpdate, offset, shift, flip, arrow } from '@floating-ui/dom';
+	import { storePopup } from '@skeletonlabs/skeleton';
 	import UsfLogo from '$lib/components/brand/USFLogo.svelte';
-	import { sidebar_links } from '$lib/stores/sidebar';
 	import { forms } from '$lib/stores/modal';
-	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
-	import { openModal } from '$lib/helpers';
+	import Resources from '$lib/components/Resources.svelte';
+	import SidebarItem from '$lib/components/SidebarItem.svelte';
 	export let data;
+	
+	initializeStores();
+	storePopup.set({ computePosition, autoUpdate, offset, shift, flip, arrow });
+	let drawerStore = getDrawerStore();
 
 	onMount(() => {
 		if (!data.profile) location.replace("https://www.usf.edu/financial-aid/");
 	})
 
-	function toggleSidebar() {
-		$sidebarStore = !$sidebarStore;
-	}
+	// function toggleSidebar() {
+	// 	$sidebarStore = !$sidebarStore;
+	// }
 </script>
 
 <Toast position="tl" buttonDismiss="btn-icon btn-icon-sm bg-white text-black" />
 <Modal regionBackdrop="bg-black/40" components={forms} />
+<Drawer height="h-[calc(100%_-_3rem)]" width="w-[450px]" position="right" 
+	bgBackdrop="bg-black/20" bgDrawer="bg-white my-6 mr-6 rounded-md"
+>
+	{#if $drawerStore.id === "resources"}
+		<Resources />
+	{/if}
+</Drawer>
 
 {#if data.profile}
-	<AppShell slotSidebarLeft="{$sidebarStore ? 'block' : 'hidden'} w-[300px] bg-accSlate text-white/80" slotHeader="p-0">
+	<AppShell slotSidebarLeft="w-[300px] bg-accSlate text-white/80" slotHeader="p-0">
 		<svelte:fragment slot="header">
 			<AppBar background="bg-accSlate text-white/90" padding="py-2 pr-2">
 				<svelte:fragment slot="lead">
-					<span class="flex items-center space-x-2 w-[300px] px-2">
-						<!-- svelte-ignore a11y-click-events-have-key-events -->
-						<box-icon on:click={toggleSidebar} class="fill-white/90 mr-2 cursor-pointer" name={$sidebarStore ? 'x' : 'menu'} />
+					<span class="flex items-center space-x-2 w-[300px] px-4">
 						<UsfLogo />
 						<strong class="text-xl">OFA Intranet</strong>
 					</span>
@@ -44,73 +53,52 @@
 				</svelte:fragment>
 				<svelte:fragment slot="trail">
 					<span class="flex items-center space-x-2">
-						<!-- svelte-ignore a11y-click-events-have-key-events -->
-						<div class="flex justify-center items-center bg-usfWhite p-2 rounded-full cursor-pointer" on:click={() => { 
-								openModal("globalSearchModal", { constants: data.constants })
-							}}>
-							<box-icon class="fill-accSlate" name="search" />
-						</div>
 						<Avatar background="bg-usfWhite" initials={data.profile?.first_name.charAt(0) + "" + data.profile?.last_name.charAt(0)} width="w-10" />
 					</span>
 				</svelte:fragment>
 			</AppBar>
-			<AppBar background="bg-accSlate/90 text-white/90" padding="p-2">
-				<!-- svelte-ignore a11y-click-events-have-key-events -->
-				<span on:click={() => goto("/dashboard")} class="chip bg-usfWhite/90 text-black py-1 px-2 rounded-sm">Dashboard</span>
-				<!-- svelte-ignore a11y-click-events-have-key-events -->
-				<span on:click={() => goto("/visitor_stats")} class="chip bg-usfWhite/90 text-black py-1 px-2 rounded-sm">Visitor Stats</span>
-				<!-- svelte-ignore a11y-click-events-have-key-events -->
-				<span on:click={() => goto("/counter_duty")} class="chip bg-usfWhite/90 text-black py-1 px-2 rounded-sm">Counter Duty</span>
-				<!-- svelte-ignore a11y-click-events-have-key-events -->
-				<span on:click={() => goto("/appointments")} class="chip bg-usfWhite/90 text-black py-1 px-2 rounded-sm">Appointments</span>
-				<!-- svelte-ignore a11y-click-events-have-key-events -->
-				<span on:click={() => goto("/referrals")} class="chip bg-usfWhite/90 text-black py-1 px-2 rounded-sm">Referrals</span>
-				<!-- svelte-ignore a11y-click-events-have-key-events -->
-				<span on:click={() => goto("/is_queue")} class="chip bg-usfWhite/90 text-black py-1 px-2 rounded-sm">IS Queue</span>
-				<!-- svelte-ignore a11y-click-events-have-key-events -->
-				<span on:click={() => goto("/dr_queue")} class="chip bg-usfWhite/90 text-black py-1 px-2 rounded-sm">DR Queue</span>
-				<!-- svelte-ignore a11y-click-events-have-key-events -->
-				<span on:click={() => goto("/master_calendar")} class="chip bg-usfWhite/90 text-black py-1 px-2 rounded-sm">Master Calendar</span>
-				<!-- svelte-ignore a11y-click-events-have-key-events -->
-				<span on:click={() => goto("/phone_list")} class="chip bg-usfWhite/90 text-black py-1 px-2 rounded-sm">Phone List</span>
-				<!-- svelte-ignore a11y-click-events-have-key-events -->
-				<span on:click={() => goto("/training")} class="chip bg-usfWhite/90 text-black py-1 px-2 rounded-sm">Trainings</span>
-				<!-- svelte-ignore a11y-click-events-have-key-events -->
-				<span on:click={() => goto("/popsel")} class="chip bg-usfWhite/90 text-black py-1 px-2 rounded-sm">Popsels</span>
-				<!-- svelte-ignore a11y-click-events-have-key-events -->
-				<span on:click={() => goto("/documents/procedures")} class="chip bg-usfWhite/90 text-black py-1 px-2 rounded-sm">S&P's</span>
-				<!-- svelte-ignore a11y-click-events-have-key-events -->
-				<span on:click={() => goto("/documents/letters")} class="chip bg-usfWhite/90 text-black py-1 px-2 rounded-sm">Letters</span>
-				<!-- svelte-ignore a11y-click-events-have-key-events -->
-				<span on:click={() => goto("/documents/forms")} class="chip bg-usfWhite/90 text-black py-1 px-2 rounded-sm">Forms</span>
-			</AppBar>
 		</svelte:fragment>
 		<svelte:fragment slot="sidebarLeft">
-			{#if $sidebarStore}
-				<Accordion class="bg-accSlate">
-					{#each $sidebar_links as section}
-						<AccordionItem>
-							<svelte:fragment slot="summary">{section.header}</svelte:fragment>
-							<svelte:fragment slot="content">
-								<ul class="pl-2 text-usfWhite">
-									{#each section.links as url}
-										<li class="hover:underline text-white/80">
-											<a href={url.link} target={url.target}>{url.label}</a>
-										</li>
-									{/each}
-								</ul>
-							</svelte:fragment>
-						</AccordionItem>
-					{/each}
-				</Accordion>
-			{/if}
+			<section class="bg-accSlate text-white/80">
+				<SidebarItem icon="fa-square-poll-vertical" label="Dashboard" border="border-y" href="/dashboard" />
+				<SidebarItem icon="fa-phone" label="Phone List" border="border-b" href="/phone_list" />
+				<SidebarItem icon="fa-book-bookmark" label="Trainings" border="border-b" href="/training" />
+				<SidebarItem icon="fa-calendar-days" label="Master Calendar" border="border-b" href="/master_calendar" />
+				<div class="flex flex-col gap-2 p-4 border-b border-white/10 duration-100 cursor-pointer">
+					<SidebarItem icon="fa-arrow-trend-up" label="Chrons" target="_blank" href="https://app.powerbi.com/groups/5a0f9b38-88e0-4604-8dad-7328caeea86a/list/dashboards" />
+					<SidebarItem icon="fa-user-check" label="Counter Duty" href="/counter_duty" />
+					<SidebarItem icon="fa-comments" label="Appointments" href="/appointments" />
+					<SidebarItem icon="fa-bell" label="Referrals" href="/referrals" />
+				</div>
+				<div class="flex flex-col gap-2 p-4 border-b border-white/10 duration-100 cursor-pointer">
+					<SidebarItem icon="fa-file-lines" label="Forms" href="/documents/forms" />
+					<SidebarItem icon="fa-envelope" label="Letters" href="/documents/letters" />
+					<SidebarItem icon="fa-file-word" label="S&P's" href="/documents/procedures" />
+					<SidebarItem icon="fa-file-excel" label="Track Spreadsheet" href="/track_spreadsheet" />
+				</div>
+				<div class="flex flex-col gap-2 p-4 border-b border-white/10 duration-100 cursor-pointer">
+					<SidebarItem icon="fa-info-circle" label="IS Queue" href="/is_queue" />
+					<SidebarItem icon="fa-database" label="DR Queue" href="/dr_queue" />
+				</div>
+				<div class="flex flex-col gap-2 p-4 border-b border-white/10 duration-100 cursor-pointer">
+					<SidebarItem icon="fa-file-circle-plus" label="Reports" target="_blank" href="http://131.247.181.30:8080/apex/f?p=115:15" />
+					<SidebarItem icon="fa-chart-simple" label="Visitor Stats" href="/visitor_stats" />
+					<SidebarItem icon="fa-street-view" label="Population Selections" href="/popsel" />
+				</div>
+			</section>
 		</svelte:fragment>
-		<section id="content">
-			<section class="p-8 { $sidebarStore ? "max-w-7xl" : "max-w-[1600px]"} mx-auto min-h-[calc(100vh_-_3.5rem_-_41px)]">
+		<section id="content" class="relative">
+			<section class="py-8 pl-8 pr-16 max-w-7xl mx-auto min-h-[calc(100vh_-_3.5rem)]">
 				<div>
 					<slot />
 				</div>
 			</section>
+			<!-- svelte-ignore a11y-click-events-have-key-events -->
+			<div class="absolute flex items-center justify-center py-6 pl-3 pr-2 right-0 top-16 bg-accSlate rounded-l-md hover:px-4 duration-100 cursor-pointer"
+				on:click={() => drawerStore.open({ id: "resources" })}
+			>
+				<i class="fa-solid fa-arrow-left fa-sm text-white/90"></i>
+			</div>
 		</section>
 	</AppShell>
 {:else}

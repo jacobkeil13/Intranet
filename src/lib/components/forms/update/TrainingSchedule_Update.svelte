@@ -1,15 +1,20 @@
 <script lang="ts">
-	import { modalStore } from '@skeletonlabs/skeleton';
+	import { getModalStore } from '@skeletonlabs/skeleton';
 	import Loading from '$lib/components/animation/Loading.svelte';
 	import type { TrainingSchedule, UserProfile } from '@prisma/client';
+	import { getDateLocal } from '$lib/helpers';
+	import UserPicker from '$lib/components/UserPicker.svelte';
 
   interface FullTraining extends TrainingSchedule {
     trainers: UserProfile[];
   }
 
+	let modalStore = getModalStore();
 	let isLoading = false;
 	let constants = $modalStore[0].meta.constants;
   let training: FullTraining = $modalStore[0].meta.training;
+
+	let stringEmailList = '';
 
 	function closeForm(): void {
 		modalStore.close();
@@ -20,11 +25,12 @@
 	<div class="flex justify-between items-center">
 		<h1 class="text-xl text-usfGreen font-medium">Update Training</h1>
 		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<box-icon class="fill-black cursor-pointer" name="x" on:click={closeForm} />
+		<i class="fa-solid fa-xmark fa-lg text-black cursor-pointer" on:click={closeForm}></i>
 	</div>
 	<br />
 	<form method="POST" action="/training?/updateTraining" enctype="multipart/form-data">
     <input type="hidden" name="id" value={training.id} />
+		<input type="hidden" name="trainerList" value={stringEmailList}>
 		<section class="space-y-2">
 			<div class="flex space-x-2">
 				<span class="flex flex-col w-full space-y-1">
@@ -33,17 +39,10 @@
 				</span>
 				<span class="flex flex-col space-y-1">
 					<label for="date">Date</label>
-					<input required type="date" name="date" class="input rounded-md" value={training.date.toISOString().split("T")[0]} />
+					<input required type="date" name="date" class="input rounded-md" value={getDateLocal(training.date.toISOString(), "YYYY-MM-DD")} />
 				</span>
 			</div>
-      <div class="space-y-2">
-				<label for="chips">Trainer(s)</label>
-				<div class="flex flex-wrap gap-1">
-          {#each training.trainers as trainer}
-            <span class="badge bg-accSlate text-white/90 rounded-md">{trainer.first_name} {trainer.last_name}</span>
-          {/each}
-        </div>
-			</div>
+      <UserPicker label="Trainers" team={training.trainers} users={constants.users} bind:stringEmailList={stringEmailList} />
 		</section>
 		<footer class="float-right mt-3">
 			<button type="submit" class="btn bg-accSlate text-white/90 rounded-md">

@@ -1,5 +1,7 @@
 <script lang="ts">
-	import { modalStore } from '@skeletonlabs/skeleton';
+	import { getModalStore } from '@skeletonlabs/skeleton';
+
+  let modalStore = getModalStore();
   function onChoice(r: boolean) {
     if ($modalStore[0] !== undefined) {
       $modalStore[0].meta.response(r);
