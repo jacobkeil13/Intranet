@@ -1,5 +1,6 @@
 import moment from "moment";
 import type { PrivacyForm } from "./types";
+let api_key = "API_KEY";
 
 export function dateAddOffset(dateNeeded: string): string {
   const date = moment(new Date(dateNeeded)).add(4, "hours").toISOString();
@@ -26,7 +27,7 @@ export function dateAddHours(date: string, hours: string) {
 }
 
 export async function email(template: string, data: any) {
-  await fetch(`http://localhost:3000/${template}`, {
+  await fetch(`http://localhost:8000/${template}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -70,4 +71,36 @@ export function checkPrivacyForms(forms: PrivacyForm[]) {
     }
   })
   return parentHasAccess;
+}
+
+export function timeout(ms: number) {
+  return new Promise((resolve, reject) => {
+      setTimeout(() => {
+          reject(new Error('Timeout'));
+      }, ms);
+  });
+}
+
+export function getFormURL(form: any) {
+  if (form?.aidYear.name !== "Non-Year") {
+    return `https://tup-ofa.forest.usf.edu/files/forms/${form?.web ? "internet" : "intranet"}/${form?.aidYear.name}/${form?.aidYear.name}_${form?.rraareqCode}.pdf?apiKey=${api_key}`;
+  }
+  return `https://tup-ofa.forest.usf.edu/files/forms/${form?.web ? "internet" : "intranet"}/non-year/${form?.rraareqCode}.pdf?apiKey=${api_key}`;
+}
+
+export function getLetterURL(letter: any) {
+  if (letter?.letterType.name ===  "Paper Letters" || letter?.letterType.name ===  "Email Letters") {
+    return `https://tup-ofa.forest.usf.edu/files/letters/${letter?.letterType.name.replace(" ", "")}/${letter.letterGroup?.name}/${letter.letterCode.name}.pdf?apiKey=${api_key}`;
+  }
+  return `https://tup-ofa.forest.usf.edu/files/letters/${letter?.letterType.name.replace(" ", "")}/${letter?.letterCode.name}.pdf?apiKey=${api_key}`;
+}
+
+export function getProcedureURL(proc: any) {
+  if (proc?.aidYear.name === "Non-Year") {
+    return `https://tup-ofa.forest.usf.edu/files/procedures/non-year/${proc?.fileName}.${proc?.extension}?apiKey=${api_key}`;
+  } else if (proc?.aidYear.name === "Administrative") {
+    return `https://tup-ofa.forest.usf.edu/files/procedures/administrative/${proc?.fileName}.${proc?.extension}?apiKey=${api_key}`;
+  } else {
+    return `https://tup-ofa.forest.usf.edu/files/procedures/${proc?.aidYear.name}/${proc?.aidYear.name} ${proc?.fileName}.${proc?.extension}?apiKey=${api_key}`;
+  }
 }

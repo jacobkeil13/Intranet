@@ -8,12 +8,12 @@
 	let modalStore = getModalStore();
 	let constants = $modalStore[0].meta.constants;
 	let isTeam = $modalStore[0].meta.isTeam;
-	let aidYears = $modalStore[0].meta.constants.aidYears.filter((year: AidYear) => year.name !== "Non-Year")
-	
+	let aidYears = $modalStore[0].meta.constants.aidYears.filter((year: AidYear) => year.name !== 'Non-Year' && year.name !== 'Administrative');
+
 	let stringEmailList: string = '';
 
 	let aidYear = writable<string>('');
-	let date: string = getDateLocal(new Date().toISOString(), "YYYY-MM-DD");
+	let date: string = getDateLocal(new Date().toISOString(), 'YYYY-MM-DD');
 	let termCode: string;
 	let application: string;
 	let letterCode: string;
@@ -37,17 +37,12 @@
 	$: {
 		firstTerm = String(`Fall 20${$aidYear.slice(0, 2)}`);
 		secondTerm = String(`Spring 20${$aidYear.slice(-2)}`);
-		thirdTerm = String(`Summer 20${$aidYear.slice(-2)}`); 
+		thirdTerm = String(`Summer 20${$aidYear.slice(-2)}`);
 		priorAidYear = String(`20${parseInt($aidYear.slice(0, 2)) - 1}-20${$aidYear.slice(0, 2)}`);
 		priorFallTerm = String(`Fall 20${parseInt($aidYear.slice(0, 2)) - 1}`);
 		priorSpringTerm = String(`Spring 20${$aidYear.slice(0, 2)}`);
 
-		termCodeOptions = [
-			`Summer 20${$aidYear.slice(0, 2)}`,
-			`Fall 20${$aidYear.slice(0, 2)}`,
-			`Spring 20${$aidYear.slice(-2)}`,
-			`Summer 20${$aidYear.slice(-2)}`
-		];
+		termCodeOptions = [`Summer 20${$aidYear.slice(0, 2)}`, `Fall 20${$aidYear.slice(0, 2)}`, `Spring 20${$aidYear.slice(-2)}`, `Summer 20${$aidYear.slice(-2)}`];
 	}
 
 	function closeForm(): void {
@@ -59,18 +54,18 @@
 	<div class="flex justify-between items-center">
 		<h1 class="text-xl text-usfGreen font-medium">Create Population Selection</h1>
 		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<i class="fa-solid fa-xmark fa-lg text-black cursor-pointer" on:click={closeForm}></i>
+		<i class="fa-solid fa-xmark fa-lg text-black cursor-pointer" on:click={closeForm} />
 	</div>
 	<br />
 	<form method="POST" action="/popsel?/create" enctype="multipart/form-data">
-		<input type="hidden" name="emailList" bind:value={stringEmailList}>
-		<input type="hidden" name="date" bind:value={date}>
-		<input type="hidden" name="firstTermFull" bind:value={firstTerm}>
-		<input type="hidden" name="secondTermFull" bind:value={secondTerm}>
-		<input type="hidden" name="thirdTermFull" bind:value={thirdTerm}>
-		<input type="hidden" name="priorAidYearFull" bind:value={priorAidYear}>
-		<input type="hidden" name="priorFallTermFull" bind:value={priorFallTerm}>
-		<input type="hidden" name="priorSpringTermFull" bind:value={priorSpringTerm}>
+		<input type="hidden" name="emailList" bind:value={stringEmailList} />
+		<input type="hidden" name="date" bind:value={date} />
+		<input type="hidden" name="firstTermFull" bind:value={firstTerm} />
+		<input type="hidden" name="secondTermFull" bind:value={secondTerm} />
+		<input type="hidden" name="thirdTermFull" bind:value={thirdTerm} />
+		<input type="hidden" name="priorAidYearFull" bind:value={priorAidYear} />
+		<input type="hidden" name="priorFallTermFull" bind:value={priorFallTerm} />
+		<input type="hidden" name="priorSpringTermFull" bind:value={priorSpringTerm} />
 		<section class="space-y-2">
 			<div class="flex space-x-2">
 				<span class="flex flex-col space-y-1 w-fit">
@@ -88,7 +83,7 @@
 				</span>
 				<span class="flex flex-col space-y-1 grow">
 					<label for="termCodeFull">Term Code</label>
-					<select disabled={$aidYear === ""} required class="input rounded-md w-full" name="termCodeFull" bind:value={termCode}>
+					<select disabled={$aidYear === ''} required class="input rounded-md w-full" name="termCodeFull" bind:value={termCode}>
 						<option disabled selected value="">Select one...</option>
 						{#each termCodeOptions as termCodeOption}
 							<option value={termCodeOption}>{termCodeOption}</option>
@@ -161,14 +156,7 @@
 				</span>
 				<span class="flex flex-col space-y-1 w-full">
 					<label for="bannerCreatorId">BANNER Creator ID</label>
-					<input
-						required
-						type="text"
-						name="bannerCreatorId"
-						class="input rounded-md"
-						bind:value={bannerCreatorId}
-						placeholder="BANNER Creator ID..."
-					/>
+					<input required type="text" name="bannerCreatorId" class="input rounded-md" bind:value={bannerCreatorId} placeholder="BANNER Creator ID..." />
 				</span>
 				<span class="flex flex-col space-y-1 w-full">
 					<label for="bannerUserId">BANNER User ID</label>
@@ -205,7 +193,7 @@
 					</span>
 				</div>
 			{/if}
-			<UserPicker team={isTeam[0].userProfile} users={constants.users} bind:stringEmailList={stringEmailList} />
+			<UserPicker team={isTeam[0].userProfile} users={constants.users} bind:stringEmailList />
 		</section>
 		<footer class="float-right mt-3">
 			<button type="submit" class="btn bg-accSlate text-white/90 rounded-md">Create request</button>

@@ -15,7 +15,7 @@
 	<div class="flex justify-between items-center">
 		<h1 class="text-xl text-usfGreen font-medium">Create Standard or Procedure</h1>
 		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<i class="fa-solid fa-xmark fa-lg text-black cursor-pointer" on:click={closeForm}></i>
+		<i class="fa-solid fa-xmark fa-lg text-black cursor-pointer" on:click={closeForm} />
 	</div>
 	<br />
 	<form method="POST" action="/documents/procedures?/create" enctype="multipart/form-data">
@@ -25,7 +25,7 @@
 					<label for="fileName">File Name</label>
 					<input required type="text" name="fileName" class="input rounded-md" placeholder="Name of file without extension..." />
 				</span>
-        <span class="flex flex-col space-y-1 grow min-w-fit">
+				<span class="flex flex-col space-y-1 grow min-w-fit">
 					<label for="aidYear">Aid Year</label>
 					<select required class="input rounded-md w-full" name="aidYear">
 						<option disabled selected value="">Select one...</option>
@@ -40,12 +40,12 @@
 					<label for="extension">Extension</label>
 					<select class="input rounded-md w-fit" name="extension">
 						<option value="docx">.docx</option>
-            <option value="pdf">.pdf</option>
-            <option value="pptx">.pptx</option>
+						<option value="pdf">.pdf</option>
+						<option value="pptx">.pptx</option>
 						<option value="xlsx">.xlsx</option>
 					</select>
 				</span>
-        <span class="flex flex-col w-full space-y-1">
+				<span class="flex flex-col w-full space-y-1">
 					<label for="owner">Owner</label>
 					<select required class="input rounded-md" name="owner">
 						<option disabled selected value="">Select one...</option>
@@ -53,6 +53,10 @@
 							<option value={user.id}>{user.first_name} {user.last_name}</option>
 						{/each}
 					</select>
+				</span>
+				<span class="flex flex-col space-y-1">
+					<label for="updatedAt">Updated At</label>
+					<input type="date" name="updatedAt" class="input rounded-md" />
 				</span>
 			</div>
 		</section>

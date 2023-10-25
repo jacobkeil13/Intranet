@@ -82,11 +82,13 @@
 		paginationSettings.page * paginationSettings.limit + paginationSettings.limit
 	);
 
-	function updatePageSettings(filteredArr: any[]) {
+function updatePageSettings(filteredArr: any[]) {
 		paginationSettings.size = filteredArr.length;
+		paginationSettings.page = 0;
 	}
 
 	function updateAppointment(id: string) {
+		if (data.profile?.role.name === "STUDENT") return;
     modalStore.trigger({
       type: 'component',
       component: 'updateAppointmentModal',
@@ -96,6 +98,7 @@
   }
 
 	function openModal(modal: string, meta: object) {
+		if (data.profile?.role.name === "STUDENT") return;
 		modalStore.trigger({
 			type: 'component',
 			component: modal,

@@ -10,11 +10,11 @@ export const load = async ({ locals }) => {
       orderBy: {
         date: "asc"
       },
-      // where: {
-      //   date: {
-      //     gte: moment().toISOString()
-      //   }
-      // },
+      where: {
+        date: {
+          gte: moment().subtract(1, "days").format()
+        }
+      },
       include: {
         trainers: true
       }
@@ -64,6 +64,7 @@ export const actions = {
 
       return { success: true, message: "Training created successfully!" }
     } catch (error) {
+      console.log({ timestamp: moment().format(), source: "Training_Create", error });
       return { success: false, message: "Training creation failed." }
     }
   },
@@ -102,6 +103,7 @@ export const actions = {
 
       return { success: true, message: "Training updated successfully!" }      
     } catch (error) {
+      console.log({ timestamp: moment().format(), source: "Training_Update", error });
       return { success: false, message: "Training update failed." }
     }
   },
@@ -123,7 +125,7 @@ export const actions = {
     try {
       let dateDueConvert = new Date(dateAddHours(date, "12"));
       let weekday = moment(new Date(dateAddHours(date, "12"))).format('dddd');
-  
+
       const newLibrary = await db.generalLibrary.create({
         data: {
           name: title,
@@ -138,6 +140,7 @@ export const actions = {
 
       return { success: true, message: "Library video created successfully!" }
     } catch (error) {
+      console.log({ timestamp: moment().format(), source: "Library_Create", error });
       return { success: false, message: "Library video creation failed." }
     }
   },
@@ -179,6 +182,7 @@ export const actions = {
 
       return { success: true, message: "Library video updated successfully!" }      
     } catch (error) {
+      console.log({ timestamp: moment().format(), source: "Library_Update", error });
       return { success: false, message: "Library video update failed." }
     }
   }

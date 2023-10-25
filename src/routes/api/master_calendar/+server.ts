@@ -11,14 +11,15 @@ export async function GET({ url }) {
     },
     include: {
       type: true,
-      primaryOwner: true,
+      primaryOwner: {
+        include: {
+          directReport: true
+        }
+      },
       secondaryOwners: true,
       comments: {
         orderBy: {
           createdAt: "desc"
-        },
-        include: {
-          userProfile: true
         }
       }
     }

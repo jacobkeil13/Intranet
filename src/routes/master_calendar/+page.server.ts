@@ -6,6 +6,7 @@ import {
 } from '$lib/server/database'
 import { dateAddHours, getLocalISO } from '$lib/helpers';
 import type { AutocompleteOption } from '@skeletonlabs/skeleton';
+import moment from 'moment';
 
 export const load = async ({ locals }) => {
   const profile = await getUserProfileByNetId(locals.user.netid);
@@ -25,9 +26,6 @@ export const load = async ({ locals }) => {
         comments: {
           orderBy: {
             createdAt: "desc"
-          },
-          include: {
-            userProfile: true
           }
         }
       }
@@ -78,22 +76,14 @@ export const actions = {
       await db.masterCalendarComment.create({
         data: {
           content: description,
-          userProfile: { connect: { id: profile?.id } },
+          user: profile?.first_name + " " + profile?.last_name,
           masterCalendar: { connect: { id: newMasterCalendarItem.id } }
         }
       })
 
-      // await email("new_is_queue", {
-      //   "subject": "New IS Queue Request",
-      //   "name": profile?.first_name + " " + profile?.last_name,
-      //   "date": getDateLocal(dateAddHours(dateNeeded, "12"), "MMMM Do, YYYY"),
-      //   "title": title,
-      //   "description": description,
-      //   "to": ["jacobkeil@usf.edu"]
-      // });
-
       return { success: true, message: "Calendar item created successfully!" }
     } catch (error) {
+      console.log({ timestamp: moment().format(), source: "MasterCalendar_Create", error });
       return { success: false, message: "Calendar item creation failed." }
     }
   },
@@ -145,26 +135,20 @@ export const actions = {
           lastUpdatedBy: userInfo?.first_name + " " + userInfo?.last_name
         }
       })
-  
-      await db.masterCalendarComment.create({
-        data: {
-          content: description,
-          userProfile: { connect: { id: profile?.id } },
-          masterCalendar: { connect: { id: updatedMasterCalendarItem.id } }
-        }
-      })
 
-      // await email("new_is_queue", {
-      //   "subject": "New IS Queue Request",
-      //   "name": profile?.first_name + " " + profile?.last_name,
-      //   "date": getDateLocal(dateAddHours(dateNeeded, "12"), "MMMM Do, YYYY"),
-      //   "title": title,
-      //   "description": description,
-      //   "to": ["jacobkeil@usf.edu"]
-      // });
+      if (description !== "") {
+        await db.masterCalendarComment.create({
+          data: {
+            content: description,
+            user: profile?.first_name + " " + profile?.last_name,
+            masterCalendar: { connect: { id: updatedMasterCalendarItem.id } }
+          }
+        })
+      }
 
       return { success: true, message: "Calendar item updated successfully!" }
     } catch (error) {
+      console.log({ timestamp: moment().format(), source: "MasterCalendar_Update", error });
       return { success: false, message: "Calendar item update failed." }
     }
   },
@@ -188,6 +172,7 @@ export const actions = {
 
       return { success: true, message: "Calendar item updated successfully!" }
     } catch (error) {
+      console.log({ timestamp: moment().format(), source: "MasterCalendar_Delete", error });
       return { success: false, message: "Calendar item update failed." }
     }
   }

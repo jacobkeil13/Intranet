@@ -26,75 +26,99 @@ export const counter_time_slots = readable([
   "14:00:00", "14:30:00", "15:00:00", "15:30:00", "16:00:00"
 ])
 
-// export async function getUidInfo(uid: string) {
-//   let parsedUID = uid.includes('U') ? uid : "U" + uid
-//   let res = await fetch("/banner/get_user?uid=" + parsedUID, {
-//     method: "GET",
-//     headers: {
-//       'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
-//       'Access-Control-Allow-Origin': '*',
-//       'Access-Control-Allow-Headers': '*',
-//     }
-//   });
-//   let response = await res.json();
-//   // console.log(response);
-//   return response;
-// }
-
-// export async function getPrivacyInfo(uid: string) {
-//   let parsedUID = uid.includes('U') ? uid : "U" + uid
-//   let res = await fetch("/banner/get_privacy?uid=" + parsedUID, {
-//     method: "GET",
-//     headers: {
-//       'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
-//       'Access-Control-Allow-Origin': '*',
-//       'Access-Control-Allow-Headers': '*',
-//     }
-//   });
-//   let response = await res.json();
-//   // console.log(response);
-//   return response;
-// }
-
 export async function getUidInfo(uid: string) {
-  let parsedUID = uid.includes('U') ? uid : "U" + uid;
-  let res = await fetch("/api/banner?uid=" + parsedUID, {
-    method: "GET"
+  let parsedUID = uid.includes('U') ? uid : "U" + uid
+  let res = await fetch("/banner/get_user?uid=" + parsedUID, {
+    method: "GET",
+    headers: {
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Headers': '*',
+    }
   });
   let response = await res.json();
   return response;
 }
 
 export async function getPrivacyInfo(uid: string) {
-  let parsedUID = uid.includes('U') ? uid : "U" + uid;
-  let res = await fetch("/api/banner/privacy?uid=" + parsedUID, {
-    method: "GET"
-  });
-  let response = await res.json();
-  return response;
-}
-
-export async function getCurrentAppts(uid: string) {
-  let parsedUID = uid.includes('U') ? uid : "U" + uid;
-  let res = await fetch("/api/current_appt?uid=" + parsedUID, {
-    method: "GET"
+  let parsedUID = uid.includes('U') ? uid : "U" + uid
+  let res = await fetch("/banner/get_privacy?uid=" + parsedUID, {
+    method: "GET",
+    headers: {
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Headers': '*',
+    }
   });
   let response = await res.json();
   return response;
 }
 
 export async function getFiveNineDirs() {
-  // let date = moment().format();
-  let res = await fetch("/api/five_nine", {
-    method: "GET"
+  let res = await fetch("/finaid/fivenine?apiKey=API_KEY", {
+    method: "GET",
+    headers: {
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Headers': '*',
+    }
   });
   let response = await res.json();
   return response;
 }
 
 export async function getFiveNineDir(dirName: string) {
-  // let date = moment().format();
-  let res = await fetch("/api/five_nine/" + dirName, {
+  let res = await fetch("/finaid/fivenine/" + dirName + "?apiKey=API_KEY", {
+    method: "GET",
+    headers: {
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Headers': '*',
+    }
+  });
+  let response = await res.json();
+  return response;
+}
+
+// export async function getUidInfo(uid: string) {
+//   let parsedUID = uid.includes('U') ? uid : "U" + uid;
+//   let res = await fetch("/api/banner?uid=" + parsedUID, {
+//     method: "GET"
+//   });
+//   let response = await res.json();
+//   return response;
+// }
+
+// export async function getPrivacyInfo(uid: string) {
+//   let parsedUID = uid.includes('U') ? uid : "U" + uid;
+//   let res = await fetch("/api/banner/privacy?uid=" + parsedUID, {
+//     method: "GET"
+//   });
+//   let response = await res.json();
+//   return response;
+// }
+
+// export async function getFiveNineDirs() {
+//   // let date = moment().format();
+//   let res = await fetch("/api/five_nine", {
+//     method: "GET"
+//   });
+//   let response = await res.json();
+//   return response;
+// }
+
+// export async function getFiveNineDir(dirName: string) {
+//   // let date = moment().format();
+//   let res = await fetch("/api/five_nine/" + dirName, {
+//     method: "GET"
+//   });
+//   let response = await res.json();
+//   return response;
+// }
+
+export async function getCurrentAppts(uid: string) {
+  let parsedUID = uid.includes('U') ? uid : "U" + uid;
+  let res = await fetch("/api/current_appt?uid=" + parsedUID, {
     method: "GET"
   });
   let response = await res.json();

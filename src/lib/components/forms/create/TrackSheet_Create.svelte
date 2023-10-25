@@ -5,16 +5,16 @@
 	import TrackCodePickerList from '$lib/components/TrackCodePickerList.svelte';
 	import { writable } from 'svelte/store';
 
-  interface FullTrackSheet extends TrackSheet {
-    defaultStatus: TrackCode[]
-    processingStatus: TrackCode[]
-    incompleteHeld: TrackCode[]
-    processMailed: TrackCode[]
-    approved: TrackCode[]
-    reviewedNoChange: TrackCode[]
-    declined: TrackCode[]
-    cancelled: TrackCode[]
-  }
+	interface FullTrackSheet extends TrackSheet {
+		defaultStatus: TrackCode[];
+		processingStatus: TrackCode[];
+		incompleteHeld: TrackCode[];
+		processMailed: TrackCode[];
+		approved: TrackCode[];
+		reviewedNoChange: TrackCode[];
+		declined: TrackCode[];
+		cancelled: TrackCode[];
+	}
 
 	let modalStore = getModalStore();
 	let isLoading = false;
@@ -29,8 +29,6 @@
 	let deniedDeclinedCodes = writable<TrackCode[]>([]);
 	let cancelledDontNeedCodes = writable<TrackCode[]>([]);
 
-	$: $defaultStatusCodes, console.log({ defaultStatusCodes: $defaultStatusCodes});
-
 	function closeForm(): void {
 		modalStore.close();
 	}
@@ -40,30 +38,30 @@
 	<div class="flex justify-between items-center">
 		<h1 class="text-xl text-usfGreen font-medium">Create Track Sheet</h1>
 		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<i class="fa-solid fa-xmark fa-lg text-black cursor-pointer" on:click={closeForm}></i>
+		<i class="fa-solid fa-xmark fa-lg text-black cursor-pointer" on:click={closeForm} />
 	</div>
 	<br />
 	<form method="POST" action="/track_spreadsheet?/createReq" enctype="multipart/form-data">
-    <input type="hidden" name="defaultStatus" value={$defaultStatusCodes.map(code => code.id).join(",")} />
-    <input type="hidden" name="processingStatus" value={$processingStatusCodes.map(code => code.id).join(",")} />
-    <input type="hidden" name="incompleteHeld" value={$incompleteHeldCodes.map(code => code.id).join(",")} />
-    <input type="hidden" name="processMailed" value={$processMailedCodes.map(code => code.id).join(",")} />
-    <input type="hidden" name="approved" value={$approvedCodes.map(code => code.id).join(",")} />
-    <input type="hidden" name="reviewedNoChange" value={$reviewedNoChangeCodes.map(code => code.id).join(",")} />
-    <input type="hidden" name="declined" value={$deniedDeclinedCodes.map(code => code.id).join(",")} />
-    <input type="hidden" name="cancelled" value={$cancelledDontNeedCodes.map(code => code.id).join(",")} />
+		<input type="hidden" name="defaultStatus" value={$defaultStatusCodes.map((code) => code.id).join(',')} />
+		<input type="hidden" name="processingStatus" value={$processingStatusCodes.map((code) => code.id).join(',')} />
+		<input type="hidden" name="incompleteHeld" value={$incompleteHeldCodes.map((code) => code.id).join(',')} />
+		<input type="hidden" name="processMailed" value={$processMailedCodes.map((code) => code.id).join(',')} />
+		<input type="hidden" name="approved" value={$approvedCodes.map((code) => code.id).join(',')} />
+		<input type="hidden" name="reviewedNoChange" value={$reviewedNoChangeCodes.map((code) => code.id).join(',')} />
+		<input type="hidden" name="declined" value={$deniedDeclinedCodes.map((code) => code.id).join(',')} />
+		<input type="hidden" name="cancelled" value={$cancelledDontNeedCodes.map((code) => code.id).join(',')} />
 		<section class="space-y-2">
 			<div class="flex space-x-2">
 				<span class="flex flex-col w-fit space-y-1">
 					<label for="reqCode">Req Code</label>
 					<input required type="text" name="reqCode" class="input rounded-md" placeholder="Req Code..." />
 				</span>
-        <span class="flex flex-col w-full space-y-1">
+				<span class="flex flex-col w-full space-y-1">
 					<label for="description">Description</label>
 					<input required type="text" name="description" class="input rounded-md" placeholder="Description..." />
 				</span>
 			</div>
-      <div class="flex items-center gap-2">
+			<div class="flex items-center gap-2">
 				<TrackCodePickerList label="Default Status" bind:trackCodeList={trackCodes} bind:trackCodeStore={defaultStatusCodes} />
 			</div>
 			<div class="flex items-center gap-2">
@@ -78,7 +76,7 @@
 			<div class="flex items-center gap-2">
 				<TrackCodePickerList label="Approved" bind:trackCodeList={trackCodes} bind:trackCodeStore={approvedCodes} />
 			</div>
-			<div class="flex items-center gap-2"> 
+			<div class="flex items-center gap-2">
 				<TrackCodePickerList label="Reviewed / No Change" bind:trackCodeList={trackCodes} bind:trackCodeStore={reviewedNoChangeCodes} />
 			</div>
 			<div class="flex items-center gap-2">
@@ -92,7 +90,7 @@
 					<label for="formType">Form Type</label>
 					<select required class="input rounded-md w-fit" name="formType">
 						<option disabled selected value="">Select one...</option>
-            <option value="None">None</option>
+						<option value="None">None</option>
 						<option value="Paper">Paper</option>
 						<option value="Online">Online</option>
 					</select>

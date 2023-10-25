@@ -65,7 +65,7 @@
 		page: 0,
 		limit: 10,
 		size: filterTrainings.length,
-		amounts: [1, 5, 10, 15],
+		amounts: [5, 10, 15],
 	} satisfies PaginationSettings;
 
 	$: paginatedSource = filterTrainings.slice(
@@ -73,8 +73,9 @@
 		paginationSettings.page * paginationSettings.limit + paginationSettings.limit
 	);
 
-	function updatePageSettings(filteredArr: any[]) {
+function updatePageSettings(filteredArr: any[]) {
 		paginationSettings.size = filteredArr.length;
+		paginationSettings.page = 0;
 	}
   
   function openModal(modal: ModalSettings) {

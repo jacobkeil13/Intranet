@@ -33,13 +33,7 @@ export async function getUserProfileByNetId(netid: string) {
           emailTo: true,
           comments: true
         }
-      },
-      queueComment: {
-        include: {
-          queueItem: true,
-          userProfile: true,
-        }
-      },
+      }
     }
   });
 
@@ -68,7 +62,7 @@ export async function createPopselQueueItem(data: any) {
   await db.queueComment.create({
     data: {
       content: "Popsel Created",
-      userProfile: { connect: { id: profile?.id } },
+      user: profile?.first_name + " " + profile?.last_name,
       queueItem: { connect: { id: newPopselQueueItem.id } }
     }
   })
@@ -142,7 +136,12 @@ export async function updatePopulationSelection(data: any) {
 export async function getTeamByName(teamName: string) {
   const team = await db.team.findMany({
     where: { name: teamName },
-    include: { userProfile: true }
+    include: { userProfile: {
+      include: {
+        team: true,
+        title: true
+      }
+    }}
   });
   return team;
 }

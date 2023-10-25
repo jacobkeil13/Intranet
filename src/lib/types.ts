@@ -12,3 +12,12 @@ export interface PrivacyForm {
   "treqCode": string
   "status": string
 }
+
+export interface Version {
+  "version": string,
+  "date": string,
+  "notes": {
+    "header": string,
+    "items": string[]
+  }[]
+}

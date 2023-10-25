@@ -40,6 +40,7 @@ import ConfirmDeleteModal from "$lib/components/modals/ConfirmDeleteModal.svelte
 import SearchUidModal from "$lib/components/modals/SearchUidModal.svelte";
 import SearchPhoneCall from "$lib/components/modals/SearchPhoneCall.svelte";
 import VisitStatsModal from "$lib/components/modals/VisitStatsModal.svelte";
+import VersionModal from "$lib/components/modals/Versions.svelte";
 
 export const forms: Record<string, ModalComponent> = {
 	// Create
@@ -81,5 +82,6 @@ export const forms: Record<string, ModalComponent> = {
 	confirmDeleteModal: { ref: ConfirmDeleteModal },
 	searchUidModal: {ref: SearchUidModal },
 	searchPhoneCall: { ref: SearchPhoneCall },
-	visitStatsModal: { ref: VisitStatsModal }
+	visitStatsModal: { ref: VisitStatsModal },
+	versionModal: { ref: VersionModal }
 };

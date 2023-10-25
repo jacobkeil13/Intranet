@@ -7,6 +7,9 @@ import { dateAddHours } from "$lib/helpers";
 export const load = async ({ locals }) => {
 	if (locals.user) {
     let trackSheets = await db.trackSheet.findMany({
+      orderBy: {
+        reqCode: "asc"
+      },
       include: {
         approved: true,
         cancelled: true,
@@ -139,8 +142,7 @@ export const actions = {
 
       return { success: true, message: "Track sheet created successfully!" }      
     } catch (error) {
-      console.log(error);
-      
+      console.log({ timestamp: moment().format(), source: "Sheet_Create", error });
       return { success: false, message: "Track sheet creation failed." }
     }
   },
@@ -217,8 +219,7 @@ export const actions = {
 
       return { success: true, message: "Track sheet updated successfully!" }      
     } catch (error) {
-      console.log(error);
-      
+      console.log({ timestamp: moment().format(), source: "Sheet_Update", error });
       return { success: false, message: "Track sheet update failed." }
     }
   },
@@ -245,6 +246,7 @@ export const actions = {
 
       return { success: true, message: "Track code created successfully!" }
     } catch (error) {
+      console.log({ timestamp: moment().format(), source: "ReqCode_Create", error });
       return { success: false, message: "Track code creation failed." }
     }
   },
@@ -276,6 +278,7 @@ export const actions = {
 
       return { success: true, message: "Track code created successfully!" }
     } catch (error) {
+      console.log({ timestamp: moment().format(), source: "ReqCode_Update", error });
       return { success: false, message: "Track code creation failed." }
     }
   }

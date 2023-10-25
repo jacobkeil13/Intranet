@@ -15,7 +15,7 @@
 	<div class="flex justify-between items-center">
 		<h1 class="text-xl text-usfGreen font-medium">Create Letter</h1>
 		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<i class="fa-solid fa-xmark fa-lg text-black cursor-pointer" on:click={closeForm}></i>
+		<i class="fa-solid fa-xmark fa-lg text-black cursor-pointer" on:click={closeForm} />
 	</div>
 	<br />
 	<form method="POST" action="/documents/letters?/create" enctype="multipart/form-data">
@@ -25,7 +25,7 @@
 					<label for="letterCode">Letter Code</label>
 					<input required type="text" name="letterCode" class="input rounded-md" placeholder="New letter code..." />
 				</span>
-        <span class="flex flex-col w-full space-y-1">
+				<span class="flex flex-col w-full space-y-1">
 					<label for="letterType">Letter Type</label>
 					<select required class="input rounded-md w-full" name="letterType">
 						<option disabled selected value="">Select one...</option>
@@ -45,16 +45,16 @@
 						{/each}
 					</select>
 				</span>
-        <span class="flex flex-col space-y-1">
+				<span class="flex flex-col space-y-1">
 					<label for="tape" class="mb-2 text-transparent">Weekly Tape Load?</label>
 					<SlideToggle name="tape" size="sm">Weekly Tape Load?</SlideToggle>
 				</span>
-        <span class="flex flex-col space-y-1">
+				<span class="flex flex-col space-y-1">
 					<label for="ruamail" class="mb-2 text-transparent">Staff in RUAMAIL?</label>
 					<SlideToggle name="ruamail" size="sm">Staff in RUAMAIL?</SlideToggle>
 				</span>
 			</div>
-      <div class="flex space-x-2">
+			<div class="flex space-x-2">
 				<span class="flex flex-col w-full space-y-1">
 					<label for="owner">Owner</label>
 					<select required class="input rounded-md" name="owner">
@@ -64,7 +64,11 @@
 						{/each}
 					</select>
 				</span>
-      </div>
+				<span class="flex flex-col space-y-1">
+					<label for="updatedAt">Updated At</label>
+					<input type="date" name="updatedAt" class="input rounded-md" />
+				</span>
+			</div>
 			<div class="flex flex-col">
 				<label for="description">Description</label>
 				<textarea required class="input rounded-md" name="description" cols="20" rows="4" placeholder="What is the letter for..." />

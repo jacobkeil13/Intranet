@@ -1,6 +1,8 @@
-import { getTerm } from "$lib/helpers";
+import { dateAddHours, email, getDateLocal, getTerm } from "$lib/helpers";
 import { createPopselQueueItem, createPopulationSelection, db, getTeamByName, getUserProfileByNetId, updatePopulationSelection } from "$lib/server/database";
+import type { AutocompleteOption } from "@skeletonlabs/skeleton";
 import { redirect } from "@sveltejs/kit";
+import moment from "moment";
 
 export const load = async ({ locals }) => {
 	if (locals.user) {
@@ -27,6 +29,7 @@ export const load = async ({ locals }) => {
 
 export const actions = {
   create: async ({ locals, request }) => {
+    let profile = await getUserProfileByNetId(locals.user.netid);
     const { 
       date,
       aidYear,
@@ -73,8 +76,6 @@ export const actions = {
       emailList: string
     }
 
-    let emailListArr = JSON.parse(emailList);
-
     let addressType: string = addressTypeFull;
     let termCode: string = String(getTerm(termCodeFull));
     let firstTerm: string = String(getTerm(firstTermFull));
@@ -89,6 +90,22 @@ export const actions = {
     } else {
       addressType = "Requestor"
     }
+
+    let emailListArr: AutocompleteOption[] = JSON.parse(emailList);
+    const isTeam = await getTeamByName("Information Systems");
+
+    isTeam[0].userProfile.forEach(isUser => {
+      if (!emailListArr.map(user => user.meta.id).includes(isUser.id)) {
+        let addUser: AutocompleteOption = {
+          label: isUser.first_name + ' ' + isUser.last_name,
+          value: isUser.first_name + ' ' + isUser.last_name,
+          meta: {
+            id: isUser.id
+          }
+        }
+        emailListArr.push(addUser);
+      }
+    });
     
     try {
       let data = {
@@ -110,8 +127,29 @@ export const actions = {
 
       await createPopselQueueItem(requestData);
 
+      let cc = [];
+      cc.push(profile?.netid + "@usf.edu");
+
+      await email("popsel", {
+        "type": "Population Selection Created",
+        "name": "Created by " + profile?.first_name + " " + profile?.last_name,
+        "subject": "Population Selection Created - " + letterCode,
+        "date": getDateLocal(dateAddHours(moment().format(), "12"), "YYYY-MM-DD"),
+        "title": letterCode,
+        "popsel": {
+          "aidYear": aidYear,
+          "letterCount": letterCount,
+          "selectionId": selectionId,
+          "termCode": termCode,
+        },
+        "from": profile?.netid + "@usf.edu",
+        "to": isTeam[0].userProfile.map(user => user.netid + "@usf.edu"),
+        "cc": cc
+      });
+
       return { success: true, message: "Popsel created successfully!" }
     } catch (error) {
+      console.log({ timestamp: moment().format(), source: "Popsel_Create", error });
       return { success: false, message: "Popsel creation failed." }
     }
   },
@@ -176,6 +214,8 @@ export const actions = {
     } else {
       addressType = "Requestor"
     }
+
+    const isTeam = await getTeamByName("Information Systems");
     
     try {
       let profile = await getUserProfileByNetId(locals.user.netid);
@@ -194,20 +234,33 @@ export const actions = {
           id
         },
         include: {
-          QueueItem: true
+          QueueItem: true,
+          letterCode: true
         }
       });
 
-      await db.queueComment.create({
-        data: {
-          content: "Popsel updated",
-          userProfile: { connect: { id: profile?.id } },
-          queueItem: { connect: { id: updatedPopsel?.QueueItem[0].id } }
-        }
-      })
+      if (updatedPopsel) {
+        await db.queueItem.update({
+          where: {
+            id: updatedPopsel.QueueItem[0].id
+          },
+          data: {
+            title: updatedPopsel.letterCode.name
+          }
+        })
+
+        await db.queueComment.create({
+          data: {
+            content: "Popsel updated",
+            user: profile?.first_name + " " + profile?.last_name,
+            queueItem: { connect: { id: updatedPopsel.QueueItem[0].id } }
+          }
+        });
+      }
 
       return { success: true, message: "Popsel updated successfully!" }
     } catch (error) {
+      console.log({ timestamp: moment().format(), source: "Popsel_Update", error });
       return { success: false, message: "Popsel update failed." }
     }
   },
@@ -242,6 +295,7 @@ export const actions = {
       
       return { success: true, message: "Popsel deleted successfully!" }
     } catch (error) {
+      console.log({ timestamp: moment().format(), source: "Popsel_Delete", error });
       return { success: false, message: "Popsel deletion failed." }
     }
   }

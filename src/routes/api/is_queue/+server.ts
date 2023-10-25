@@ -9,9 +9,6 @@ export async function GET({ url }) {
         orderBy: {
           createdAt: "desc"
         },
-        include: {
-          userProfile: true
-        }
       },
       emailTo: true,
       priority: true,

@@ -1,10 +1,19 @@
-import { dateAddOffset, getUtcDate } from "$lib/helpers.js";
+import { dateAddOffset, email, getUtcDate } from "$lib/helpers.js";
 import { db, getTeamByName } from "$lib/server/database";
+import type { AutocompleteOption } from "@skeletonlabs/skeleton";
 import { redirect } from "@sveltejs/kit";
 import moment from "moment";
 
+const allUsers = await db.userProfile.findMany();
+
+function removeDuplicates(arr: string[]) { 
+	return arr.filter((item, 
+			index) => arr.indexOf(item) === index); 
+}
+
 export const load = async ({ locals }) => {
 	if (locals.user) {
+		if (locals.user.role === "STUDENT") throw redirect(302, '/dashboard');
 		const appointmentReasons = await db.appointmentReason.findMany();
 		const visitCounterReasons = await db.visitCounterReason.findMany();
 		const managementTeam = await getTeamByName("Management");
@@ -56,6 +65,7 @@ export const actions = {
 
       return { success: true }
     } catch (error) {
+			console.log({ timestamp: moment().format(), source: "Visit_Create", error });
       return { success: false }
     }
   },
@@ -131,8 +141,46 @@ export const actions = {
 				}
 			});
 
+			let advisorInfo = await db.userProfile.findFirst({
+				where: {
+					AND: [
+						{ first_name: { equals: advisorRequested.split(" ")[0] } },
+						{ last_name: { equals: advisorRequested.split(" ")[1] } }
+					]
+				},
+			})
+
+			let newTime = Number(time.split("_")[0]) > 12 ? Number(time.split("_")[0]) - 12 : Number(time.split("_")[0]);
+			let ordinal = Number(time.split("_")[0]) > 11 ? "PM" : "AM";
+
+			await email("new_appt", {
+				"type": type + " Scheduled",
+        "subject": "Scheduled " + type + " " + moment(date).format("M/D/YYYY") + " " + newTime + ":" + time.split("_")[1] + " " + ordinal,
+				"date": moment(date).format("M/D/YYYY") + " " + newTime + ":" + time.split("_")[1] + " " + ordinal,
+        "title": studentName + " - " + studentUid,
+        "sName": studentName,
+        "uid": studentUid,
+        "phone": callbackNumber === "" ? "None" : callbackNumber,
+        "campus": studentCampus,
+				"reason": appReason,
+				"advisor": advisorRequested,
+        "from": "financialaid@usf.edu",
+        "to": advisorInfo?.netid + "@usf.edu"
+      });
+
+			await email("new_appt_student", {
+				"type": type + " Scheduled",
+				"reason": appReason,
+				"advisor": advisorRequested,
+        "subject": "Scheduled " + type + " " + moment(date).format("M/D/YYYY") + " " + newTime + ":" + time.split("_")[1] + " " + ordinal,
+				"date": moment(date).format("M/D/YYYY") + " " + newTime + ":" + time.split("_")[1] + " " + ordinal,
+				"from": "financialaid@usf.edu",
+        "to": studentEmail
+      });
+
       return { success: true }
     } catch (error) {
+			console.log({ timestamp: moment().format(), source: "Appointment_Create", error });
       return { success: false }
     }
   },
@@ -152,7 +200,7 @@ export const actions = {
 			preferredContactMethod,
 			submittedDocument,
 			referralType,
-			researchUser,
+			collaborators,
 			escalatedUser
      } = Object.fromEntries(await request.formData()) as {
 			type: string
@@ -169,15 +217,12 @@ export const actions = {
 			preferredContactMethod: string
 			submittedDocument: string
 			referralType: string
-			researchUser: string
+			collaborators: string
 			escalatedUser: string
     }
 
-		const counterUserInfo = await db.userProfile.findFirst({
-			where: {
-				netid: locals.user.netid
-			}
-		});
+		let collaboratorsArr: AutocompleteOption[] = JSON.parse(collaborators);
+		const counterUserInfo = allUsers.filter(user => locals.user.netid === user.netid)[0];
 
 		let callbackDate = moment().add(2, 'days');
 		if (callbackDate.weekday() === 6 || callbackDate.weekday() === 0) {
@@ -201,7 +246,9 @@ export const actions = {
 					preferredContactMethod,
 					referralType,
 					escalationUser: referralType === "Escalated Referral" ? escalatedUser : null,
-					researchUser: referralType === "Collaboration Referral" ? researchUser : null,
+					researchUser: type === "Escalated Referral" ? null : collaboratorsArr.length > 0 ? removeDuplicates(collaboratorsArr.map(user => {
+						return user.label
+					})).join(',') : null,
 					source: "Counter Duty"
         }
       });
@@ -220,16 +267,81 @@ export const actions = {
 				}
 			});
 
-			const newComment = await db.referralComment.create({
+			
+			await db.referralComment.create({
 				data: {
 					user: counterUserInfo?.first_name + " " + counterUserInfo?.last_name,
 					content: referralDetails,
 					Referral: { connect: { id: newReferral.id } }
 				}
 			})
+			
+			let updatedReferral = await db.referral.findFirst({
+				where: {
+					id: newReferral.id
+				},
+				include: {
+					comments: {
+						orderBy: {
+							createdAt: "desc"
+						}
+					},
+				}
+			});
+
+			const ownerInfo = allUsers.filter(user => user.first_name + " " + user.last_name === updatedReferral?.counterUser);
+			const escalatedUserInfo = allUsers.filter(user => user.first_name + " " + user.last_name === updatedReferral?.escalationUser);
+
+			let allCollaborators: string[] = [];
+
+			if (updatedReferral !== null && updatedReferral.researchUser !== null) {
+				allCollaborators = updatedReferral.researchUser.split(',').map(user => {
+					let foundUser = allUsers.filter(userAll => userAll.first_name + " " + userAll.last_name === user)
+					if (foundUser !== null && foundUser.length > 0) {
+						return foundUser[0].netid + "@usf.edu"
+					}
+				}).filter((user): user is string => user !== undefined);
+			}
+			
+			if (updatedReferral?.referralType === "Escalated Referral") {
+				allCollaborators.push(counterUserInfo.netid + "@usf.edu");
+			}
+
+			if (escalatedUserInfo.length > 0 && ownerInfo.length > 0) {
+				if (ownerInfo[0].netid !== escalatedUserInfo[0].netid) {
+					allCollaborators.push(ownerInfo[0].netid + "@usf.edu");
+				}
+			}
+
+
+			let cc = [];
+
+			cc = removeDuplicates(allCollaborators);
+
+			await email("referral", {
+				"type": updatedReferral?.referralType + " Created",
+				"name": "Created by " + counterUserInfo?.first_name + " " + counterUserInfo?.last_name,
+				"subject": "Updated " + updatedReferral?.referralType + " for: " + updatedReferral?.studentUid,
+				"date": moment(updatedReferral?.bestTimeCallback).format("MM/DD/YYYY"),
+				"title": updatedReferral?.studentName + " - " + updatedReferral?.studentUid,
+				"owner": updatedReferral?.escalationUser !== null && updatedReferral?.referralType === "Escalated Referral" ? 
+					updatedReferral?.escalationUser : counterUserInfo?.first_name + " " + counterUserInfo?.last_name,
+				"sName": updatedReferral?.studentName,
+				"uid": updatedReferral?.studentUid,
+				"phone": updatedReferral?.callbackNumber === "" ? "None" : updatedReferral?.callbackNumber,
+				"reason": updatedReferral?.reason,
+				"referralType": updatedReferral?.referralType,
+				"lastCommentedUser": updatedReferral?.comments[0] ? updatedReferral?.comments[0].user : null,
+				"lastComment": updatedReferral?.comments[0] ? updatedReferral?.comments[0].content : null,
+				"lastCommentDate": updatedReferral?.comments[0] ? moment(updatedReferral?.comments[0].createdAt).format("YYYY-MM-DD h:mmA") : null,
+				"from": "financialaid@usf.edu",
+				"to": escalatedUserInfo.length > 0 && updatedReferral?.referralType === "Escalated Referral" ? escalatedUserInfo[0].netid + "@usf.edu" : counterUserInfo?.netid + "@usf.edu",
+				"cc": cc
+			});
 
       return { success: true }
     } catch (error) {
+			console.log({ timestamp: moment().format(), source: "Referral_Create", error });
       return { success: false }
     }
   }

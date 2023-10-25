@@ -15,11 +15,6 @@ export const handle: Handle = async ({ event, resolve }) => {
 		where: { netid: String(session?.username.split("@")[0]) }
 	})
 
-  // console.log(profile);
-  // if (profile === null) {
-  //   throw redirect(301, "https://www.usf.edu/financial-aid/");
-  // }
-
   event.locals.user = {
     netid: String(profile?.netid),
     role: String(profile?.role.name)
@@ -45,7 +40,11 @@ export const handle: Handle = async ({ event, resolve }) => {
       }
     }),
     applications: await db.application.findMany(),
-    letterCodes: await db.letterCode.findMany(),
+    letterCodes: await db.letterCode.findMany({
+      orderBy: {
+        name: "asc"
+      },
+    }),
     letterTypes: await db.letterType.findMany(),
     letterGroups: await db.letterGroup.findMany(),
     addressTypes: await db.addressType.findMany(),

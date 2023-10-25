@@ -12,9 +12,17 @@ body {
 	color: #2c3656;
 }
 
-/* aside {
-	transition: all 0.1s ease-in-out;
-} */
+pre {
+	font-family: system-ui;
+}
+
+@media print {
+	html,
+	body {
+		overflow: visible !important; /* Override the overflow-hidden */
+		height: auto !important; /* Override the h-full (100% height) */
+	}
+}
 
 @keyframes shake {
 	0% {
@@ -50,4 +58,8 @@ body {
 	tbody tr:nth-child(n):hover {
 		background-color: rgba(167, 167, 167, 0.298);
 	}
+}
+
+.dropzone {
+	background-color: white;
 }

@@ -34,7 +34,7 @@
 					<input required type="date" name="date" class="input rounded-md" />
 				</span>
 			</div>
-      <UserPicker users={constants.users} bind:stringEmailList={stringEmailList} />
+      <UserPicker users={constants.users} bind:stringEmailList={stringEmailList} label="Trainers" />
 		</section>
 		<footer class="float-right mt-3">
 			<button type="submit" class="btn bg-accSlate text-white/90 rounded-md">

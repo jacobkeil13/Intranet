@@ -1,5 +1,6 @@
 import { db } from "$lib/server/database";
 import { redirect } from "@sveltejs/kit";
+import moment from "moment";
 
 export const load = async ({ locals }) => {
 	if (locals.user) {
@@ -71,7 +72,8 @@ export const actions = {
       })
 
       return { success: true, message: "User created successfully!" }
-    } catch (error) {      
+    } catch (error) {
+      console.log({ timestamp: moment().format(), source: "PhoneList_Create", error });
       return { success: false, message: "User creation failed." }
     }
   },
@@ -108,6 +110,7 @@ export const actions = {
 
       return { success: true, message: "User updated successfully!" }
     } catch (error) {
+      console.log({ timestamp: moment().format(), source: "PhoneList_Update", error });
       return { success: false, message: "User update failed." }
     }
   },
@@ -127,6 +130,7 @@ export const actions = {
 
       return { success: true, message: "User deleted successfully!" }
     } catch (error) {
+      console.log({ timestamp: moment().format(), source: "PhoneList_Delete", error });
       return { success: false, message: "User deletion failed." }
     }
   },

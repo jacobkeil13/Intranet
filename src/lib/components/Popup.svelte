@@ -19,7 +19,7 @@
 </script>
 
 <div
-  class="{pointer}"
+  class="{pointer} {width}"
   use:popup={event}
 >
   <slot name="content" />

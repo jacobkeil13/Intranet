@@ -4,14 +4,14 @@
 	import type { GeneralLibrary, UserProfile } from '@prisma/client';
 	import UserPicker from '$lib/components/UserPicker.svelte';
 
-  interface FullGeneralLibrary extends GeneralLibrary {
-    trainers: UserProfile[];
-  }
+	interface FullGeneralLibrary extends GeneralLibrary {
+		trainers: UserProfile[];
+	}
 
 	let modalStore = getModalStore();
 	let isLoading = false;
 	let constants = $modalStore[0].meta.constants;
-  let library: FullGeneralLibrary = $modalStore[0].meta.library;
+	let library: FullGeneralLibrary = $modalStore[0].meta.library;
 
 	let stringEmailList = '';
 
@@ -24,12 +24,12 @@
 	<div class="flex justify-between items-center">
 		<h1 class="text-xl text-usfGreen font-medium">Update General Library Video</h1>
 		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<i class="fa-solid fa-xmark fa-lg text-black cursor-pointer" on:click={closeForm}></i>
+		<i class="fa-solid fa-xmark fa-lg text-black cursor-pointer" on:click={closeForm} />
 	</div>
 	<br />
 	<form method="POST" action="/training?/updateLibrary" enctype="multipart/form-data">
-    <input type="hidden" name="id" value={library.id} />
-		<input type="hidden" name="emailList" bind:value={stringEmailList} />
+		<input type="hidden" name="id" value={library.id} />
+		<input type="hidden" name="trainerList" bind:value={stringEmailList} />
 		<section class="space-y-2">
 			<div class="flex space-x-2">
 				<span class="flex flex-col w-full space-y-1">
@@ -38,10 +38,10 @@
 				</span>
 				<span class="flex flex-col space-y-1">
 					<label for="date">Date</label>
-					<input required type="date" name="date" class="input rounded-md" value={library.date.toISOString().split("T")[0]} />
+					<input required type="date" name="date" class="input rounded-md" value={library.date.toISOString().split('T')[0]} />
 				</span>
 			</div>
-      <UserPicker team={library.trainers} users={constants.users} bind:stringEmailList={stringEmailList} />
+			<UserPicker label="Trainers" currentList={library.trainers} users={constants.users} bind:stringEmailList />
 			<div class="space-y-2">
 				<div class="flex items-center space-x-2">
 					<label for="chips">Training Video</label>
