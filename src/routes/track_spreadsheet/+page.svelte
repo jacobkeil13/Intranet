@@ -2,6 +2,7 @@
 	import PageWrapper from '$lib/components/PageWrapper.svelte';
 	import Search from '$lib/components/Search.svelte';
 	import TableWrapper from '$lib/components/TableWrapper.svelte';
+	import HeaderSort from '$lib/components/HeaderSort.svelte';
 	import { getToastStore, type ModalSettings, getModalStore, type PaginationSettings, TabGroup, Tab, RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
 	import { fly } from 'svelte/transition';
 	export let form;
@@ -23,6 +24,10 @@
 		component: 'trackCodeModal',
 		meta: { constants: data.constants }
 	};
+
+	type HeaderTypes = 'reqCode' | 'description' | 'formType' | 'uploadable' | 'requiresAppt';
+	let currentSortField: HeaderTypes = 'reqCode';
+	let currentSortOrder: 'asc' | 'dsc' = 'asc';
 
 	let modalStore = getModalStore();
 	let toastStore = getToastStore();
@@ -113,6 +118,47 @@
 			meta: { trackCode: filteredTrackCodes.find((trackCode) => trackCode.id === id) }
 		});
 	}
+
+	function resetFilters() {
+		sheetFormType = 'all';
+		searchQuery = '';
+		currentSortField = 'reqCode';
+		currentSortOrder = 'asc';
+		sort();
+	}
+
+	let tableHeaders = [
+		{ sortable: true, title: 'Req Code', field: 'reqCode' },
+		{ sortable: true, title: 'Description', field: 'description' },
+		{ sortable: true, title: 'FormType', field: 'formType' },
+		{ sortable: false, title: 'Uploadable', field: 'uploadable' },
+		{ sortable: false, title: 'Requires Appt.', field: 'requiresAppt' }
+	];
+
+	function sort() {
+		filteredTrackSheets = trackSheets.sort((a, b) => {
+			const getField = (obj: typeof a, field: HeaderTypes) => {
+				const fieldsMap = {
+					reqCode: obj.reqCode,
+					description: obj.description,
+					formType: obj.formType,
+					uploadable: '',
+					requiresAppt: ''
+				};
+				return fieldsMap[field] || obj.reqCode;
+			};
+
+			let aSortBy = getField(a, currentSortField);
+			let bSortby = getField(b, currentSortField);
+
+			const compareValues = (a: string, b: string) => {
+				if (currentSortOrder === 'asc') return a < b ? -1 : a > b ? 1 : 0;
+				return a > b ? -1 : a < b ? 1 : 0;
+			};
+
+			return compareValues(aSortBy, bSortby);
+		});
+	}
 </script>
 
 <svelte:head>
@@ -147,6 +193,7 @@
 					<RadioItem bind:group={sheetFormType} name="sheetFormType" value="online">Online</RadioItem>
 				</RadioGroup>
 			{/if}
+			<button class="bg-accSlate/80 text-white/90 font-medium rounded-md px-4 py-2" on:click={resetFilters}> Reset Filters </button>
 		</svelte:fragment>
 		<svelte:fragment slot="content">
 			<TabGroup>
@@ -158,11 +205,9 @@
 							<svelte:fragment slot="header">
 								<thead>
 									<tr class="bg-accSlate text-white/90">
-										<th><pre>Req Code</pre></th>
-										<th>Description</th>
-										<th><pre>Form Type</pre></th>
-										<th>Uploadable</th>
-										<th><pre>Requires Appt.</pre></th>
+										{#each tableHeaders as header}
+											<HeaderSort sortable={header.sortable} title={header.title} field={header.field} bind:currentSortField bind:currentSortOrder on:sort={sort} />
+										{/each}
 									</tr>
 								</thead>
 							</svelte:fragment>

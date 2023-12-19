@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { TrainingSchedule, UserProfile } from '@prisma/client';
-	import moment from 'moment';
 	import { fly } from 'svelte/transition';
+	import moment from 'moment';
 
 	interface FullTraining extends TrainingSchedule {
 		trainers: UserProfile[];

@@ -1,46 +1,29 @@
-import type { ModalComponent } from "@skeletonlabs/skeleton";
+import type { ModalComponent } from '@skeletonlabs/skeleton';
 
 // Create Imports
-import IsQueue_Create from "$lib/components/forms/create/IsQueue_Create.svelte";
-import DrQueue_Create from "$lib/components/forms/create/DrQueue_Create.svelte";
-import PopulationSelection_Create from "$lib/components/forms/create/PopulationSelection_Create.svelte";
-import Form_Create from "$lib/components/forms/create/Form_Create.svelte";
-import StandardProcedure_Create	from "$lib/components/forms/create/StandardProcedure_Create.svelte";
-import Letter_Create from "$lib/components/forms/create/Letter_Create.svelte";
-import MasterCalendar_Create from "$lib/components/forms/create/MasterCalendar_Create.svelte";
-import TrainingSchedule_Create from "$lib/components/forms/create/TrainingSchedule_Create.svelte";
-import UserProfile_Create from "$lib/components/forms/create/UserProfile_Create.svelte";
-import GeneralLibrary_Create from "$lib/components/forms/create/GeneralLibrary_Create.svelte";
-import Appointment_Create from "$lib/components/forms/create/Appointment_Create.svelte";
-import TrackSheet_Create from "$lib/components/forms/create/TrackSheet_Create.svelte";
-import TrackCode_Create from "$lib/components/forms/create/TrackCode_Create.svelte";
+import { 
+	IsQueue_Create, DrQueue_Create, PopulationSelection_Create, Form_Create,
+	StandardProcedure_Create, Letter_Create, MasterCalendar_Create, TrainingSchedule_Create,
+	UserProfile_Create, GeneralLibrary_Create, Appointment_Create, TrackSheet_Create,
+	TrackCode_Create 
+} from '$lib/components';
 
 // Update Imports
-import IsQueue_Update from "$lib/components/forms/update/IsQueue_Update.svelte"
-import DrQueue_Update from "$lib/components/forms/update/DrQueue_Update.svelte"
-import PopulationSelection_Update from "$lib/components/forms/update/PopulationSelection_Update.svelte";
-import Form_Update from "$lib/components/forms/update/Form_Update.svelte"
-import StandardProcedure_Update from "$lib/components/forms/update/StandardProcedure_Update.svelte"
-import Letter_Update from "$lib/components/forms/update/Letter_Update.svelte"
-import MasterCalendar_Update from "$lib/components/forms/update/MasterCalendar_Update.svelte"
-import TrainingSchedule_Update from "$lib/components/forms/update/TrainingSchedule_Update.svelte";
-import UserProfile_Update from "$lib/components/forms/update/UserProfile_Update.svelte";
-import GeneralLibrary_Update from "$lib/components/forms/update/GeneralLibrary_Update.svelte";
-import Appointment_Update from "$lib/components/forms/update/Appointment_Update.svelte";
-import Referral_Update from "$lib/components/forms/update/Referral_Update.svelte";
-import TrackSheet_Update from "$lib/components/forms/update/TrackSheet_Update.svelte";
-import TrackCode_Update from "$lib/components/forms/update/TrackCode_Update.svelte";
+import { 
+	IsQueue_Update, DrQueue_Update, PopulationSelection_Update, Form_Update,
+	StandardProcedure_Update, Letter_Update, MasterCalendar_Update, TrainingSchedule_Update,
+	UserProfile_Update, GeneralLibrary_Update, Appointment_Update, TrackSheet_Update,
+	TrackCode_Update , Referral_Update
+} from '$lib/components';
 
 // View Imports
-import TrackSheet_View from "$lib/components/forms/view/TrackSheet_View.svelte";
+import { TrackSheet_View } from '$lib/components';
 
 // Other Imports
-import EmbedModal from "$lib/components/modals/EmbedModal.svelte";
-import ConfirmDeleteModal from "$lib/components/modals/ConfirmDeleteModal.svelte";
-import SearchUidModal from "$lib/components/modals/SearchUidModal.svelte";
-import SearchPhoneCall from "$lib/components/modals/SearchPhoneCall.svelte";
-import VisitStatsModal from "$lib/components/modals/VisitStatsModal.svelte";
-import VersionModal from "$lib/components/modals/Versions.svelte";
+import { 
+	EmbedModal, ConfirmDeleteModal, SearchUidModal, SearchPhoneCall, VisitStatsModal, 
+	Versions 
+} from '$lib/components';
 
 export const forms: Record<string, ModalComponent> = {
 	// Create
@@ -80,8 +63,8 @@ export const forms: Record<string, ModalComponent> = {
 	// Other
 	embedModal: { ref: EmbedModal },
 	confirmDeleteModal: { ref: ConfirmDeleteModal },
-	searchUidModal: {ref: SearchUidModal },
+	searchUidModal: { ref: SearchUidModal },
 	searchPhoneCall: { ref: SearchPhoneCall },
 	visitStatsModal: { ref: VisitStatsModal },
-	versionModal: { ref: VersionModal }
+	versionModal: { ref: Versions }
 };

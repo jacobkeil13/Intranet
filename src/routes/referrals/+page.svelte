@@ -8,6 +8,7 @@
 	import TableWrapper from '$lib/components/TableWrapper.svelte';
 	import Popup from '$lib/components/Popup.svelte';
 	import PageWrapper from '$lib/components/PageWrapper.svelte';
+	import HeaderSort from '$lib/components/HeaderSort.svelte';
 	export let form;
 	export let data;
 
@@ -20,6 +21,10 @@
 			classes: 'text-white/90 font-medium'
 		});
 	}
+
+	type HeaderTypes = 'status' | 'dueDate' | 'name' | 'uid' | 'assignedTo' | 'collaborators' | 'lastUpdatedBy';
+	let currentSortField: HeaderTypes = 'dueDate';
+	let currentSortOrder: 'asc' | 'dsc' = 'asc';
 
 	let filter = $page.url.searchParams.get('filter') === null ? 'all' : $page.url.searchParams.get('filter');
 	let type = 'all';
@@ -89,6 +94,46 @@
 		complete = 'pending';
 		searchQuery = '';
 		filteredReferrals = referrals;
+		currentSortField = 'dueDate';
+		currentSortOrder = 'asc';
+		sort();
+	}
+
+	let tableHeaders = [
+		{ sortable: false, title: 'Status', field: 'status' },
+		{ sortable: true, title: 'Due', field: 'dueDate' },
+		{ sortable: true, title: 'Name', field: 'name' },
+		{ sortable: true, title: 'UID', field: 'uid' },
+		{ sortable: true, title: 'Assigned To', field: 'assignedTo' },
+		{ sortable: false, title: 'Collaborators', field: 'collaborators' },
+		{ sortable: true, title: 'Last Updated By', field: 'lastUpdatedBy' }
+	];
+
+	function sort() {
+		filteredReferrals = referrals.sort((a, b) => {
+			const getField = (obj: typeof a, field: HeaderTypes) => {
+				const fieldsMap = {
+					status: '',
+					dueDate: obj.bestTimeCallback.toISOString(),
+					name: obj.studentName,
+					uid: obj.studentUid,
+					assignedTo: obj.counterUser,
+					collaborators: '',
+					lastUpdatedBy: obj.lastUpdatedBy
+				};
+				return fieldsMap[field] || obj.bestTimeCallback.toISOString();
+			};
+
+			let aSortBy = getField(a, currentSortField);
+			let bSortby = getField(b, currentSortField);
+
+			const compareValues = (a: string, b: string) => {
+				if (currentSortOrder === 'asc') return a < b ? -1 : a > b ? 1 : 0;
+				return a > b ? -1 : a < b ? 1 : 0;
+			};
+
+			return compareValues(aSortBy, bSortby);
+		});
 	}
 </script>
 
@@ -145,13 +190,9 @@
 				<svelte:fragment slot="header">
 					<thead>
 						<tr class="bg-accSlate text-white/90">
-							<th class="table-cell-fit">Status</th>
-							<th>Due</th>
-							<th>Name</th>
-							<th>UID</th>
-							<th><pre>Assigned To</pre></th>
-							<th>Collaborators</th>
-							<th><pre>Last Updated By</pre></th>
+							{#each tableHeaders as header}
+								<HeaderSort sortable={header.sortable} title={header.title} field={header.field} bind:currentSortField bind:currentSortOrder on:sort={sort} />
+							{/each}
 						</tr>
 					</thead>
 				</svelte:fragment>

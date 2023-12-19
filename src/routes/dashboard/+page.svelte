@@ -1,14 +1,8 @@
 <script lang="ts">
-	import { getDateLocal } from '$lib/helpers.js';
-	import { fly } from 'svelte/transition';
+	import { DashboardAction, DashboardCard, FixesAndFeatures, UpcomingTraining } from '$lib/components';
 	import { getModalStore } from '@skeletonlabs/skeleton';
-	import { onMount } from 'svelte';
-	import { getFiveNineDir } from '$lib/stores/counter_duty.js';
+	import { fly } from 'svelte/transition';
 	import moment from 'moment';
-	import DashboardCard from '$lib/components/DashboardCard.svelte';
-	import DashboardAction from '$lib/components/DashboardAction.svelte';
-	import FixesAndFeatures from '$lib/components/FixesAndFeatures.svelte';
-	import UpcomingTraining from '$lib/components/UpcomingTraining.svelte';
 	export let data;
 
 	let modalStore = getModalStore();
@@ -29,18 +23,6 @@
 			meta
 		});
 	}
-
-	// onMount(async () => {
-	// 	getFiveNineDir(moment().format("M_D_YYYY")).then(res => {
-	// 		if (res.files) {
-	// 			fiveNineCallCount = res.files.length;
-	// 			fiveNineCalls = res.files;
-	// 		} else {
-	// 			fiveNineCallCount = 0;
-	// 			fiveNineCalls = [];
-	// 		}
-	//   });
-	// })
 </script>
 
 <svelte:head>
@@ -93,35 +75,30 @@
 				<section class="grid grid-cols-1 tablet:grid-cols-2 desktop:grid-cols-3 gap-2">
 					<DashboardAction href="/counter_duty" label="Counter Duty" />
 					<DashboardAction
-						href="/"
 						label="Create Appointment / Referral"
 						on:click={() => {
 							openModal('appointmentModal', { constants, appointmentReasons: data.appointmentReasons, visitCounterReasons: data.visitCounterReasons, managementTeam: managementTeam[0].userProfile });
 						}}
 					/>
 					<DashboardAction
-						href="/"
 						label="IS Queue Request"
 						on:click={() => {
 							openModal('isQueueModal', { constants, isTeam, managementTeam, profile: data.profile });
 						}}
 					/>
 					<DashboardAction
-						href="/"
 						label="DR Queue Request"
 						on:click={() => {
 							openModal('drQueueModal', { constants, eptTeam, profile: data.profile });
 						}}
 					/>
 					<DashboardAction
-						href="/"
 						label="Create Popsel"
 						on:click={() => {
 							openModal('popselModal', { constants, isTeam });
 						}}
 					/>
 					<DashboardAction
-						href="/"
 						label="Search UID / Visits"
 						on:click={() => {
 							openModal('searchUidModal', {});
@@ -132,18 +109,18 @@
 			<div class:row-span-2={data.profile?.role.name === 'ADMIN'} class="desktop:border-l desktop:border-l-[#BFC4D7] desktop:pl-8">
 				<h1 class="text-2xl font-medium text-usfGreen mb-2">Apps</h1>
 				<section class="grid grid-cols-3 mobile:grid-cols-4 desktop:grid-cols-1 gap-2">
-					<DashboardAction href="https://oasisappnav.usf.edu:8443/applicationNavigator" label="Banner" />
-					<DashboardAction href="https://edocs.usf.edu/appxtender/login.aspx?sso=true" label="BDMS" />
-					<DashboardAction href="https://login.five9.com/" label="Five 9" />
+					<DashboardAction href="https://oasisappnav.usf.edu:8443/applicationNavigator" target="_blank" label="Banner" />
+					<DashboardAction href="https://appxprod.it.usf.edu/AppXtender/DataSources/PROD/?DSN=PROD&sso=true" target="_blank" label="BDMS" />
+					<DashboardAction href="https://login.five9.com/" target="_blank" label="Five 9" />
 				</section>
 			</div>
 		{:else}
 			<div>
 				<h1 class="text-2xl font-medium text-usfGreen mb-2">Apps</h1>
 				<section class="grid grid-cols-4 gap-2">
-					<DashboardAction href="https://oasisappnav.usf.edu:8443/applicationNavigator" label="Banner" />
-					<DashboardAction href="https://edocs.usf.edu/appxtender/login.aspx?sso=true" label="BDMS" />
-					<DashboardAction href="https://login.five9.com/" label="Five 9" />
+					<DashboardAction href="https://oasisappnav.usf.edu:8443/applicationNavigator" target="_blank" label="Banner" />
+					<DashboardAction href="https://appxprod.it.usf.edu/AppXtender/DataSources/PROD/?DSN=PROD&sso=true" target="_blank" label="BDMS" />
+					<DashboardAction href="https://login.five9.com/" target="_blank" label="Five 9" />
 				</section>
 			</div>
 		{/if}
@@ -152,35 +129,30 @@
 				<h1 class="text-2xl font-medium text-usfGreen mb-2">Admin Actions</h1>
 				<section class="grid grid-cols-1 tablet:grid-cols-2 desktop:grid-cols-3 gap-2">
 					<DashboardAction
-						href="/"
 						label="Create Form"
 						on:click={() => {
 							openModal('formModal', { constants });
 						}}
 					/>
 					<DashboardAction
-						href="/"
 						label="Create S&P"
 						on:click={() => {
 							openModal('standardProcedureModal', { constants });
 						}}
 					/>
 					<DashboardAction
-						href="/"
 						label="Create Letter"
 						on:click={() => {
 							openModal('letterModal', { constants });
 						}}
 					/>
 					<DashboardAction
-						href="/"
 						label="Create Training"
 						on:click={() => {
 							openModal('trainingModal', { constants });
 						}}
 					/>
 					<DashboardAction
-						href="/"
 						label="Create Library Training"
 						on:click={() => {
 							openModal('libraryModal', { constants });

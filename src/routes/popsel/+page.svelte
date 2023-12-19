@@ -5,6 +5,7 @@
 	import { getDateLocal } from '$lib/helpers.js';
 	import TableWrapper from '$lib/components/TableWrapper.svelte';
 	import PageWrapper from '$lib/components/PageWrapper.svelte';
+	import HeaderSort from '$lib/components/HeaderSort.svelte';
 	export let form;
 	export let data;
 
@@ -17,6 +18,10 @@
 			classes: 'text-white/90 font-medium'
 		});
 	}
+
+	type HeaderTypes = 'letterCode' | 'selectionId' | 'letterCount' | 'requestedBy' | 'requestedDate';
+	let currentSortField: HeaderTypes = 'letterCode';
+	let currentSortOrder: 'asc' | 'dsc' = 'asc';
 
 	let searchQuery = '';
 	$: popsels = data.popsels;
@@ -95,6 +100,46 @@
 			meta
 		});
 	}
+
+	function resetFilters() {
+		searchQuery = '';
+		currentSortField = 'letterCode';
+		currentSortOrder = 'asc';
+		sort();
+	}
+
+	let tableHeaders = [
+		{ sortable: true, title: 'Letter Code', field: 'letterCode' },
+		{ sortable: true, title: 'Selection ID', field: 'selectionId' },
+		{ sortable: false, title: 'Letter Count', field: 'letterCount' },
+		{ sortable: true, title: 'Requested By', field: 'requestedBy' },
+		{ sortable: true, title: 'Requested Date', field: 'requestedDate' }
+	];
+
+	function sort() {
+		filteredPopsels = popsels.sort((a, b) => {
+			const getField = (obj: typeof a, field: HeaderTypes) => {
+				const fieldsMap = {
+					letterCode: obj.letterCode.name,
+					selectionId: obj.selectionId,
+					letterCount: obj.letterCount.toString(),
+					requestedBy: obj.requestedBy.first_name + ' ' + obj.requestedBy.last_name,
+					requestedDate: obj.createdAt.toISOString()
+				};
+				return fieldsMap[field] || obj.letterCode.name;
+			};
+
+			let aSortBy = getField(a, currentSortField);
+			let bSortby = getField(b, currentSortField);
+
+			const compareValues = (a: string, b: string) => {
+				if (currentSortOrder === 'asc') return a < b ? -1 : a > b ? 1 : 0;
+				return a > b ? -1 : a < b ? 1 : 0;
+			};
+
+			return compareValues(aSortBy, bSortby);
+		});
+	}
 </script>
 
 <svelte:head>
@@ -118,16 +163,17 @@
 				<i class="fa-solid fa-plus fa-lg text-white/90" />
 			</div>
 		</svelte:fragment>
+		<svelte:fragment slot="filters">
+			<button class="bg-accSlate/80 text-white/90 font-medium rounded-md px-4 py-2" on:click={resetFilters}> Reset Filters </button>
+		</svelte:fragment>
 		<svelte:fragment slot="content">
 			<TableWrapper arrLength={filteredPopsels.length} bind:paginationSettings>
 				<svelte:fragment slot="header">
 					<thead>
 						<tr class="bg-accSlate text-white/90">
-							<th>Letter Code</th>
-							<th>Selection ID</th>
-							<th>Letter Count</th>
-							<th>Requested By</th>
-							<th>Requested Date</th>
+							{#each tableHeaders as header}
+								<HeaderSort sortable={header.sortable} title={header.title} field={header.field} bind:currentSortField bind:currentSortOrder on:sort={sort} />
+							{/each}
 						</tr>
 					</thead>
 				</svelte:fragment>

@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { counter_time_slots } from '$lib/stores/counter_duty';
-	import moment from 'moment';
 	import { onMount } from 'svelte';
 	import { writable } from 'svelte/store';
-  export let currentDate: string;
-  export let requestedAdvisor: string;
-  export let timeChosen: string;
+	import moment from 'moment';
+	export let currentDate: string;
+	export let requestedAdvisor: string;
+	export let timeChosen: string;
 
 	interface Appointment {
 		advisor: string;
@@ -43,15 +43,15 @@
 	const takenTimes = writable<string[]>([]);
 
 	onMount(async () => {
-		let appointments = await fetch("/api/counter_duty?type=Phone Appointment");
+		let appointments = await fetch('/api/counter_duty?type=Phone Appointment');
 		let res = await appointments.json();
 		res.appointments.forEach((appt: any) => {
 			currentAppts.push({
 				advisor: appt.advisor,
-				date: moment.utc(appt.dateTime).local().format("YYYY-MM-DDTHH:mm:ss") + ".000Z"
+				date: moment.utc(appt.dateTime).local().format('YYYY-MM-DDTHH:mm:ss') + '.000Z'
 			});
-		})
-	})
+		});
+	});
 
 	function updateTimes() {
 		$takenTimes = [];
@@ -67,7 +67,7 @@
 				$takenTimes = [];
 			}
 		});
-    timeChosen = '';
+		timeChosen = '';
 	}
 </script>
 
@@ -83,11 +83,7 @@
 				value={time.split(':')[0] + '_' + time.split(':')[1]}
 				bind:group={timeChosen}
 			/>
-			<label
-				class="flex justify-center rounded-sm bg-transparent border border-accSlate/50 p-2"
-				for={time.split(':')[0] + '_' + time.split(':')[1]}
-				>{parseTime(time)}</label
-			>
+			<label class="flex justify-center rounded-sm bg-transparent border border-accSlate/50 p-2" for={time.split(':')[0] + '_' + time.split(':')[1]}>{parseTime(time)}</label>
 		{/each}
 	</div>
 {:else}
@@ -107,7 +103,7 @@
 
 	input[type='radio']:checked + label {
 		color: #f3f3f3;
-    background-color: #293A40;
+		background-color: #293a40;
 	}
 
 	input[type='radio']:disabled + label {

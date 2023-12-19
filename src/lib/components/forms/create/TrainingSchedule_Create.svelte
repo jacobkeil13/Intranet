@@ -1,7 +1,6 @@
 <script lang="ts">
+	import { Loading, UserPicker } from '$lib/components';
 	import { getModalStore } from '@skeletonlabs/skeleton';
-	import Loading from '$lib/components/animation/Loading.svelte';
-	import UserPicker from '$lib/components/UserPicker.svelte';
 
 	let modalStore = getModalStore();
 	let isLoading = false;
@@ -18,11 +17,11 @@
 	<div class="flex justify-between items-center">
 		<h1 class="text-xl text-usfGreen font-medium">Create Training</h1>
 		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<i class="fa-solid fa-xmark fa-lg text-black cursor-pointer" on:click={closeForm}></i>
+		<i class="fa-solid fa-xmark fa-lg text-black cursor-pointer" on:click={closeForm} />
 	</div>
 	<br />
 	<form method="POST" action="/training?/createTraining" enctype="multipart/form-data">
-    <input type="hidden" name="trainerList" bind:value={stringEmailList} />
+		<input type="hidden" name="trainerList" bind:value={stringEmailList} />
 		<section class="space-y-2">
 			<div class="flex space-x-2">
 				<span class="flex flex-col w-full space-y-1">
@@ -34,7 +33,7 @@
 					<input required type="date" name="date" class="input rounded-md" />
 				</span>
 			</div>
-      <UserPicker users={constants.users} bind:stringEmailList={stringEmailList} label="Trainers" />
+			<UserPicker users={constants.users} bind:stringEmailList label="Trainers" />
 		</section>
 		<footer class="float-right mt-3">
 			<button type="submit" class="btn bg-accSlate text-white/90 rounded-md">

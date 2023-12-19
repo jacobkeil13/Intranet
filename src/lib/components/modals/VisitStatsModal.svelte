@@ -1,14 +1,10 @@
 <script lang="ts">
-	import { getDateLocal } from '$lib/helpers';
 	import type { Appointment, Referral, VisitCounter } from '@prisma/client';
-	import { SlideToggle, Tab, TabGroup, getModalStore, type PaginationSettings, Paginator } from '@skeletonlabs/skeleton';
-	import moment from 'moment';
+	import { D3Chart, Popup, TableWrapper, Search } from '$lib/components';
+	import { SlideToggle, Tab, TabGroup, getModalStore, type PaginationSettings } from '@skeletonlabs/skeleton';
 	import { onMount } from 'svelte';
-	import Search from '$lib/components/Search.svelte';
-	import D3Chart from '../charts/D3Chart.svelte';
 	import { fly } from 'svelte/transition';
-	import Popup from '../Popup.svelte';
-	import TableWrapper from '../TableWrapper.svelte';
+	import moment from 'moment';
 
 	enum Stat {
 		Visits = 0,
@@ -38,19 +34,19 @@
 	$: timePicked = '';
 	let staffVisits: { name: string; visits: number }[] = [];
 	let times: { time: string; visits: number }[] = [];
-	let visits: FullVisit[] = $modalStore[0].meta.visits.sort((a: VisitCounter, b: VisitCounter) => a.createdAt.toISOString().localeCompare(b.createdAt.toISOString()));
+	let visits: FullVisit[] = $modalStore[0].meta.visits.sort((a: VisitCounter, b: VisitCounter) => moment(a.createdAt).format().localeCompare(moment(b.createdAt).format()));
 	let filteredVisits = visits;
 	let date = $modalStore[0].meta.date;
 
 	onMount(() => {
 		let visitsPerHour: { [key: string]: { visits: number; iso: string } } = {};
 		for (let visit of visits) {
-			let time = getDateLocal(visit.createdAt.toISOString(), 'hA');
+			let time = moment(visit.createdAt).format('hA');
 			if (visitsPerHour[time] === undefined) {
 				visitsPerHour[time] = { visits: 0, iso: '' };
 			}
 			visitsPerHour[time].visits++;
-			visitsPerHour[time].iso = visit.createdAt.toISOString();
+			visitsPerHour[time].iso = moment(visit.createdAt).format();
 		}
 
 		Object.keys(visitsPerHour).forEach((time) => {
@@ -67,7 +63,7 @@
 	$: {
 		const doesIncludeSearch = (field: string | null, searchQuery: string) => field?.toLowerCase().includes(searchQuery.toLowerCase().trim());
 
-		const matchTime = (visit: FullVisit, timePicked: string) => timePicked === 'All' || (timePicked && getDateLocal(visit.createdAt.toISOString(), 'hA') === timePicked);
+		const matchTime = (visit: FullVisit, timePicked: string) => timePicked === 'All' || (timePicked && moment(visit.createdAt).format('hA') === timePicked);
 
 		filteredVisits = visits.filter((visit) => {
 			const searchLowered = searchQuery.toLowerCase().trim();
@@ -114,7 +110,7 @@
 	$: {
 		staffVisits = [];
 		for (let visit of visits) {
-			let hourCreated = getDateLocal(visit.createdAt.toISOString(), 'hA');
+			let hourCreated = moment(visit.createdAt).format('hA');
 			let user = staffVisits.find((user) => user.name === visit.counterUser);
 			if (user === undefined) {
 				staffVisits.push({ name: visit.counterUser, visits: 0 });
@@ -141,7 +137,7 @@
 		page: 0,
 		limit: 5,
 		size: filteredVisits.length,
-		amounts: [5, 10]
+		amounts: [5, 10, 25]
 	} satisfies PaginationSettings;
 
 	$: paginatedSource = filteredVisits.slice(paginationSettings.page * paginationSettings.limit, paginationSettings.page * paginationSettings.limit + paginationSettings.limit);
@@ -167,7 +163,7 @@
 			row.push(String(visit.submittedDocument));
 			row.push(String(visit.appointment ? true : false));
 			row.push(String(visit.referral ? true : false));
-			row.push(String(getDateLocal(visit.createdAt.toISOString(), 'YYYY-MM-DD hh:mmA')));
+			row.push(String(moment(visit.createdAt).format('YYYY-MM-DD hh:mmA')));
 			rows.push(row);
 		});
 
@@ -336,7 +332,7 @@
 																	<p class="flex items-center font-semibold {visit.appointment.completed ? 'text-green-500' : 'text-orange-300'}">
 																		{visit.appointment.completed ? 'Completed' : 'Pending'}
 																	</p>
-																	<p class="text-white/80 font-semibold">{getDateLocal(visit.appointment.createdAt.toISOString(), 'MMMM Do, YYYY')}</p>
+																	<p class="text-white/80 font-semibold">{moment(visit.appointment.createdAt).format('YYYY-MM-DD')}</p>
 																	<hr class="!border-dashed my-2" />
 																	<p class="text-white/80 font-semibold">{visit.appointment.studentName}</p>
 																	<p class="text-white/80 font-semibold">{visit.appointment.type}</p>
@@ -357,7 +353,7 @@
 																	<p class="flex items-center font-semibold {visit.referral.completed ? 'text-green-400' : 'text-orange-300'}">
 																		{visit.referral.completed ? 'Completed' : 'Pending'}
 																	</p>
-																	<p class="text-white/80 font-semibold">{getDateLocal(visit.referral.bestTimeCallback.toISOString(), 'MMMM Do, YYYY')}</p>
+																	<p class="text-white/80 font-semibold">{moment(visit.referral.bestTimeCallback).format('YYYY-MM-DD')}</p>
 																	<hr class="!border-dashed my-2" />
 																	<p class="text-white/80 font-semibold">{visit.referral.details}</p>
 																	<hr class="!border-dashed my-2" />

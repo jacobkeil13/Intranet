@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { SlideToggle, getModalStore } from '@skeletonlabs/skeleton';
-	import Loading from '$lib/components/animation/Loading.svelte';
 	import type { AidYear, Form, UserProfile } from '@prisma/client';
+	import { Loading } from '$lib/components';
+	import { SlideToggle, getModalStore } from '@skeletonlabs/skeleton';
 	import { getFormURL } from '$lib/helpers';
 	import { goto } from '$app/navigation';
 

@@ -13,54 +13,53 @@
 	let modalStore = getModalStore();
 	$: fromDate = '';
 	$: toDate = '';
-	let parsedVists: any[] = [];
-	let filteredParsedVisits = parsedVists;
+	let filteredParsedVisits = data.parsedVists;
 	let searchQuery = $page.url.searchParams.get('search') === null ? '' : String($page.url.searchParams.get('search'));
 
 	onMount(() => {
-		const visitsPerDay: { [key: string]: { visits: number; phone: number; inperson: number; walkin: number; refs: number } } = {};
+		// const visitsPerDay: { [key: string]: { visits: number; phone: number; inperson: number; walkin: number; refs: number } } = {};
 
-		for (let visit of data.visits) {
-			let date = getDateLocal(visit.createdAt.toISOString(), 'YYYY-MM-DD');
+		// for (let visit of data.visits) {
+		// 	let date = getDateLocal(visit.createdAt.toISOString(), 'YYYY-MM-DD');
 
-			if (visitsPerDay[date] === undefined) {
-				visitsPerDay[date] = { visits: 0, phone: 0, inperson: 0, walkin: 0, refs: 0 };
-			}
+		// 	if (visitsPerDay[date] === undefined) {
+		// 		visitsPerDay[date] = { visits: 0, phone: 0, inperson: 0, walkin: 0, refs: 0 };
+		// 	}
 
-			visitsPerDay[date].visits++;
+		// 	visitsPerDay[date].visits++;
 
-			if (visit.appointment !== null) {
-				if (visit.appointment.type === 'Phone Appointment') {
-					visitsPerDay[date].phone++;
-				}
-				if (visit.appointment.type === 'In-person Appointment') {
-					visitsPerDay[date].inperson++;
-				}
-				if (visit.appointment.type === 'Walk-in Appointment') {
-					visitsPerDay[date].walkin++;
-				}
-			}
-			if (visit.referral !== null) {
-				visitsPerDay[date].refs++;
-			}
-		}
+		// 	if (visit.appointment !== null) {
+		// 		if (visit.appointment.type === 'Phone Appointment') {
+		// 			visitsPerDay[date].phone++;
+		// 		}
+		// 		if (visit.appointment.type === 'In-person Appointment') {
+		// 			visitsPerDay[date].inperson++;
+		// 		}
+		// 		if (visit.appointment.type === 'Walk-in Appointment') {
+		// 			visitsPerDay[date].walkin++;
+		// 		}
+		// 	}
+		// 	if (visit.referral !== null) {
+		// 		visitsPerDay[date].refs++;
+		// 	}
+		// }
 
-		Object.keys(visitsPerDay).forEach((date) => {
-			let tr = {
-				date,
-				totalVisits: visitsPerDay[date].visits,
-				phoneAppts: visitsPerDay[date].phone,
-				inPersonAppts: visitsPerDay[date].inperson,
-				walkinAppts: visitsPerDay[date].walkin,
-				referralsCreated: visitsPerDay[date].refs
-			};
-			parsedVists.push(tr);
-		});
-		filteredParsedVisits = parsedVists;
+		// Object.keys(visitsPerDay).forEach((date) => {
+		// 	let tr = {
+		// 		date,
+		// 		totalVisits: visitsPerDay[date].visits,
+		// 		phoneAppts: visitsPerDay[date].phone,
+		// 		inPersonAppts: visitsPerDay[date].inperson,
+		// 		walkinAppts: visitsPerDay[date].walkin,
+		// 		referralsCreated: visitsPerDay[date].refs
+		// 	};
+		// 	parsedVists.push(tr);
+		// });
+		filteredParsedVisits = data.parsedVists;
 	});
 
 	$: {
-		filteredParsedVisits = parsedVists.filter((visit: any) => {
+		filteredParsedVisits = data.parsedVists.filter((visit: any) => {
 			if (fromDate !== '' && toDate !== '') {
 				if (moment(visit.date).isSameOrAfter(fromDate) && moment(visit.date).isSameOrBefore(toDate)) {
 					return visit;
@@ -88,49 +87,54 @@
 	}
 
 	function viewDate(date: string) {
-		modalStore.trigger({
-			type: 'component',
-			component: 'visitStatsModal',
-			meta: { visits: data.visits.filter((visit) => getDateLocal(visit.createdAt.toISOString(), 'YYYY-MM-DD') === date), date }
+		fetch('/api/visits/date/' + moment(date).format('YYYY-MM-DD')).then(async (res) => {
+			let resp = await res.json();
+
+			modalStore.trigger({
+				type: 'component',
+				component: 'visitStatsModal',
+				meta: { visits: resp.visits, date }
+			});
 		});
+		// console.log(visitsDate.length);
 	}
 
-	function downloadCSV() {
-		const rows: any = [];
-		const headerRow: string[] = ['UID', 'Student Name', 'Student Email', 'Reason', 'Visitor Type', 'Counter User', 'Submitted Document', 'Appointment', 'Referral', 'Time'];
-		rows.push(headerRow);
+	// function downloadCSV() {
+	// 	const rows: any = [];
+	// 	const headerRow: string[] = ['UID', 'Student Name', 'Student Email', 'Reason', 'Visitor Type', 'Counter User', 'Submitted Document', 'Appointment', 'Referral', 'Time'];
+	// 	rows.push(headerRow);
 
-		let rangeVisits = data.visits.filter((visit) => {
-			if (moment(visit.createdAt).isSameOrAfter(fromDate, 'day') && moment(visit.createdAt).isSameOrBefore(toDate, 'day')) {
-				return visit;
-			}
-		});
+	// 	let rangeVisits = data.visits.filter((visit) => {
+	// 		if (moment(visit.createdAt).isSameOrAfter(fromDate, 'day') && moment(visit.createdAt).isSameOrBefore(toDate, 'day')) {
+	// 			return visit;
+	// 		}
+	// 	});
 
-		rangeVisits.forEach((visit) => {
-			let row: any = [];
-			row.push(String(visit.studentUid === null || visit.studentUid.includes('#') ? '-' : visit.studentUid));
-			row.push(String(visit.studentName ?? '-'));
-			row.push(String(visit.studentEmail ?? '-'));
-			row.push(String(visit.reason.replaceAll(', ', ' / ')));
-			row.push(String(visit.visitorType));
-			row.push(String(visit.counterUser));
-			row.push(String(visit.submittedDocument));
-			row.push(String(visit.appointment ? true : false));
-			row.push(String(visit.referral ? true : false));
-			row.push(String(getDateLocal(visit.createdAt.toISOString(), 'YYYY-MM-DD hh:mmA')));
-			rows.push(row);
-		});
+	// 	rangeVisits.forEach((visit) => {
+	// 		let row: any = [];
+	// 		row.push(String(visit.studentUid === null || visit.studentUid.includes('#') ? '-' : visit.studentUid));
+	// 		row.push(String(visit.studentName ?? '-'));
+	// 		row.push(String(visit.studentEmail ?? '-'));
+	// 		row.push(String(visit.reason.replaceAll(', ', ' / ')));
+	// 		row.push(String(visit.visitorType));
+	// 		row.push(String(visit.counterUser));
+	// 		row.push(String(visit.submittedDocument));
+	// 		row.push(String(visit.appointment ? true : false));
+	// 		row.push(String(visit.referral ? true : false));
+	// 		row.push(String(getDateLocal(visit.createdAt.toISOString(), 'YYYY-MM-DD hh:mmA')));
+	// 		rows.push(row);
+	// 	});
 
-		let csvContent = 'data:text/csv;charset=utf-8,' + rows.map((e: any) => e.join(',')).join('\n');
+	// 	let csvContent = 'data:text/csv;charset=utf-8,' + rows.map((e: any) => e.join(',')).join('\n');
 
-		var encodedUri = encodeURI(csvContent);
+	// 	var encodedUri = encodeURI(csvContent);
 
-		var link = document.createElement('a');
-		link.setAttribute('href', encodedUri);
-		link.setAttribute('download', `Visits_${fromDate}_-_${toDate}.csv`);
-		document.body.appendChild(link);
-		link.click();
-	}
+	// 	var link = document.createElement('a');
+	// 	link.setAttribute('href', encodedUri);
+	// 	link.setAttribute('download', `Visits_${fromDate}_-_${toDate}.csv`);
+	// 	document.body.appendChild(link);
+	// 	link.click();
+	// }
 
 	function resetFilters() {
 		fromDate = '';
@@ -164,9 +168,9 @@
 			<input type="date" class="input rounded-md" name="from" id="" bind:value={fromDate} />
 			<h1 class="bg-accSlate/80 text-white/90 font-medium rounded-md px-4 py-2">To</h1>
 			<input type="date" class="input rounded-md" name="to" id="" min={fromDate} bind:value={toDate} />
-			{#if fromDate !== '' && toDate !== ''}
+			<!-- {#if fromDate !== '' && toDate !== ''}
 				<button class="bg-accSlate/80 text-white/90 font-medium rounded-md px-4 py-2" on:click={downloadCSV}> Export Visits </button>
-			{/if}
+			{/if} -->
 			<button class="bg-accSlate/80 text-white/90 font-medium rounded-md px-4 py-2" on:click={resetFilters}> Reset Filters </button>
 		</svelte:fragment>
 		<svelte:fragment slot="content">

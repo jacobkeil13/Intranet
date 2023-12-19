@@ -53,8 +53,8 @@
 		</svelte:fragment>
 		<svelte:fragment slot="sidebarLeft">
 			<section class="bg-accSlate text-white/80 no-print">
-				<SidebarItem icon="fa-square-poll-vertical" label="Dashboard" border="border-y" href="/dashboard" />
-				<SidebarItem icon="fa-phone" label="Phone List" border="border-b" href="/phone_list" />
+				<SidebarItem icon="fa-grid-2" label="Dashboard" border="border-y" href="/dashboard" />
+				<SidebarItem icon="fa-phone-rotary" label="Phone List" border="border-b" href="/phone_list" />
 				<SidebarItem icon="fa-book-bookmark" label="Trainings" border="border-b" href="/training" />
 				<SidebarItem icon="fa-calendar-days" label="Master Calendar" border="border-b" href="/master_calendar" />
 				<div class="flex flex-col gap-2 p-4 border-b border-white/10 duration-100 cursor-pointer">
@@ -68,9 +68,9 @@
 					<SidebarItem icon="fa-envelope" label="Letters" href="/documents/letters" />
 					<SidebarItem icon="fa-file-word" label="S&P's" href="/documents/procedures" />
 					<a href="/" target="_self" on:click|preventDefault={() => drawerStore.open({ id: 'resources' })} class="flex items-center justify-between duration-100 cursor-pointer group">
-						<h1 class="font-medium text-xl">Quick Resources / Links</h1>
+						<h1 class="font-regular text-lg">Quick Resources / Links</h1>
 						<div class="flex items-center justify-center w-6 h-6 rounded-full">
-							<i class="fa-solid fa-paperclip fa-lg text-white/80 group-hover:text-accApple group-hover:rotate-[10deg] duration-200" />
+							<i class="fa-light fa-link fa-lg text-white/80 group-hover:text-orange-300 group-hover:-translate-x-1 duration-200" />
 						</div>
 					</a>
 					<SidebarItem icon="fa-file-excel" label="Track Spreadsheet" href="/track_spreadsheet" />

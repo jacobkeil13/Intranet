@@ -4,13 +4,7 @@ import { skeleton } from '@skeletonlabs/tw-plugin';
 
 const config = {
 	darkMode: 'class',
-	content: [
-		'./src/**/*.{html,js,svelte,ts}',
-		join(require.resolve(
-			'@skeletonlabs/skeleton'),
-			'../**/*.{html,js,svelte,ts}'
-		)
-	],
+	content: ['./src/**/*.{html,js,svelte,ts}', join(require.resolve('@skeletonlabs/skeleton'), '../**/*.{html,js,svelte,ts}')],
 	theme: {
 		extend: {
 			screens: {
@@ -32,7 +26,8 @@ const config = {
 				accStorm: '#006484',
 				accSilver: '#CAD2D8',
 				accGray: '#7E96A0',
-				accSlate: '#293a40'
+				accSlate: '#293a40',
+				clay: '#C03F1F'
 			}
 		}
 	},
@@ -40,7 +35,7 @@ const config = {
 		skeleton({
 			themes: {
 				// Register each theme within this array:
-				preset: [ "skeleton" ] 
+				preset: ['skeleton']
 			}
 		}),
 		require('@tailwindcss/forms'),

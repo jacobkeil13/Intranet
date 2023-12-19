@@ -1,9 +1,8 @@
 <script lang="ts">
-	import { getModalStore } from '@skeletonlabs/skeleton';
-	import Loading from '$lib/components/animation/Loading.svelte';
 	import type { TrainingSchedule, UserProfile } from '@prisma/client';
+	import { Loading, UserPicker } from '$lib/components';
+	import { getModalStore } from '@skeletonlabs/skeleton';
 	import { getDateLocal } from '$lib/helpers';
-	import UserPicker from '$lib/components/UserPicker.svelte';
 
 	interface FullTraining extends TrainingSchedule {
 		trainers: UserProfile[];

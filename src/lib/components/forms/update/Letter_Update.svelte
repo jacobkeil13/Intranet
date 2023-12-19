@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { SlideToggle, getModalStore } from '@skeletonlabs/skeleton';
-	import Loading from '$lib/components/animation/Loading.svelte';
 	import type { Letter, LetterCode, LetterGroup, LetterType, UserProfile } from '@prisma/client';
+	import { Loading } from '$lib/components';
+	import { SlideToggle, getModalStore } from '@skeletonlabs/skeleton';
 	import { getLetterURL } from '$lib/helpers';
 
 	interface FullLetter extends Letter {

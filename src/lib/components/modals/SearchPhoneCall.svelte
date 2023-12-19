@@ -1,7 +1,7 @@
 <script lang="ts">
+	import { TableWrapper, Search } from '$lib/components';
 	import { getModalStore, type PaginationSettings } from '@skeletonlabs/skeleton';
-	import TableWrapper from '../TableWrapper.svelte';
-	import Search from '../Search.svelte';
+	import { api_key } from '$lib/helpers';
 	import moment from 'moment';
 
 	let modalStore = getModalStore();
@@ -99,7 +99,7 @@
 				{#each paginatedSource as call}
 					<tr
 						on:click={() => {
-							playAudio(`https://tup-ofa.forest.usf.edu/finaid/files/phone/${moment().format('M_D_YYYY')}/${call}?apiKey=API_KEY`);
+							playAudio(`https://tup-ofa.forest.usf.edu/finaid/files/phone/${moment().format('M_D_YYYY')}/${call}?apiKey=${api_key}`);
 						}}
 						class="cursor-pointer"
 					>

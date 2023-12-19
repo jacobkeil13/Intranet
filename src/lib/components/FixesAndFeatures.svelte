@@ -1,9 +1,9 @@
 <script lang="ts">
+	import { Popup } from '$lib/components';
 	import { onMount } from 'svelte';
-	import { slide, fly, scale } from 'svelte/transition';
+	import { fly } from 'svelte/transition';
 	import { currentVersion, versions } from '$lib/stores/version';
 	import { Accordion, AccordionItem, getModalStore, type ModalSettings } from '@skeletonlabs/skeleton';
-	import Popup from './Popup.svelte';
 
 	let modalStore = getModalStore();
 

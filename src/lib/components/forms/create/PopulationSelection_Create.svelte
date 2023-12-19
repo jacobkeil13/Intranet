@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { writable } from 'svelte/store';
 	import type { AidYear } from '@prisma/client';
+	import { UserPicker } from '$lib/components';
+	import { writable } from 'svelte/store';
 	import { getModalStore } from '@skeletonlabs/skeleton';
 	import { getDateLocal } from '$lib/helpers';
-	import UserPicker from '$lib/components/UserPicker.svelte';
 
 	let modalStore = getModalStore();
 	let constants = $modalStore[0].meta.constants;

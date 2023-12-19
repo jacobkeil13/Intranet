@@ -570,9 +570,12 @@ const csv = `year,age,sex,people
 2000,90,1,336303
 2000,90,2,1064581`;
 
-const data = csv.split('\n').slice(1).map(str => {
-	const [year, age, sex, people] = str.split(',').map(parseFloat);
-	return { year, age, sex, people };
-});
+const data = csv
+	.split('\n')
+	.slice(1)
+	.map((str) => {
+		const [year, age, sex, people] = str.split(',').map(parseFloat);
+		return { year, age, sex, people };
+	});
 
 export default data;

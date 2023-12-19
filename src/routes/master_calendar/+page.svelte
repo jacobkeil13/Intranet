@@ -7,6 +7,7 @@
 	import { getDateLocal } from '$lib/helpers.js';
 	import TableWrapper from '$lib/components/TableWrapper.svelte';
 	import PageWrapper from '$lib/components/PageWrapper.svelte';
+	import HeaderSort from '$lib/components/HeaderSort.svelte';
 	import type { MasterCalendarComment, MasterCalendarItem, MasterCalendarType, UserProfile } from '@prisma/client';
 	export let form;
 	export let data;
@@ -49,7 +50,10 @@
 	let complete = 'pending';
 	let fromDate = '';
 	let toDate = '';
-	// let activeFilters: string[] = ['My Tasks', 'September', 'Completed'];
+
+	type HeaderTypes = 'status' | 'dateDue' | 'type' | 'title' | 'who' | 'comments';
+	let currentSortField: HeaderTypes = 'dateDue';
+	let currentSortOrder: 'asc' | 'dsc' = 'asc';
 
 	$: items = data.masterCalendarItems;
 	let filteredItems = data.masterCalendarItems;
@@ -93,7 +97,6 @@
 			if (!matchesSearchQuery(item)) return false;
 			if (complete === 'pending' && isItemComplete(item)) return false;
 			if (complete === 'completed' && !isItemComplete(item)) return false;
-			// if (complete === "overdue" && !isItemOverdue(item)) return false;
 			if (fromDate !== '' && toDate !== '') {
 				if (!isItemWithinDateRange(item.dueDate, fromDate, toDate)) return false;
 			} else {
@@ -191,18 +194,44 @@
 		fromDate = '';
 		toDate = '';
 		filteredItems = items;
+		currentSortField = 'dateDue';
+		currentSortOrder = 'asc';
+		sort();
 	}
 
-	function getMonthString(monthString: string): string {
-		if (monthString === 'previousMonth') {
-			return moment().subtract(1, 'M').format('MMMM');
-		} else if (monthString === 'current') {
-			return moment().format('MMMM');
-		} else if (monthString === 'nextMonth') {
-			return moment().add(1, 'M').format('MMMM');
-		} else {
-			return moment().format('MMMM');
-		}
+	let tableHeaders = [
+		{ sortable: false, title: '', field: 'status' },
+		{ sortable: true, title: 'Due', field: 'dateDue' },
+		{ sortable: true, title: 'Type', field: 'type' },
+		{ sortable: true, title: 'Title', field: 'title' },
+		{ sortable: true, title: 'Who', field: 'who' },
+		{ sortable: false, title: 'Notes & Comments', field: 'comments' }
+	];
+
+	function sort() {
+		filteredItems = items.sort((a, b) => {
+			const getField = (obj: typeof a, field: HeaderTypes) => {
+				const fieldsMap = {
+					status: '',
+					dateDue: obj.dueDate.toISOString(),
+					type: obj.type.name,
+					title: obj.title,
+					who: obj.primaryOwner.first_name + ' ' + obj.primaryOwner.last_name,
+					comments: ''
+				};
+				return fieldsMap[field] || obj.dueDate.toISOString();
+			};
+
+			let aSortBy = getField(a, currentSortField);
+			let bSortby = getField(b, currentSortField);
+
+			const compareValues = (a: string, b: string) => {
+				if (currentSortOrder === 'asc') return a < b ? -1 : a > b ? 1 : 0;
+				return a > b ? -1 : a < b ? 1 : 0;
+			};
+
+			return compareValues(aSortBy, bSortby);
+		});
 	}
 </script>
 
@@ -292,12 +321,9 @@
 						<svelte:fragment slot="header">
 							<thead class="bg-accSlate">
 								<tr class="bg-accSlate text-white/90">
-									<th class="table-cell-fit" />
-									<th><pre>Due</pre></th>
-									<th><pre>Type</pre></th>
-									<th class="min-w-[30ch]"><pre>Title</pre></th>
-									<th><pre>Who</pre></th>
-									<th><pre>Notes & Comments</pre></th>
+									{#each tableHeaders as header}
+										<HeaderSort sortable={header.sortable} title={header.title} field={header.field} bind:currentSortField bind:currentSortOrder on:sort={sort} />
+									{/each}
 								</tr>
 							</thead>
 						</svelte:fragment>

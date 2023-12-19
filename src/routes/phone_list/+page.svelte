@@ -4,11 +4,17 @@
 	import { fly } from 'svelte/transition';
 	import TableWrapper from '$lib/components/TableWrapper.svelte';
 	import PageWrapper from '$lib/components/PageWrapper.svelte';
+	import HeaderSort from '$lib/components/HeaderSort.svelte';
 	import Popup from '$lib/components/Popup.svelte';
 	export let data;
 
 	let modalStore = getModalStore();
 	let toastStore = getToastStore();
+
+	type HeaderTypes = 'name' | 'netid' | 'title' | 'team' | 'extension';
+	let currentSortField: HeaderTypes = 'name';
+	let currentSortOrder: 'asc' | 'dsc' = 'asc';
+
 	let searchQuery = '';
 	let phoneBar = false;
 	$: teamFilter = '';
@@ -137,6 +143,42 @@
 		teamFilter = '';
 		searchQuery = '';
 		filteredUsers = users;
+		currentSortField = 'name';
+		currentSortOrder = 'asc';
+		sort();
+	}
+
+	let tableHeaders = [
+		{ sortable: true, title: 'Name', field: 'name' },
+		{ sortable: true, title: 'Net ID', field: 'netid' },
+		{ sortable: true, title: 'Title', field: 'title' },
+		{ sortable: true, title: 'Team', field: 'team' },
+		{ sortable: true, title: 'Extension', field: 'extension' }
+	];
+
+	function sort() {
+		filteredUsers = users.sort((a, b) => {
+			const getField = (obj: typeof a, field: HeaderTypes) => {
+				const fieldsMap = {
+					name: obj.first_name + ' ' + obj.last_name,
+					netid: obj.netid,
+					title: obj.title.name,
+					team: obj.team.map((team) => team.name).join(','),
+					extension: obj.phone
+				};
+				return fieldsMap[field] || obj.first_name + ' ' + obj.last_name;
+			};
+
+			let aSortBy = getField(a, currentSortField);
+			let bSortby = getField(b, currentSortField);
+
+			const compareValues = (a: string, b: string) => {
+				if (currentSortOrder === 'asc') return a < b ? -1 : a > b ? 1 : 0;
+				return a > b ? -1 : a < b ? 1 : 0;
+			};
+
+			return compareValues(aSortBy, bSortby);
+		});
 	}
 </script>
 
@@ -182,11 +224,9 @@
 						<svelte:fragment slot="header">
 							<thead>
 								<tr class="bg-accSlate text-white/90">
-									<th>Name</th>
-									<th>Net ID</th>
-									<th>Title</th>
-									<th>Team</th>
-									<th>Extension</th>
+									{#each tableHeaders as header}
+										<HeaderSort sortable={header.sortable} title={header.title} field={header.field} bind:currentSortField bind:currentSortOrder on:sort={sort} />
+									{/each}
 								</tr>
 							</thead>
 						</svelte:fragment>

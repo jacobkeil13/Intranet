@@ -1,7 +1,6 @@
 <script lang="ts">
+	import { Loading, UserPicker } from '$lib/components';
 	import { getModalStore } from '@skeletonlabs/skeleton';
-	import Loading from '../../animation/Loading.svelte';
-	import UserPicker from '$lib/components/UserPicker.svelte';
 
 	let modalStore = getModalStore();
 	let isLoading = false;
@@ -18,7 +17,7 @@
 	<div class="flex justify-between items-center">
 		<h1 class="text-xl text-usfGreen font-medium">Create Master Calendar Item</h1>
 		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<i class="fa-solid fa-xmark fa-lg text-black cursor-pointer" on:click={closeForm}></i>
+		<i class="fa-solid fa-xmark fa-lg text-black cursor-pointer" on:click={closeForm} />
 	</div>
 	<br />
 	<form method="POST" action="/master_calendar?/create" enctype="multipart/form-data">
@@ -35,7 +34,7 @@
 				</span>
 			</div>
 			<div class="flex space-x-2">
-        <span class="flex flex-col w-full space-y-1">
+				<span class="flex flex-col w-full space-y-1">
 					<label for="primaryOwner">Primary Owner</label>
 					<select required class="input rounded-md" name="primaryOwner">
 						<option disabled selected value="">Select one...</option>
@@ -52,9 +51,9 @@
 							<option value={masterCalendarType.type}>{masterCalendarType.name}</option>
 						{/each}
 					</select>
-				</span>	
+				</span>
 			</div>
-			<UserPicker users={constants.users} bind:stringEmailList={stringEmailList} />
+			<UserPicker users={constants.users} bind:stringEmailList />
 			<div class="flex flex-col">
 				<label for="description">Description</label>
 				<textarea required class="input rounded-md" name="description" cols="20" rows="4" placeholder="Why are you making this item..." />

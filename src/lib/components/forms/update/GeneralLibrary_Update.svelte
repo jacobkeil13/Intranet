@@ -1,8 +1,7 @@
 <script lang="ts">
-	import { getModalStore } from '@skeletonlabs/skeleton';
-	import Loading from '$lib/components/animation/Loading.svelte';
 	import type { GeneralLibrary, UserProfile } from '@prisma/client';
-	import UserPicker from '$lib/components/UserPicker.svelte';
+	import { Loading, UserPicker } from '$lib/components';
+	import { getModalStore } from '@skeletonlabs/skeleton';
 
 	interface FullGeneralLibrary extends GeneralLibrary {
 		trainers: UserProfile[];

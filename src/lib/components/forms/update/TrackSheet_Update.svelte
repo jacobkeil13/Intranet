@@ -1,8 +1,7 @@
 <script lang="ts">
-	import { SlideToggle, getModalStore } from '@skeletonlabs/skeleton';
-	import Loading from '$lib/components/animation/Loading.svelte';
 	import type { TrackCode, TrackSheet } from '@prisma/client';
-	import TrackCodePickerList from '$lib/components/TrackCodePickerList.svelte';
+	import { Loading, TrackCodePickerList } from '$lib/components';
+	import { SlideToggle, getModalStore } from '@skeletonlabs/skeleton';
 	import { writable } from 'svelte/store';
 
 	interface FullTrackSheet extends TrackSheet {

@@ -1,13 +1,13 @@
 <script>
-	import * as Pancake from '@sveltejs/pancake'; 
+	import * as Pancake from '@sveltejs/pancake';
 	import { spring } from 'svelte/motion';
 	import { onMount } from 'svelte';
 	import data from './data';
 
-	const age1 = Math.max(...data.map(d => d.age));
-	const year0 = Math.min(...data.map(d => d.year));
-	const year1 = Math.max(...data.map(d => d.year));
-	const max = Math.max(...data.map(d => d.people));
+	const age1 = Math.max(...data.map((d) => d.age));
+	const year0 = Math.min(...data.map((d) => d.year));
+	const year1 = Math.max(...data.map((d) => d.year));
+	const max = Math.max(...data.map((d) => d.people));
 
 	const birth_years = range(year0 - age1, year1, 5);
 	const ages = range(0, age1, 5);
@@ -26,9 +26,9 @@
 		return num ? `${num / 1e6}M` : '';
 	}
 
-	function get_populations (year, sex) {
-		return birth_years.map(birth_year => {
-			const d = selection.find(d => d.sex === sex && d.age === year - birth_year);
+	function get_populations(year, sex) {
+		return birth_years.map((birth_year) => {
+			const d = selection.find((d) => d.sex === sex && d.age === year - birth_year);
 			return {
 				x: birth_year,
 				y: d ? d.people : 0
@@ -43,31 +43,29 @@
 
 	$: $x2 = year;
 	$: $x1 = year - age1;
-	$: selection = data.filter(d => d.year === year);
+	$: selection = data.filter((d) => d.year === year);
 	$: $m = get_populations(year, 1);
 	$: $f = get_populations(year, 2);
 	$: size = w < 480 ? 'small' : w < 640 ? 'medium' : 'large';
 
-	const handle_pointerdown = e => {
+	const handle_pointerdown = (e) => {
 		if (!e.isPrimary) return;
 
 		const start_x = e.clientX;
 		const start_value = year;
 
-		const handle_pointermove = e => {
+		const handle_pointermove = (e) => {
 			if (!e.isPrimary) return;
 
 			const d = e.clientX - start_x;
 
-			const step = Math.min(10, d > 0
-				? (window.innerWidth - start_x) / (year1 - start_value)
-				: start_x / (start_value - year0));
+			const step = Math.min(10, d > 0 ? (window.innerWidth - start_x) / (year1 - start_value) : start_x / (start_value - year0));
 
 			const n = Math.round(d / step);
 			year = Math.max(year0, Math.min(year1, start_value + Math.round(n * 0.1) * 10));
 		};
 
-		const handle_pointerup = e => {
+		const handle_pointerup = (e) => {
 			if (!e.isPrimary) return;
 
 			window.removeEventListener('pointermove', handle_pointermove);
@@ -87,19 +85,19 @@
 	onMount(handle_resize);
 </script>
 
-<svelte:window on:resize={handle_resize}/>
+<svelte:window on:resize={handle_resize} />
 
 <div class="chart {size}" bind:this={el}>
 	<div class="background">
-		<Pancake.Chart x1="{$x1 - 2.5}" x2="{$x2 + 2.5}" y1={0} y2={max} clip>
+		<Pancake.Chart x1={$x1 - 2.5} x2={$x2 + 2.5} y1={0} y2={max} clip>
 			<!-- men -->
 			<Pancake.Columns data={$m} width={5}>
-				<div class="column m"></div>
+				<div class="column m" />
 			</Pancake.Columns>
 
 			<!-- women -->
 			<Pancake.Columns data={$f} width={5}>
-				<div class="column f"></div>
+				<div class="column f" />
 			</Pancake.Columns>
 
 			<Pancake.Grid vertical ticks={birth_years} let:value>
@@ -109,13 +107,13 @@
 	</div>
 
 	<div class="foreground">
-		<Pancake.Chart x1="{90 + 2.5}" x2="{0 - 2.5}" y1={0} y2={max}>
+		<Pancake.Chart x1={90 + 2.5} x2={0 - 2.5} y1={0} y2={max}>
 			<Pancake.Grid horizontal count={5} let:value let:first>
-				<div class="grid-line horizontal"></div>
+				<div class="grid-line horizontal" />
 				<span class="y label">{format(value)}</span>
 			</Pancake.Grid>
 
-			<Pancake.Grid vertical count="{size === 'large' ? 20 : 10}" let:value>
+			<Pancake.Grid vertical count={size === 'large' ? 20 : 10} let:value>
 				<span class="x label">
 					{value}
 					{#if value === 0}<span style="position: absolute; left: 2.5em">yrs old</span>{/if}
@@ -127,9 +125,9 @@
 	<div class="slider-container">
 		<!-- TODO this should be componentised, but there's a bug in Svelte that prevents it -->
 		<!-- <NumberSlider min={year0} max={year1} step={10} bind:value={year}/> -->
-		<button disabled="{year === year0}" on:click="{() => year -= 10}">&larr;</button>
+		<button disabled={year === year0} on:click={() => (year -= 10)}>&larr;</button>
 		<span on:pointerdown={handle_pointerdown}>{year}</span>
-		<button disabled="{year === year1}" on:click="{() => year += 10}">&rarr;</button>
+		<button disabled={year === year1} on:click={() => (year += 10)}>&rarr;</button>
 	</div>
 </div>
 
@@ -141,7 +139,8 @@
 		margin: 0 0 36px 0;
 	}
 
-	.background, .foreground {
+	.background,
+	.foreground {
 		position: absolute;
 		width: 100%;
 		height: 100%;
@@ -184,7 +183,7 @@
 	.grid-line.horizontal {
 		width: 100%;
 		left: 0;
-		border-bottom: 1px solid rgba(0,0,0,0.05);
+		border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 	}
 
 	.label {
@@ -223,8 +222,8 @@
 		width: calc(100% - 2px); */
 		left: 0;
 		width: 100%;
-		border-left: 1px solid rgba(255,255,255,0.4);
-		border-right: 1px solid rgba(255,255,255,0.4);
+		border-left: 1px solid rgba(255, 255, 255, 0.4);
+		border-right: 1px solid rgba(255, 255, 255, 0.4);
 		box-sizing: border-box;
 		height: 100%;
 		opacity: 0.6;
@@ -238,7 +237,7 @@
 	.column.f {
 		background-color: #006747;
 	}
-	
+
 	.credit {
 		font-size: 14px;
 	}

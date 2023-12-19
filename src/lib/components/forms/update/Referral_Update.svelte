@@ -1,10 +1,8 @@
 <script lang="ts">
-	import { SlideToggle, getModalStore } from '@skeletonlabs/skeleton';
-	import Loading from '$lib/components/animation/Loading.svelte';
 	import type { Referral, ReferralComment, UserProfile } from '@prisma/client';
+	import { Loading, TextareaCopy, UserPicker } from '$lib/components';
+	import { SlideToggle, getModalStore } from '@skeletonlabs/skeleton';
 	import { getDateLocal } from '$lib/helpers';
-	import TextareaCopy from '$lib/components/TextareaCopy.svelte';
-	import UserPicker from '$lib/components/UserPicker.svelte';
 
 	interface FullReferral extends Referral {
 		comments: ReferralComment[];

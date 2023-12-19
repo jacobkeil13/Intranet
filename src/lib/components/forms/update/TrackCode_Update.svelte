@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { SlideToggle, getModalStore } from '@skeletonlabs/skeleton';
-	import Loading from '$lib/components/animation/Loading.svelte';
 	import type { TrackCode } from '@prisma/client';
+	import { Loading } from '$lib/components';
+	import { SlideToggle, getModalStore } from '@skeletonlabs/skeleton';
 
 	let modalStore = getModalStore();
 	let isLoading = false;
-  let trackCode: TrackCode = $modalStore[0].meta.trackCode;
+	let trackCode: TrackCode = $modalStore[0].meta.trackCode;
 
 	function closeForm(): void {
 		modalStore.close();
@@ -16,23 +16,23 @@
 	<div class="flex justify-between items-center">
 		<h1 class="text-xl text-usfGreen font-medium">Update Track Code</h1>
 		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<i class="fa-solid fa-xmark fa-lg text-black cursor-pointer" on:click={closeForm}></i>
+		<i class="fa-solid fa-xmark fa-lg text-black cursor-pointer" on:click={closeForm} />
 	</div>
 	<br />
 	<form method="POST" action="/track_spreadsheet?/updateReqCode" enctype="multipart/form-data">
-		<input type="hidden" name="id" value={trackCode.id}>
+		<input type="hidden" name="id" value={trackCode.id} />
 		<section class="flex flex-col gap-2">
 			<div class="flex space-x-2">
 				<span class="flex flex-col w-full space-y-1">
 					<label for="statusIndicator">Status Indicator</label>
 					<input required type="text" name="statusIndicator" class="input rounded-md" placeholder="Status Indicator..." value={trackCode.statusIndicator} />
 				</span>
-        <span class="flex flex-col space-y-1">
+				<span class="flex flex-col space-y-1">
 					<label for="satisfied" class="mb-2 text-transparent">Satisfied</label>
 					<SlideToggle name="satisfied" size="sm" bind:checked={trackCode.satisfied}>Satisfied</SlideToggle>
 				</span>
 			</div>
-      <div class="flex flex-col gap-2">
+			<div class="flex flex-col gap-2">
 				<label for="description">Description</label>
 				<textarea required class="input rounded-md" name="description" cols="20" rows="4" placeholder="Code description..." value={trackCode.description} />
 			</div>
@@ -59,7 +59,7 @@
 		border-color: #3e4c7a8a;
 	}
 
-  textarea {
+	textarea {
 		background-color: #ffffff;
 		color: black;
 		border-color: #3e4c7a8a;

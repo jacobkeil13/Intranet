@@ -1,6 +1,6 @@
 <script lang="ts">
+	import { Loading } from '$lib/components';
 	import { SlideToggle, getModalStore } from '@skeletonlabs/skeleton';
-	import Loading from '$lib/components/animation/Loading.svelte';
 
 	let modalStore = getModalStore();
 	let isLoading = false;
@@ -14,7 +14,7 @@
 	<div class="flex justify-between items-center">
 		<h1 class="text-xl text-usfGreen font-medium">Create Track Code</h1>
 		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<i class="fa-solid fa-xmark fa-lg text-black cursor-pointer" on:click={closeForm}></i>
+		<i class="fa-solid fa-xmark fa-lg text-black cursor-pointer" on:click={closeForm} />
 	</div>
 	<br />
 	<form method="POST" action="/track_spreadsheet?/createReqCode" enctype="multipart/form-data">
@@ -24,12 +24,12 @@
 					<label for="statusIndicator">Status Indicator</label>
 					<input required type="text" name="statusIndicator" class="input rounded-md" placeholder="Status Indicator..." />
 				</span>
-        <span class="flex flex-col space-y-1">
+				<span class="flex flex-col space-y-1">
 					<label for="satisfied" class="mb-2 text-transparent">Satisfied</label>
 					<SlideToggle name="satisfied" size="sm">Satisfied</SlideToggle>
 				</span>
 			</div>
-      <div class="flex flex-col gap-2">
+			<div class="flex flex-col gap-2">
 				<label for="description">Description</label>
 				<textarea required class="input rounded-md" name="description" cols="20" rows="4" placeholder="Code description..." />
 			</div>
@@ -56,7 +56,7 @@
 		border-color: #3e4c7a8a;
 	}
 
-  textarea {
+	textarea {
 		background-color: #ffffff;
 		color: black;
 		border-color: #3e4c7a8a;

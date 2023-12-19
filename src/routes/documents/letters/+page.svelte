@@ -1,11 +1,9 @@
 <script lang="ts">
-	import Search from '$lib/components/Search.svelte';
-	import { fly } from 'svelte/transition';
+	import { Search, TableWrapper, PageWrapper, HeaderSort } from '$lib/components';
 	import { getToastStore, Tab, TabGroup, getModalStore, type ModalSettings, type PaginationSettings, RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
 	import { getDateLocal, getLetterURL } from '$lib/helpers.js';
+	import { fly } from 'svelte/transition';
 	import { page } from '$app/stores';
-	import TableWrapper from '$lib/components/TableWrapper.svelte';
-	import PageWrapper from '$lib/components/PageWrapper.svelte';
 	import moment from 'moment';
 	export let form;
 	export let data;
@@ -27,6 +25,10 @@
 			classes: 'text-white/90 font-medium'
 		});
 	}
+
+	type HeaderTypes = 'letterCode' | 'letterType' | 'letterGroup' | 'owner' | 'lastUpdated';
+	let currentSortField: HeaderTypes = 'letterCode';
+	let currentSortOrder: 'asc' | 'dsc' = 'asc';
 
 	let filter = $page.url.searchParams.get('filter') === null ? 'all' : $page.url.searchParams.get('filter');
 	let update = 'all';
@@ -57,7 +59,6 @@
 				owner.toLowerCase().includes(searchQuery.toLowerCase().trim())
 			) {
 				if (filter === 'my' && letter.owner.netid !== data.profile?.netid) return false;
-				// if (update === 'up_to_date' && moment(letter.updatedAt).isBefore(moment().subtract(1, 'year'))) return false;
 				if (update === 'out_of_date' && moment(letter.updatedAt).isAfter(moment().subtract(1, 'year'))) return false;
 				if (letterType === 'All' && letter.letterType.name !== 'Old Letters') {
 					return letter;
@@ -112,6 +113,42 @@
 		filter = 'all';
 		update = 'all';
 		searchQuery = '';
+		currentSortField = 'letterCode';
+		currentSortOrder = 'asc';
+		sort();
+	}
+
+	let tableHeaders = [
+		{ sortable: true, title: 'Letter Code', field: 'letterCode' },
+		{ sortable: true, title: 'Letter Type', field: 'letterType' },
+		{ sortable: true, title: 'Letter Group', field: 'letterGroup' },
+		{ sortable: true, title: 'Owner', field: 'owner' },
+		{ sortable: true, title: 'Last Updated', field: 'lastUpdated' }
+	];
+
+	function sort() {
+		filteredLetters = letters.sort((a, b) => {
+			const getField = (obj: typeof a, field: HeaderTypes) => {
+				const fieldsMap = {
+					letterCode: obj.letterCode.name,
+					letterType: obj.letterType.name,
+					letterGroup: obj.letterGroup?.name,
+					owner: obj.owner.first_name + ' ' + obj.owner.last_name,
+					lastUpdated: obj.updatedAt.toISOString()
+				};
+				return fieldsMap[field] || obj.letterCode.name;
+			};
+
+			let aSortBy = getField(a, currentSortField);
+			let bSortby = getField(b, currentSortField);
+
+			const compareValues = (a: string, b: string) => {
+				if (currentSortOrder === 'asc') return a < b ? -1 : a > b ? 1 : 0;
+				return a > b ? -1 : a < b ? 1 : 0;
+			};
+
+			return compareValues(aSortBy, bSortby);
+		});
 	}
 </script>
 
@@ -162,11 +199,9 @@
 						<svelte:fragment slot="header">
 							<thead>
 								<tr class="bg-accSlate text-white/90">
-									<th>Letter Code</th>
-									<th>Letter Type</th>
-									<th>Letter Group</th>
-									<th>Owner</th>
-									<th>Last Updated</th>
+									{#each tableHeaders as header}
+										<HeaderSort sortable={header.sortable} title={header.title} field={header.field} bind:currentSortField bind:currentSortOrder on:sort={sort} />
+									{/each}
 								</tr>
 							</thead>
 						</svelte:fragment>
@@ -174,11 +209,11 @@
 							<tbody>
 								{#each paginatedSource as letter}
 									<tr on:click={() => updateLetter(letter.id)} class="cursor-pointer">
-										<td>{letter.letterCode.name}</td>
-										<td>{letter.letterType.name}</td>
-										<td>{letter.letterGroup?.name ?? '-'}</td>
-										<td>{letter.owner.first_name + ' ' + letter.owner.last_name}</td>
-										<td>{getDateLocal(letter.updatedAt.toISOString(), 'MMMM Do, YYYY')}</td>
+										<td><pre>{letter.letterCode.name}</pre></td>
+										<td><pre>{letter.letterType.name}</pre></td>
+										<td><pre>{letter.letterGroup?.name ?? '-'}</pre></td>
+										<td><pre>{letter.owner.first_name + ' ' + letter.owner.last_name}</pre></td>
+										<td><pre>{getDateLocal(letter.updatedAt.toISOString(), 'YYYY-MM-DD')}</pre></td>
 									</tr>
 								{/each}
 							</tbody>

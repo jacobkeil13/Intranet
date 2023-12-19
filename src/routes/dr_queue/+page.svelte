@@ -1,23 +1,11 @@
 <script lang="ts">
-	import { page } from '$app/stores';
-	import PageWrapper from '$lib/components/PageWrapper.svelte';
-	import Popup from '$lib/components/Popup.svelte';
-	import Search from '$lib/components/Search.svelte';
-	import TableWrapper from '$lib/components/TableWrapper.svelte';
-	import { getDateLocal } from '$lib/helpers.js';
+	import { Search, PageWrapper, Popup, TableWrapper, HeaderSort } from '$lib/components';
 	import { type PaginationSettings, type ModalSettings, getModalStore, getToastStore, RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
+	import { getDateLocal } from '$lib/helpers.js';
 	import { fly } from 'svelte/transition';
+	import { page } from '$app/stores';
 	export let data;
 	export let form;
-
-	let tableFilter = {
-		current: 'dateNeeded',
-		title: { filter: 'asc' },
-		dateRequested: { filter: 'asc' },
-		dateNeeded: { filter: 'asc' },
-		requestedBy: { filter: 'asc' },
-		assignedTo: { filter: 'asc' }
-	};
 
 	let modalStore = getModalStore();
 	let toastStore = getToastStore();
@@ -39,6 +27,10 @@
 			profile: data.profile
 		}
 	};
+
+	type HeaderTypes = 'priority' | 'title' | 'dateRequested' | 'dateNeeded' | 'requestedBy' | 'assignedTo' | 'comments';
+	let currentSortField: HeaderTypes = 'dateNeeded';
+	let currentSortOrder: 'asc' | 'dsc' = 'asc';
 
 	let filter = $page.url.searchParams.get('filter') === null ? 'all' : $page.url.searchParams.get('filter');
 	let complete = 'pending';
@@ -96,66 +88,45 @@
 		filter = 'all';
 		complete = 'pending';
 		searchQuery = '';
-		sortBy('dateNeeded', 'asc');
-		tableFilter.dateNeeded.filter = 'asc';
+		currentSortField = 'dateNeeded';
+		currentSortOrder = 'asc';
+		sort();
 	}
 
-	function sortBy(field: string, sort: string) {
-		tableFilter.current = field;
+	let tableHeaders = [
+		{ sortable: false, title: 'Priority', field: 'priority' },
+		{ sortable: true, title: 'Title', field: 'title' },
+		{ sortable: true, title: 'Date Needed', field: 'dateNeeded' },
+		{ sortable: true, title: 'Date Requested', field: 'dateRequested' },
+		{ sortable: true, title: 'Requested By', field: 'requestedBy' },
+		{ sortable: true, title: 'Assigned To', field: 'assignedTo' },
+		{ sortable: false, title: 'Comments', field: 'comments' }
+	];
+
+	function sort() {
 		filteredQueueRequests = dataRequests.sort((a, b) => {
-			let aSortBy = a.dateNeeded.toISOString();
-			let bSortby = b.dateNeeded.toISOString();
-			switch (field) {
-				case 'title':
-					aSortBy = a.title;
-					bSortby = b.title;
-					break;
-				case 'dateRequested':
-					aSortBy = a.createdAt.toISOString();
-					bSortby = b.createdAt.toISOString();
-					break;
-				case 'dateNeeded':
-					aSortBy = a.dateNeeded.toISOString();
-					bSortby = b.dateNeeded.toISOString();
-					break;
-				case 'requestedBy':
-					aSortBy = a.requestedBy.first_name + ' ' + a.requestedBy.last_name;
-					bSortby = b.requestedBy.first_name + ' ' + b.requestedBy.last_name;
-					break;
-				case 'assignedTo':
-					aSortBy = a.assignedTo?.first_name + ' ' + a.assignedTo?.last_name;
-					bSortby = b.assignedTo?.first_name + ' ' + b.assignedTo?.last_name;
-					break;
+			const getField = (obj: typeof a, field: HeaderTypes) => {
+				const fieldsMap = {
+					priority: obj.priority.name,
+					title: obj.title,
+					dateNeeded: obj.dateNeeded.toISOString(),
+					dateRequested: obj.createdAt.toISOString(),
+					requestedBy: obj.requestedBy.first_name + ' ' + obj.requestedBy.last_name,
+					assignedTo: obj.assignedTo ? obj.assignedTo.first_name + ' ' + obj.assignedTo.last_name : '-',
+					comments: ''
+				};
+				return fieldsMap[field] || obj.dateNeeded.toISOString();
+			};
 
-				default:
-					aSortBy = a.dateNeeded.toISOString();
-					bSortby = b.dateNeeded.toISOString();
-					break;
-			}
+			let aSortBy = getField(a, currentSortField);
+			let bSortby = getField(b, currentSortField);
 
-			if (sort === 'asc') {
-				if (field === 'dateRequested' || field === 'dateNeeded') {
-					if (new Date(aSortBy) < new Date(bSortby)) return -1;
-					if (new Date(aSortBy) > new Date(bSortby)) return 1;
-					return 0;
-				} else {
-					if (aSortBy < bSortby) return -1;
-					if (aSortBy > bSortby) return 1;
-					return 0;
-				}
-			} else if (sort === 'dsc') {
-				if (field === 'dateRequested' || field === 'dateNeeded') {
-					if (new Date(aSortBy) > new Date(bSortby)) return -1;
-					if (new Date(aSortBy) < new Date(bSortby)) return 1;
-					return 0;
-				} else {
-					if (aSortBy > bSortby) return -1;
-					if (aSortBy < bSortby) return 1;
-					return 0;
-				}
-			} else {
-				return 0;
-			}
+			const compareValues = (a: string, b: string) => {
+				if (currentSortOrder === 'asc') return a < b ? -1 : a > b ? 1 : 0;
+				return a > b ? -1 : a < b ? 1 : 0;
+			};
+
+			return compareValues(aSortBy, bSortby);
 		});
 	}
 </script>
@@ -197,103 +168,9 @@
 				<svelte:fragment slot="header">
 					<thead>
 						<tr class="bg-accSlate text-white/90">
-							<th>Priority</th>
-							<th
-								class="cursor-pointer select-none gap-2 min-w-[35ch]"
-								on:click={() => {
-									if (tableFilter.title.filter === 'asc') {
-										tableFilter.title.filter = 'dsc';
-									} else if (tableFilter.title.filter === 'dsc') {
-										tableFilter.title.filter = 'asc';
-									}
-									sortBy('title', tableFilter.title.filter);
-								}}
-								>Title*
-								<span>
-									<i
-										class="fa-solid fa-sm text-white/70
-                        {tableFilter.current === 'title' ? 'inline-block' : 'hidden'} 
-                        {tableFilter.title.filter === 'asc' ? 'fa-arrow-up-long' : 'fa-arrow-down-long'}"
-									/>
-								</span>
-							</th>
-							<th
-								class="cursor-pointer select-none gap-2 whitespace-nowrap"
-								on:click={() => {
-									if (tableFilter.dateRequested.filter === 'asc') {
-										tableFilter.dateRequested.filter = 'dsc';
-									} else if (tableFilter.dateRequested.filter === 'dsc') {
-										tableFilter.dateRequested.filter = 'asc';
-									}
-									sortBy('dateRequested', tableFilter.dateRequested.filter);
-								}}
-								>Date Requested*
-								<span>
-									<i
-										class="fa-solid fa-sm text-white/70
-                        {tableFilter.current === 'dateRequested' ? 'inline-block' : 'hidden'} 
-                        {tableFilter.dateRequested.filter === 'asc' ? 'fa-arrow-up-long' : 'fa-arrow-down-long'}"
-									/>
-								</span>
-							</th>
-							<th
-								class="flex cursor-pointer select-none gap-2 whitespace-nowrap"
-								on:click={() => {
-									if (tableFilter.dateNeeded.filter === 'asc') {
-										tableFilter.dateNeeded.filter = 'dsc';
-									} else if (tableFilter.dateNeeded.filter === 'dsc') {
-										tableFilter.dateNeeded.filter = 'asc';
-									}
-									sortBy('dateNeeded', tableFilter.dateNeeded.filter);
-								}}
-								>Date Needed*
-								<span>
-									<i
-										class="fa-solid fa-sm text-white/70
-                        {tableFilter.current === 'dateNeeded' ? 'inline-block' : 'hidden'} 
-                        {tableFilter.dateNeeded.filter === 'asc' ? 'fa-arrow-up-long' : 'fa-arrow-down-long'}"
-									/>
-								</span>
-							</th>
-							<th
-								class="cursor-pointer select-none gap-2 whitespace-nowrap"
-								on:click={() => {
-									if (tableFilter.requestedBy.filter === 'asc') {
-										tableFilter.requestedBy.filter = 'dsc';
-									} else if (tableFilter.requestedBy.filter === 'dsc') {
-										tableFilter.requestedBy.filter = 'asc';
-									}
-									sortBy('requestedBy', tableFilter.requestedBy.filter);
-								}}
-								>Requested By*
-								<span>
-									<i
-										class="fa-solid fa-sm text-white/70
-                        {tableFilter.current === 'requestedBy' ? 'inline-block' : 'hidden'} 
-                        {tableFilter.requestedBy.filter === 'asc' ? 'fa-arrow-up-long' : 'fa-arrow-down-long'}"
-									/>
-								</span>
-							</th>
-							<th
-								class="cursor-pointer select-none gap-2 whitespace-nowrap"
-								on:click={() => {
-									if (tableFilter.assignedTo.filter === 'asc') {
-										tableFilter.assignedTo.filter = 'dsc';
-									} else if (tableFilter.assignedTo.filter === 'dsc') {
-										tableFilter.assignedTo.filter = 'asc';
-									}
-									sortBy('assignedTo', tableFilter.assignedTo.filter);
-								}}
-								>Assigned To*
-								<span>
-									<i
-										class="fa-solid fa-sm text-white/70
-                        {tableFilter.current === 'assignedTo' ? 'inline-block' : 'hidden'} 
-                        {tableFilter.assignedTo.filter === 'asc' ? 'fa-arrow-up-long' : 'fa-arrow-down-long'}"
-									/>
-								</span>
-							</th>
-							<th>Comments</th>
+							{#each tableHeaders as header}
+								<HeaderSort sortable={header.sortable} title={header.title} field={header.field} bind:currentSortField bind:currentSortOrder on:sort={sort} />
+							{/each}
 						</tr>
 					</thead>
 				</svelte:fragment>
@@ -317,12 +194,14 @@
 									</Popup>
 								</td>
 								<td>{request.title}</td>
-								<td><pre>{getDateLocal(request.createdAt.toISOString(), 'YYYY-MM-DD')}</pre></td>
 								<td><pre>{getDateLocal(request.dateNeeded.toISOString(), 'YYYY-MM-DD')}</pre></td>
+								<td><pre>{getDateLocal(request.createdAt.toISOString(), 'YYYY-MM-DD')}</pre></td>
 								<td><pre>{request.requestedBy.first_name + ' ' + request.requestedBy.last_name}</pre></td>
 								<td>
 									{#if request.assignedTo}
 										<pre>{request.assignedTo.first_name + ' ' + request.assignedTo.last_name}</pre>
+									{:else}
+										<pre>-</pre>
 									{/if}
 								</td>
 								<td>

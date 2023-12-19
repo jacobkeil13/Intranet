@@ -1,10 +1,9 @@
 <script lang="ts">
-	import { getModalStore } from '@skeletonlabs/skeleton';
-	import Loading from '$lib/components/animation/Loading.svelte';
-	import { getDateLocal } from '$lib/helpers';
 	import type { MasterCalendarComment, MasterCalendarItem, MasterCalendarType, UserProfile } from '@prisma/client';
+	import { Loading, UserPicker } from '$lib/components';
+	import { getModalStore } from '@skeletonlabs/skeleton';
+	import { getDateLocal } from '$lib/helpers';
 	import { enhance } from '$app/forms';
-	import UserPicker from '$lib/components/UserPicker.svelte';
 
 	interface FullCalendarItem extends MasterCalendarItem {
 		type: MasterCalendarType;

@@ -1,6 +1,6 @@
 <script lang="ts">
+	import { Loading } from '$lib/components';
 	import { getModalStore } from '@skeletonlabs/skeleton';
-	import Loading from '$lib/components/animation/Loading.svelte';
 
 	let modalStore = getModalStore();
 	let isLoading = false;

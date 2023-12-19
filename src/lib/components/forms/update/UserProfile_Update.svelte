@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { getModalStore } from '@skeletonlabs/skeleton';
-	import Loading from '$lib/components/animation/Loading.svelte';
 	import type { Role, UserProfile } from '@prisma/client';
+	import { Loading } from '$lib/components';
+	import { getModalStore } from '@skeletonlabs/skeleton';
 	import { enhance } from '$app/forms';
 
 	interface FullProfile extends UserProfile {
-		role: Role
-		directReport: UserProfile
+		role: Role;
+		directReport: UserProfile;
 	}
 
 	let deletedSafety = false;
@@ -14,17 +14,17 @@
 	let modalStore = getModalStore();
 	let isLoading = false;
 	let userProfile: FullProfile = $modalStore[0].meta.userProfile;
-	
+
 	let constants = $modalStore[0].meta.constants;
-  
+
 	function closeForm(): void {
 		modalStore.close();
 	}
 
-	function response(action: "delete" | "update"): void {
+	function response(action: 'delete' | 'update'): void {
 		if ($modalStore[0] !== undefined) {
-      $modalStore[0].meta.response(action);
-    }
+			$modalStore[0].meta.response(action);
+		}
 		closeForm();
 	}
 
@@ -36,12 +36,12 @@
 		if (deletedSafety && toDelete) {
 			const formData = new FormData();
 			formData.append('id', id);
-			await fetch("/phone_list?/delete", {
+			await fetch('/phone_list?/delete', {
 				method: 'POST',
-				body: formData,
-			})
+				body: formData
+			});
 
-			response("delete");
+			response('delete');
 		}
 	}
 </script>
@@ -50,54 +50,65 @@
 	<div class="flex justify-between items-center">
 		<div class="flex items-center gap-3">
 			<h1 class="text-xl text-usfGreen font-medium">Update User Profile</h1>
-			{#if userProfile.role.name === "STUDENT"}
+			{#if userProfile.role.name === 'STUDENT'}
 				<!-- svelte-ignore a11y-click-events-have-key-events -->
-				<i class="fa-solid fa-trash-can text-black/60 hover:text-red-600 cursor-pointer" on:click={toggleSafety} ></i>
+				<i class="fa-solid fa-trash-can text-black/60 hover:text-red-600 cursor-pointer" on:click={toggleSafety} />
 				{#if deletedSafety}
 					<div class="flex items-center gap-3 px-3 py-[2px] rounded-md bg-red-600 text-white/90 font-medium">
-						<button on:click={() => { deleteUser(userProfile.id) }}>Delete Permanently</button>
+						<button
+							on:click={() => {
+								deleteUser(userProfile.id);
+							}}>Delete Permanently</button
+						>
 						<!-- svelte-ignore a11y-click-events-have-key-events -->
 						{#if !toDelete}
-							<i class="fa-regular fa-square-check text-white/90 cursor-pointer" on:click={() => toDelete = !toDelete} ></i>
+							<i class="fa-regular fa-square-check text-white/90 cursor-pointer" on:click={() => (toDelete = !toDelete)} />
 						{:else}
-							<i class="fa-solid fa-square-check text-white/90 cursor-pointer" on:click={() => toDelete = !toDelete} ></i>
+							<i class="fa-solid fa-square-check text-white/90 cursor-pointer" on:click={() => (toDelete = !toDelete)} />
 						{/if}
 					</div>
 				{/if}
 			{/if}
 		</div>
 		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<i class="fa-solid fa-xmark fa-lg text-black cursor-pointer" on:click={closeForm}></i>
+		<i class="fa-solid fa-xmark fa-lg text-black cursor-pointer" on:click={closeForm} />
 	</div>
 	<br />
-	<form use:enhance={() => { response("update") }} method="POST" action="/phone_list?/update" enctype="multipart/form-data">
-    <input type="hidden" name="id" value={userProfile.id}>
+	<form
+		use:enhance={() => {
+			response('update');
+		}}
+		method="POST"
+		action="/phone_list?/update"
+		enctype="multipart/form-data"
+	>
+		<input type="hidden" name="id" value={userProfile.id} />
 		<section class="space-y-2">
 			<div class="flex space-x-2">
 				<span class="flex flex-col w-full space-y-1">
 					<label for="firstName">First Name</label>
 					<input required type="text" name="firstName" class="input rounded-md" placeholder="Name of file without extension..." value={userProfile.first_name} />
 				</span>
-        <span class="flex flex-col w-full space-y-1">
+				<span class="flex flex-col w-full space-y-1">
 					<label for="lastName">Last Name</label>
 					<input required type="text" name="lastName" class="input rounded-md" placeholder="Name of file without extension..." value={userProfile.last_name} />
 				</span>
 				<span class="flex flex-col w-full space-y-1">
 					<label for="directReport">Direct Report</label>
-					<select class="input rounded-md" name="directReport" value={userProfile.directReport === null ? "" : userProfile.directReport.id}>
+					<select class="input rounded-md" name="directReport" value={userProfile.directReport === null ? '' : userProfile.directReport.id}>
 						<option disabled selected value="">Select one...</option>
 						{#each constants.users as user}
-							<option value={user.id}>{user.first_name + " " + user.last_name}</option>
+							<option value={user.id}>{user.first_name + ' ' + user.last_name}</option>
 						{/each}
 					</select>
 				</span>
 			</div>
 			<div class="flex space-x-2">
-        <span class="flex flex-col w-full space-y-1">
+				<span class="flex flex-col w-full space-y-1">
 					<label for="netId">Net ID</label>
 					<input required type="text" name="netId" class="input rounded-md" placeholder="Name of file without extension..." value={userProfile.netid} />
 				</span>
-        <span class="flex flex-col w-full space-y-1 flex-grow">
+				<span class="flex flex-col w-full space-y-1 flex-grow">
 					<label for="uidRange">UID Range (For Advisors)</label>
 					<input type="text" name="uidRange" class="input rounded-md" placeholder="UID Range ex.(1249-2500)" value={userProfile.uidRange} />
 				</span>
@@ -119,7 +130,7 @@
 </section>
 
 <style>
-  input {
+	input {
 		background-color: #ffffff;
 		color: black;
 		border-color: #3e4c7a8a;

@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { getModalStore } from '@skeletonlabs/skeleton';
-	import Loading from '$lib/components/animation/Loading.svelte';
 	import type { AidYear, Procedure, UserProfile } from '@prisma/client';
+	import { Loading } from '$lib/components';
+	import { getModalStore } from '@skeletonlabs/skeleton';
 	import { getProcedureURL } from '$lib/helpers';
 
 	interface FullProcedure extends Procedure {
