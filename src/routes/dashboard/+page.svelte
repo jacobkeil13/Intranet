@@ -3,6 +3,9 @@
 	import { getModalStore } from '@skeletonlabs/skeleton';
 	import { fly } from 'svelte/transition';
 	import moment from 'moment';
+	import { scaleTime } from 'd3';
+	import { Chart, Svg, Axis, Area, Highlight, Tooltip, RectClipPath, LinearGradient } from 'layerchart';
+	import { PeriodType, format } from 'svelte-ux';
 	export let data;
 
 	let modalStore = getModalStore();
@@ -243,9 +246,136 @@
 			</a> -->
 		</section>
 		<br />
-		<!-- <Chart /> -->
-		<!-- <section class="hidden desktop:grid grid-cols-2 gap-4">
-			<D3Chart height={400} width={700} data={chartData} />
-		</section> -->
+		<section class="grid grid-cols-1 pl-5 desktop:grid-cols-2 gap-8">
+			<div>
+				<h1 class="text-lg font-medium text-usfGreen mb-2">Visits - Last 6 Months</h1>
+				<div class="h-[200px] border rounded">
+					<Chart
+						data={data.counts.counter_visits.pastWeekVisits}
+						x="date"
+						xScale={scaleTime()}
+						y="value"
+						yDomain={[0, null]}
+						yNice
+						padding={{ top: 0, bottom: 24 }}
+						tooltip
+						let:width
+						let:height
+						let:padding
+						let:tooltip
+					>
+						<Svg>
+							<Axis placement="left" grid rule />
+							<LinearGradient class="from-accent-500/50 to-accent-500/5" vertical let:url>
+								<Area line={{ class: 'stroke-2 stroke-accent-500 opacity-20' }} fill={url} />
+								<RectClipPath x={0} y={0} width={tooltip.data ? tooltip.x : width} {height} spring>
+									<Area line={{ class: 'stroke stroke-accent-500' }} fill={url} />
+								</RectClipPath>
+							</LinearGradient>
+							<Highlight points lines={{ class: 'stroke-accent-500/50 [stroke-dasharray:2]' }} />
+							<Axis placement="bottom" />
+						</Svg>
+
+						<Tooltip y={48} xOffset={15} variant="none" class="text-sm font-semibold text-accent-700 leading-3" let:data>
+							{format(data.value, 'integer')} Visits
+						</Tooltip>
+
+						<Tooltip x={16} y={16} variant="none" class="text-sm font-semibold leading-3" let:data>
+							{format(data.date, PeriodType.Day)}
+						</Tooltip>
+
+						<Tooltip x="data" y={height + padding.top + 2} anchor="top" variant="none" class="text-sm font-semibold bg-accent-500 text-white leading-3 px-2 py-1 rounded whitespace-nowrap" let:data>
+							{format(data.date, PeriodType.Day)}
+						</Tooltip>
+					</Chart>
+				</div>
+			</div>
+			<div>
+				<h1 class="text-lg font-medium text-usfGreen mb-2">Appointments - Last 3 Months</h1>
+				<div class="h-[200px] border rounded">
+					<Chart
+						data={data.counts.counter_visits.pastWeekAppt}
+						x="date"
+						xScale={scaleTime()}
+						y="value"
+						yDomain={[0, null]}
+						yNice
+						padding={{ top: 0, bottom: 24 }}
+						tooltip
+						let:width
+						let:height
+						let:padding
+						let:tooltip
+					>
+						<Svg>
+							<Axis placement="left" grid rule />
+							<LinearGradient class="from-secondary-500/50 to-secondary-500/5" vertical let:url>
+								<Area line={{ class: 'stroke stroke-secondary-500 opacity-20' }} fill={url} />
+								<RectClipPath x={0} y={0} width={tooltip.data ? tooltip.x : width} {height} spring>
+									<Area line={{ class: 'stroke stroke-secondary-500' }} fill={url} />
+								</RectClipPath>
+							</LinearGradient>
+							<Highlight points lines={{ class: 'stroke-secondary-500/50 [stroke-dasharray:2]' }} />
+							<Axis placement="bottom" />
+						</Svg>
+
+						<Tooltip y={48} xOffset={15} variant="none" class="text-sm font-semibold text-secondary-700 leading-3" let:data>
+							{format(data.value, 'integer')} Appointments
+						</Tooltip>
+
+						<Tooltip x={16} y={16} variant="none" class="text-sm font-semibold leading-3" let:data>
+							{format(data.date, PeriodType.Day)}
+						</Tooltip>
+
+						<Tooltip x="data" y={height + padding.top + 2} anchor="top" variant="none" class="text-sm font-semibold bg-secondary-500 text-white leading-3 px-2 py-1 rounded whitespace-nowrap" let:data>
+							{format(data.date, PeriodType.Day)}
+						</Tooltip>
+					</Chart>
+				</div>
+			</div>
+			<div>
+				<h1 class="text-lg font-medium text-usfGreen mb-2">Referrals - Last 3 Months</h1>
+				<div class="h-[200px] border rounded">
+					<Chart
+						data={data.counts.counter_visits.pastWeekRef}
+						x="date"
+						xScale={scaleTime()}
+						y="value"
+						yDomain={[0, null]}
+						yNice
+						padding={{ top: 0, bottom: 24 }}
+						tooltip
+						let:width
+						let:height
+						let:padding
+						let:tooltip
+					>
+						<Svg>
+							<Axis placement="left" grid rule />
+							<LinearGradient class="from-tertiary-500/50 to-tertiary-500/5" vertical let:url>
+								<Area line={{ class: 'stroke stroke-tertiary-500 opacity-20' }} fill={url} />
+								<RectClipPath x={0} y={0} width={tooltip.data ? tooltip.x : width} {height} spring>
+									<Area line={{ class: 'stroke stroke-tertiary-500' }} fill={url} />
+								</RectClipPath>
+							</LinearGradient>
+							<Highlight points lines={{ class: 'stroke-tertiary-500/50 [stroke-dasharray:2]' }} />
+							<Axis placement="bottom" />
+						</Svg>
+
+						<Tooltip y={48} xOffset={15} variant="none" class="text-sm font-semibold text-tertiary-700 leading-3" let:data>
+							{format(data.value, 'integer')} Referrals
+						</Tooltip>
+
+						<Tooltip x={16} y={16} variant="none" class="text-sm font-semibold leading-3" let:data>
+							{format(data.date, PeriodType.Day)}
+						</Tooltip>
+
+						<Tooltip x="data" y={height + padding.top + 2} anchor="top" variant="none" class="text-sm font-semibold bg-tertiary-500 text-white leading-3 px-2 py-1 rounded whitespace-nowrap" let:data>
+							{format(data.date, PeriodType.Day)}
+						</Tooltip>
+					</Chart>
+				</div>
+			</div>
+		</section>
 	{/if}
 </article>

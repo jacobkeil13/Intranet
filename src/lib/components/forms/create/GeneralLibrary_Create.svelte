@@ -1,7 +1,6 @@
 <script lang="ts">
+	import { Loading, UserPicker} from '$lib/components';
 	import { getModalStore } from '@skeletonlabs/skeleton';
-	import Loading from '$lib/components/animation/Loading.svelte';
-	import UserPicker from '$lib/components/UserPicker.svelte';
 
 	let modalStore = getModalStore();
 	let isLoading = false;

@@ -1,10 +1,8 @@
 <script lang="ts">
-	import PageWrapper from '$lib/components/PageWrapper.svelte';
-	import Search from '$lib/components/Search.svelte';
-	import TableWrapper from '$lib/components/TableWrapper.svelte';
-	import HeaderSort from '$lib/components/HeaderSort.svelte';
+	import { getToastStore, type ModalSettings, getModalStore, type PaginationSettings, TabGroup, Tab } from '@skeletonlabs/skeleton';
+	import { PageWrapper, Search, TableWrapper, HeaderSort } from '$lib/components';
+	import { pageOptions } from '$lib/stores/filters.js';
 	import { getDateLocal } from '$lib/helpers.js';
-	import { getToastStore, type ModalSettings, getModalStore, type PaginationSettings, TabGroup, Tab, RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
 	import { fly } from 'svelte/transition';
 	export let form;
 	export let data;
@@ -72,7 +70,7 @@
 		page: 0,
 		limit: 10,
 		size: filterTrainings.length,
-		amounts: [5, 10, 15]
+		amounts: pageOptions
 	} satisfies PaginationSettings;
 
 	$: paginatedSource = filterTrainings.slice(paginationSettings.page * paginationSettings.limit, paginationSettings.page * paginationSettings.limit + paginationSettings.limit);

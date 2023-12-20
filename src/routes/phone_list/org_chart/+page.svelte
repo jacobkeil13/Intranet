@@ -1,6 +1,5 @@
 <script>
-	import Hierarchy from '$lib/components/Hierarchy.svelte';
-	import PageWrapper from '$lib/components/PageWrapper.svelte';
+	import { Hierarchy, PageWrapper } from '$lib/components';
 	import { fly } from 'svelte/transition';
 </script>
 

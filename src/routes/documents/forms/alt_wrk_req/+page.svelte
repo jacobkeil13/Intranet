@@ -1,8 +1,8 @@
 <script lang="ts">
-	import PageWrapper from '$lib/components/PageWrapper.svelte';
-	import moment from 'moment';
-	import { fly } from 'svelte/transition';
+	import { PageWrapper } from '$lib/components';
 	import { writable } from 'svelte/store';
+	import { fly } from 'svelte/transition';
+	import moment from 'moment';
 	export let data;
 
 	interface Day {

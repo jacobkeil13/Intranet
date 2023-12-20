@@ -1,7 +1,20 @@
 import type { Version } from '$lib/types';
 
-export const currentVersion: string = '1.0.6';
+export const currentVersion: string = '1.0.7';
 export const versions: Version[] = [
+	{
+		version: '1.0.7',
+		date: '2023-12-20',
+		notes: [
+			{
+				header: 'Statistics',
+				items: [
+					'Added 3 tables to the stats section on the dashboard. These will show the amount of visits, appointments, and referrals in the past months.',
+					'Updated the statistics graph view to a similar table design on the the dashboard.'
+				]
+			}
+		]
+	},
 	{
 		version: '1.0.6',
 		date: '2023-12-04',

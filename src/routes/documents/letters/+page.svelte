@@ -2,6 +2,7 @@
 	import { Search, TableWrapper, PageWrapper, HeaderSort } from '$lib/components';
 	import { getToastStore, Tab, TabGroup, getModalStore, type ModalSettings, type PaginationSettings, RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
 	import { getDateLocal, getLetterURL } from '$lib/helpers.js';
+	import { pageOptions } from '$lib/stores/filters.js';
 	import { fly } from 'svelte/transition';
 	import { page } from '$app/stores';
 	import moment from 'moment';
@@ -75,7 +76,7 @@
 		page: 0,
 		limit: 10,
 		size: filteredLetters.length,
-		amounts: [5, 10, 15]
+		amounts: pageOptions
 	} satisfies PaginationSettings;
 
 	$: paginatedSource = filteredLetters.slice(paginationSettings.page * paginationSettings.limit, paginationSettings.page * paginationSettings.limit + paginationSettings.limit);

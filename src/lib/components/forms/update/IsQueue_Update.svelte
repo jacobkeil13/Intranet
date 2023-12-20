@@ -1,10 +1,11 @@
 <script lang="ts">
+	import type { 
+		AddressType, AidYear, Application, LetterCode, PopulationSelection, 
+		Priority, QueueComment, QueueItem, RequestType, UserProfile 
+	} from '@prisma/client';
+	import { Loading, UserPicker, FileUpload } from '$lib/components';
 	import { SlideToggle, getModalStore } from '@skeletonlabs/skeleton';
-	import Loading from '../../animation/Loading.svelte';
 	import { getDateLocal, getTerm } from '$lib/helpers';
-	import type { AddressType, AidYear, Application, LetterCode, PopulationSelection, Priority, QueueComment, QueueItem, RequestType, UserProfile } from '@prisma/client';
-	import UserPicker from '$lib/components/UserPicker.svelte';
-	import FileUpload from '$lib/components/FileUpload.svelte';
 	import moment from 'moment';
 
 	interface FullPopsel extends PopulationSelection {

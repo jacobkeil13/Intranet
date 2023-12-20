@@ -2,7 +2,6 @@ import { redirect } from '@sveltejs/kit';
 import { db, getTeamByName, getUserProfileByNetId } from '$lib/server/database';
 import { getDateLocal } from '$lib/helpers.js';
 import moment from 'moment';
-import type { UserProfile } from '@prisma/client';
 
 export const load = async ({ locals }) => {
 	if (locals.user) {
@@ -75,6 +74,74 @@ export const load = async ({ locals }) => {
 			}
 		});
 
+		const visitsWeekly = await db.visitCounter.findMany({
+			where: { createdAt: { gte: moment().subtract(6, "months").format() }}
+		})
+
+		const appointmentsWeekly = await db.appointment.findMany({
+			where: { createdAt: { gte: moment().subtract(3, "months").format() }}
+		})
+
+		const referralsWeekly = await db.referral.findMany({
+			where: { createdAt: { gte: moment().subtract(3, "months").format() }}
+		})
+
+		const pastWeekVisits: { "date": Date, "value": number }[] = []
+		const pastWeekAppt: { "date": Date, "value": number }[] = []
+		const pastWeekRef: { "date": Date, "value": number }[] = []
+
+		let visitsPerHour: { [key: string]: { visits: number; iso: string } } = {};
+		let apptPerHour: { [key: string]: { visits: number; iso: string } } = {};
+		let refPerHour: { [key: string]: { visits: number; iso: string } } = {};
+
+		for (let visit of visitsWeekly) {
+			let date = moment(visit.createdAt).format('YYYY-MM-DD');
+			if (visitsPerHour[date] === undefined) {
+				visitsPerHour[date] = { visits: 0, iso: '' };
+			}
+			visitsPerHour[date].visits++;
+			visitsPerHour[date].iso = moment(visit.createdAt).format();
+		}
+
+		Object.keys(visitsPerHour).forEach((time) => {
+			pastWeekVisits.push({
+				date: new Date(visitsPerHour[time].iso),
+				value: visitsPerHour[time].visits
+			});
+		});
+
+		for (let appt of appointmentsWeekly) {
+			let date = moment(appt.createdAt).format('YYYY-MM-DD');
+			if (apptPerHour[date] === undefined) {
+				apptPerHour[date] = { visits: 0, iso: '' };
+			}
+			apptPerHour[date].visits++;
+			apptPerHour[date].iso = moment(appt.createdAt).format();
+		}
+
+		Object.keys(apptPerHour).forEach((time) => {
+			pastWeekAppt.push({
+				date: new Date(apptPerHour[time].iso),
+				value: apptPerHour[time].visits
+			});
+		});
+
+		for (let ref of referralsWeekly) {
+			let date = moment(ref.createdAt).format('YYYY-MM-DD');
+			if (refPerHour[date] === undefined) {
+				refPerHour[date] = { visits: 0, iso: '' };
+			}
+			refPerHour[date].visits++;
+			refPerHour[date].iso = moment(ref.createdAt).format();
+		}
+
+		Object.keys(refPerHour).forEach((time) => {
+			pastWeekRef.push({
+				date: new Date(refPerHour[time].iso),
+				value: refPerHour[time].visits
+			});
+		});
+
 		let counts = {
 			is_queue: {
 				total: isQueue.length,
@@ -101,7 +168,10 @@ export const load = async ({ locals }) => {
 				needs_update: procedures.filter((procedure) => moment(procedure.updatedAt).isBefore(moment().subtract(1, 'year')) && procedure.owner.id === profile?.id).length
 			},
 			counter_visits: {
-				total: counterVisits
+				total: counterVisits,
+				pastWeekVisits,
+				pastWeekAppt,
+				pastWeekRef
 			},
 			phone_appt: {
 				total_open: appointments.filter((appt) => appt.type === 'Phone Appointment' && !appt.completed).length,

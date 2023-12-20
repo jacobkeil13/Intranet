@@ -1,8 +1,8 @@
 <script lang="ts">
-	import PageWrapper from '$lib/components/PageWrapper.svelte';
-	import { page } from '$app/stores';
-	import { fly } from 'svelte/transition';
+	import { PageWrapper } from '$lib/components';
 	import { writable } from 'svelte/store';
+	import { fly } from 'svelte/transition';
+	import { page } from '$app/stores';
 
 	const aidYear = $page.params.aidYear;
 	let currentAidYear = '20' + aidYear.slice(0, 2);

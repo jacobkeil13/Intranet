@@ -1,11 +1,9 @@
 <script lang="ts">
-	import Search from '$lib/components/Search.svelte';
 	import { type PaginationSettings, getToastStore, getModalStore } from '@skeletonlabs/skeleton';
-	import { fly } from 'svelte/transition';
+	import { PageWrapper, Search, TableWrapper, HeaderSort } from '$lib/components';
+	import { pageOptions } from '$lib/stores/filters.js';
 	import { getDateLocal } from '$lib/helpers.js';
-	import TableWrapper from '$lib/components/TableWrapper.svelte';
-	import PageWrapper from '$lib/components/PageWrapper.svelte';
-	import HeaderSort from '$lib/components/HeaderSort.svelte';
+	import { fly } from 'svelte/transition';
 	export let form;
 	export let data;
 
@@ -46,7 +44,7 @@
 		page: 0,
 		limit: 10,
 		size: filteredPopsels.length,
-		amounts: [5, 10, 15]
+		amounts: pageOptions
 	} satisfies PaginationSettings;
 
 	$: paginatedSource = filteredPopsels.slice(paginationSettings.page * paginationSettings.limit, paginationSettings.page * paginationSettings.limit + paginationSettings.limit);

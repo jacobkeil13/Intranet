@@ -2,7 +2,8 @@
 	import { Search, TableWrapper, PageWrapper, HeaderSort, FileAttachment } from '$lib/components';
 	import { getToastStore, Tab, TabGroup, getModalStore, type ModalSettings, type PaginationSettings, RadioGroup, RadioItem, Accordion, AccordionItem } from '@skeletonlabs/skeleton';
 	import { api_key, getDateLocal, getFormURL } from '$lib/helpers.js';
-	import { getFormArchives } from '$lib/stores/counter_duty.js';
+	import { pageOptions } from '$lib/stores/filters.js';
+	import { getFormArchives } from '$lib/helpers';
 	import { fly } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
@@ -100,7 +101,7 @@
 		page: 0,
 		limit: 10,
 		size: filteredForms.length,
-		amounts: [5, 10, 15]
+		amounts: pageOptions
 	} satisfies PaginationSettings;
 
 	$: paginatedSource = filteredForms.slice(paginationSettings.page * paginationSettings.limit, paginationSettings.page * paginationSettings.limit + paginationSettings.limit);

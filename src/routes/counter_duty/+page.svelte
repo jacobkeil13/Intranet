@@ -3,8 +3,9 @@
 	import type { BannerUser, PrivacyForm } from '$lib/types';
 	import { Spinner, UserPicker, TimePicker, TimePickerAdvisor, SuccessCheck, TextareaCopy, PageWrapper, Popup } from '$lib/components';
 	import { RadioGroup, RadioItem, SlideToggle, Step, Stepper, getToastStore, getModalStore } from '@skeletonlabs/skeleton';
-	import { actions, getCurrentAppts, getPrivacyInfo, getUidInfo } from '$lib/stores/counter_duty';
+	import { getCurrentAppts, getPrivacyInfo, getUidInfo } from '$lib/helpers';
 	import { getCampusName, timeout } from '$lib/helpers';
+	import { actions } from '$lib/stores/counter_duty';
 	import { writable } from 'svelte/store';
 	import { fly } from 'svelte/transition';
 	import moment from 'moment';

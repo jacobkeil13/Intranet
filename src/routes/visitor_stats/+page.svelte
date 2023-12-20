@@ -1,13 +1,12 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { fly } from 'svelte/transition';
-	import { onMount } from 'svelte';
-	import { page } from '$app/stores';
-	import { getDateLocal } from '$lib/helpers';
 	import { type PaginationSettings, getModalStore } from '@skeletonlabs/skeleton';
-	import PageWrapper from '$lib/components/PageWrapper.svelte';
+	import { PageWrapper, TableWrapper } from '$lib/components';
+	import { pageOptions } from '$lib/stores/filters.js';
+	import { fly } from 'svelte/transition';
+	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
+	import { onMount } from 'svelte';
 	import moment from 'moment';
-	import TableWrapper from '$lib/components/TableWrapper.svelte';
 	export let data;
 
 	let modalStore = getModalStore();
@@ -76,7 +75,7 @@
 		page: 0,
 		limit: 10,
 		size: filteredParsedVisits.length,
-		amounts: [5, 10, 15]
+		amounts: pageOptions
 	} satisfies PaginationSettings;
 
 	$: paginatedSource = filteredParsedVisits.slice(paginationSettings.page * paginationSettings.limit, paginationSettings.page * paginationSettings.limit + paginationSettings.limit);

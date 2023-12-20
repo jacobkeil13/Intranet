@@ -108,3 +108,152 @@ export function getProcedureURL(proc: any) {
 		return `https://tup-ofa.forest.usf.edu/files/procedures/${proc?.aidYear.name}/${proc?.aidYear.name} ${proc?.fileName}.${proc?.extension}?apiKey=${api_key}`;
 	}
 }
+
+export async function getUidInfo(uid: string) {
+	let parsedUID = uid.includes('U') ? uid : 'U' + uid;
+	let res = await fetch('/banner/get_user?uid=' + parsedUID, {
+		method: 'GET',
+		headers: {
+			'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+			'Access-Control-Allow-Origin': '*',
+			'Access-Control-Allow-Headers': '*'
+		}
+	});
+	let response = await res.json();
+	return response;
+}
+
+export async function getPrivacyInfo(uid: string) {
+	let parsedUID = uid.includes('U') ? uid : 'U' + uid;
+	let res = await fetch('/banner/get_privacy?uid=' + parsedUID, {
+		method: 'GET',
+		headers: {
+			'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+			'Access-Control-Allow-Origin': '*',
+			'Access-Control-Allow-Headers': '*'
+		}
+	});
+	let response = await res.json();
+	return response;
+}
+
+export async function getFiveNineDirs() {
+	let res = await fetch(`/finaid/fivenine?apiKey=${api_key}`, {
+		method: 'GET',
+		headers: {
+			'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+			'Access-Control-Allow-Origin': '*',
+			'Access-Control-Allow-Headers': '*'
+		}
+	});
+	let response = await res.json();
+	return response;
+}
+
+export async function getFiveNineDir(dirName: string) {
+	let res = await fetch(`/finaid/fivenine/" + dirName + "?apiKey=${api_key}`, {
+		method: 'GET',
+		headers: {
+			'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+			'Access-Control-Allow-Origin': '*',
+			'Access-Control-Allow-Headers': '*'
+		}
+	});
+	let response = await res.json();
+	return response;
+}
+
+export async function getProcedureArchives() {
+	let res = await fetch(`/archive/procedures?apiKey=${api_key}`, {
+		method: 'GET',
+		headers: {
+			'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+			'Access-Control-Allow-Origin': '*',
+			'Access-Control-Allow-Headers': '*'
+		}
+	});
+	let response = await res.json();
+	return response;
+}
+
+export async function getFormArchives() {
+	let res = await fetch(`/archive/forms?apiKey=${api_key}`, {
+		method: 'GET',
+		headers: {
+			'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+			'Access-Control-Allow-Origin': '*',
+			'Access-Control-Allow-Headers': '*'
+		}
+	});
+	let response = await res.json();
+	return response;
+}
+
+// export async function getUidInfo(uid: string) {
+//   let parsedUID = uid.includes('U') ? uid : "U" + uid;
+//   let res = await fetch("/api/banner?uid=" + parsedUID, {
+//     method: "GET"
+//   });
+//   let response = await res.json();
+//   return response;
+// }
+
+// export async function getPrivacyInfo(uid: string) {
+//   let parsedUID = uid.includes('U') ? uid : "U" + uid;
+//   let res = await fetch("/api/banner/privacy?uid=" + parsedUID, {
+//     method: "GET"
+//   });
+//   let response = await res.json();
+//   return response;
+// }
+
+// export async function getFiveNineDirs() {
+//   // let date = moment().format();
+//   let res = await fetch("/api/five_nine", {
+//     method: "GET"
+//   });
+//   let response = await res.json();
+//   return response;
+// }
+
+// export async function getFiveNineDir(dirName: string) {
+//   // let date = moment().format();
+//   let res = await fetch("/api/five_nine/" + dirName, {
+//     method: "GET"
+//   });
+//   let response = await res.json();
+//   return response;
+// }
+
+// export async function getProcedureArchives() {
+//   let res = await fetch("/api/procedures", {
+//     method: "GET",
+//     headers: {
+//       "Content-Type": "application/json"
+//     }
+//   });
+
+//   let response = await res.json();
+//   return response;
+// }
+
+// export async function getFormArchives() {
+//   let res = await fetch("/api/forms", {
+//     method: "GET",
+//     headers: {
+//       "Content-Type": "application/json"
+//     }
+//   });
+
+//   let response = await res.json();
+//   return response;
+// }
+
+export async function getCurrentAppts(uid: string) {
+	let parsedUID = uid.includes('U') ? uid : 'U' + uid;
+	let res = await fetch('/api/current_appt?uid=' + parsedUID, {
+		method: 'GET'
+	});
+	let response = await res.json();
+	return response;
+}

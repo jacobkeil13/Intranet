@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { Search, TableWrapper, PageWrapper, HeaderSort } from '$lib/components';
 	import { getToastStore, Tab, TabGroup, getModalStore, type PaginationSettings, RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
-	import { fly } from 'svelte/transition';
+	import { pageOptions } from '$lib/stores/filters.js';
 	import { getDateLocal } from '$lib/helpers.js';
+	import { fly } from 'svelte/transition';
 	import { page } from '$app/stores';
 	export let form;
 	export let data;
@@ -78,7 +79,7 @@
 		page: 0,
 		limit: 10,
 		size: filteredAppointments.length,
-		amounts: [5, 10, 15]
+		amounts: pageOptions
 	} satisfies PaginationSettings;
 
 	$: paginatedSource = filteredAppointments.slice(paginationSettings.page * paginationSettings.limit, paginationSettings.page * paginationSettings.limit + paginationSettings.limit);

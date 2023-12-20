@@ -1,14 +1,11 @@
 <script lang="ts">
-	import Search from '$lib/components/Search.svelte';
-	import Popup from '$lib/components/Popup.svelte';
 	import { type PaginationSettings, RadioGroup, RadioItem, type ModalSettings, getModalStore, getToastStore } from '@skeletonlabs/skeleton';
-	import moment from 'moment';
-	import { fly } from 'svelte/transition';
-	import { getDateLocal } from '$lib/helpers.js';
-	import TableWrapper from '$lib/components/TableWrapper.svelte';
-	import PageWrapper from '$lib/components/PageWrapper.svelte';
-	import HeaderSort from '$lib/components/HeaderSort.svelte';
 	import type { MasterCalendarComment, MasterCalendarItem, MasterCalendarType, UserProfile } from '@prisma/client';
+	import { PageWrapper, Popup, Search, TableWrapper, HeaderSort } from '$lib/components';
+	import { getDateLocal } from '$lib/helpers.js';
+	import { fly } from 'svelte/transition';
+	import moment from 'moment';
+	import { pageOptions } from '$lib/stores/filters.js';
 	export let form;
 	export let data;
 
@@ -133,7 +130,7 @@
 		page: 0,
 		limit: 10,
 		size: filteredItems.length,
-		amounts: [5, 10, 25]
+		amounts: pageOptions
 	} satisfies PaginationSettings;
 
 	$: paginatedSource = filteredItems.slice(paginationSettings.page * paginationSettings.limit, paginationSettings.page * paginationSettings.limit + paginationSettings.limit);

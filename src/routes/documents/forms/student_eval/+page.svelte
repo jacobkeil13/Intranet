@@ -1,6 +1,5 @@
 <script lang="ts">
-	import PageWrapper from '$lib/components/PageWrapper.svelte';
-	import { page } from '$app/stores';
+	import { PageWrapper } from '$lib/components';
 	import { fly } from 'svelte/transition';
 	import moment from 'moment';
 	export let data;

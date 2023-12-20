@@ -1,6 +1,6 @@
 export { Loading, Spinner, SuccessCheck } from './animation';
 export { USFLogo } from './brand';
-export { Chart, D3Chart } from './charts';
+export { D3Chart } from './charts';
 export { 
   Appointment_Create, Appointment_Update, DrQueue_Create, DrQueue_Update, Form_Create, Form_Update,
   GeneralLibrary_Create, GeneralLibrary_Update, IsQueue_Create, IsQueue_Update, Letter_Create, Letter_Update,

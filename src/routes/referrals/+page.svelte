@@ -1,14 +1,11 @@
 <script lang="ts">
-	import Search from '$lib/components/Search.svelte';
-	import { getDateLocal } from '$lib/helpers.js';
 	import { type PaginationSettings, getToastStore, getModalStore, RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
+	import { PageWrapper, Popup, Search, TableWrapper, HeaderSort } from '$lib/components';
+	import { pageOptions } from '$lib/stores/filters.js';
+	import { getDateLocal } from '$lib/helpers.js';
 	import { fly } from 'svelte/transition';
 	import { page } from '$app/stores';
 	import moment from 'moment';
-	import TableWrapper from '$lib/components/TableWrapper.svelte';
-	import Popup from '$lib/components/Popup.svelte';
-	import PageWrapper from '$lib/components/PageWrapper.svelte';
-	import HeaderSort from '$lib/components/HeaderSort.svelte';
 	export let form;
 	export let data;
 
@@ -60,7 +57,7 @@
 		page: 0,
 		limit: 50,
 		size: filteredReferrals.length,
-		amounts: [5, 10, 15, 25, 50]
+		amounts: pageOptions
 	} satisfies PaginationSettings;
 
 	$: paginatedSource = filteredReferrals.slice(paginationSettings.page * paginationSettings.limit, paginationSettings.page * paginationSettings.limit + paginationSettings.limit);

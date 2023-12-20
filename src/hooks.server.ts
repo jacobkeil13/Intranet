@@ -2,11 +2,11 @@ import type { Handle } from '@sveltejs/kit';
 import { db } from '$lib/server/database';
 
 export const handle: Handle = async ({ event, resolve }) => {
-	// let session = event.platform?.req.session.account;
+	let session = event.platform?.req.session.account;
 
-	let session = {
-		username: 'test@usf.edu'
-	};
+	// let session = {
+	// 	username: 'test@usf.edu'
+	// };
 
 	const profile = await db.userProfile.findFirst({
 		include: {

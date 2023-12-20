@@ -1,11 +1,8 @@
 <script lang="ts">
-	import Search from '$lib/components/Search.svelte';
 	import { type PaginationSettings, type ModalSettings, getModalStore, getToastStore } from '@skeletonlabs/skeleton';
+	import { PageWrapper, Popup, Search, TableWrapper, HeaderSort } from '$lib/components';
+	import { pageOptions } from '$lib/stores/filters.js';
 	import { fly } from 'svelte/transition';
-	import TableWrapper from '$lib/components/TableWrapper.svelte';
-	import PageWrapper from '$lib/components/PageWrapper.svelte';
-	import HeaderSort from '$lib/components/HeaderSort.svelte';
-	import Popup from '$lib/components/Popup.svelte';
 	export let data;
 
 	let modalStore = getModalStore();
@@ -58,7 +55,7 @@
 		page: 0,
 		limit: 10,
 		size: filteredUsers.length,
-		amounts: [5, 10, 15]
+		amounts: pageOptions
 	} satisfies PaginationSettings;
 
 	$: paginatedSource = filteredUsers.slice(paginationSettings.page * paginationSettings.limit, paginationSettings.page * paginationSettings.limit + paginationSettings.limit);

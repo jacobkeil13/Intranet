@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Search, PageWrapper, Popup, TableWrapper, HeaderSort } from '$lib/components';
 	import { type PaginationSettings, type ModalSettings, getModalStore, getToastStore, RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
+	import { pageOptions } from '$lib/stores/filters.js';
 	import { getDateLocal } from '$lib/helpers.js';
 	import { fly } from 'svelte/transition';
 	import { page } from '$app/stores';
@@ -60,7 +61,7 @@
 		page: 0,
 		limit: 10,
 		size: filteredQueueRequests.length,
-		amounts: [5, 10, 20, 50, 100]
+		amounts: pageOptions
 	} satisfies PaginationSettings;
 
 	$: paginatedSource = filteredQueueRequests.slice(paginationSettings.page * paginationSettings.limit, paginationSettings.page * paginationSettings.limit + paginationSettings.limit);

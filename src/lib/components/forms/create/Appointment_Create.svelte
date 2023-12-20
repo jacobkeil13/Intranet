@@ -1,20 +1,15 @@
 <script lang="ts">
-	import { fly } from 'svelte/transition';
-	import { RadioGroup, RadioItem, SlideToggle, Step, Stepper, getModalStore, getToastStore } from '@skeletonlabs/skeleton';
-	import { getCampusName, getDateLocal, timeout } from '$lib/helpers';
-	import type { BannerUser, PrivacyForm } from '$lib/types';
-	import Spinner from '$lib/components/animation/Spinner.svelte';
-	import { actions, getCurrentAppts, getPrivacyInfo, getUidInfo } from '$lib/stores/counter_duty';
-	import moment from 'moment';
-	import TimePickerAdvisor from '$lib/components/TimePickerAdvisor.svelte';
-	import TimePicker from '$lib/components/TimePicker.svelte';
-	import { writable } from 'svelte/store';
-	import * as devalue from 'devalue';
-	import SuccessCheck from '$lib/components/animation/SuccessCheck.svelte';
 	import type { Appointment, Referral } from '@prisma/client';
-	import TextareaCopy from '$lib/components/TextareaCopy.svelte';
-	import Popup from '$lib/components/Popup.svelte';
-	import UserPicker from '$lib/components/UserPicker.svelte';
+	import type { BannerUser, PrivacyForm } from '$lib/types';
+	import { Spinner, SuccessCheck, TextareaCopy, Popup, TimePicker, TimePickerAdvisor, UserPicker } from '$lib/components';
+	import { RadioGroup, RadioItem, SlideToggle, Step, Stepper, getModalStore, getToastStore } from '@skeletonlabs/skeleton';
+	import { getCurrentAppts, getPrivacyInfo, getUidInfo } from '$lib/helpers';
+	import { getCampusName, timeout } from '$lib/helpers';
+	import { actions } from '$lib/stores/counter_duty';
+	import { writable } from 'svelte/store';
+	import { fly } from 'svelte/transition';
+	import * as devalue from 'devalue';
+	import moment from 'moment';
 
 	let modalStore = getModalStore();
 	let toastStore = getToastStore();

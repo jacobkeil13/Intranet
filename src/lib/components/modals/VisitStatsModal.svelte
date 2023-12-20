@@ -1,9 +1,15 @@
 <script lang="ts">
 	import type { Appointment, Referral, VisitCounter } from '@prisma/client';
-	import { D3Chart, Popup, TableWrapper, Search } from '$lib/components';
+	import { Popup, TableWrapper, Search } from '$lib/components';
 	import { SlideToggle, Tab, TabGroup, getModalStore, type PaginationSettings } from '@skeletonlabs/skeleton';
-	import { onMount } from 'svelte';
+	import { Area, Axis, Chart, ChartClipPath, Highlight, Svg, Tooltip, TooltipItem } from 'layerchart';
+	import { format, PeriodType } from 'svelte-ux';
+	import { format as formatDate } from 'date-fns';
+	import { pageOptions } from '$lib/stores/filters';
 	import { fly } from 'svelte/transition';
+	import { onMount } from 'svelte';
+	import { scaleTime } from 'd3-scale';
+	import { cubicInOut } from 'svelte/easing';
 	import moment from 'moment';
 
 	enum Stat {
@@ -22,13 +28,13 @@
 	}
 
 	interface ChartData {
-		date: string;
-		visits: number;
+		date: Date;
+		value: number;
 	}
 
 	let modalStore = getModalStore();
 	let graphView = false;
-	let graphData: ChartData[] = [];
+	let data: ChartData[] = [];
 	let tabSet: number = 0;
 	let searchQuery: string = '';
 	$: timePicked = '';
@@ -52,9 +58,9 @@
 		Object.keys(visitsPerHour).forEach((time) => {
 			times.push({ time, visits: visitsPerHour[time].visits });
 
-			graphData.push({
-				date: visitsPerHour[time].iso,
-				visits: visitsPerHour[time].visits
+			data.push({
+				date: new Date(visitsPerHour[time].iso),
+				value: visitsPerHour[time].visits
 			});
 		});
 		timePicked = 'All';
@@ -137,7 +143,7 @@
 		page: 0,
 		limit: 5,
 		size: filteredVisits.length,
-		amounts: [5, 10, 25]
+		amounts: pageOptions
 	} satisfies PaginationSettings;
 
 	$: paginatedSource = filteredVisits.slice(paginationSettings.page * paginationSettings.limit, paginationSettings.page * paginationSettings.limit + paginationSettings.limit);
@@ -249,9 +255,25 @@
 				</div>
 				<div>
 					{#if graphView}
-						{#if graphData.length > 2}
+						{#if data.length > 2}
 							<section in:fly={{ y: -10, duration: 250 }}>
-								<D3Chart width={800} height={400} data={graphData} />
+								<div class="h-[450px] p-4 border rounded">
+									<Chart {data} x="date" xScale={scaleTime()} y="value" yDomain={[0, null]} yNice padding={{ left: 16, bottom: 24 }} tooltip>
+										<Svg>
+											<Axis placement="left" grid rule />
+											<Axis placement="bottom" format={(d) => format(d, PeriodType.Day, 'short')} rule />
+											{#if graphView}
+												<ChartClipPath initialWidth={0} tweened={{ width: { duration: 2000, easing: cubicInOut } }}>
+													<Area line={{ class: 'stroke stroke-accent-500' }} class="fill-accent-500/30" />
+												</ChartClipPath>
+											{/if}
+											<Highlight points lines />
+										</Svg>
+										<Tooltip header={(data) => formatDate(data.date, 'ha')} let:data>
+											<TooltipItem label="Visits" value={data.value} />
+										</Tooltip>
+									</Chart>
+								</div>
 							</section>
 						{:else}
 							<h1>Graph needs more data before it can be rendered</h1>

@@ -1,16 +1,11 @@
 <script lang="ts">
 	import '../app.postcss';
 
-	import { getDrawerStore } from '@skeletonlabs/skeleton';
-	import { initializeStores } from '@skeletonlabs/skeleton';
-	import { AppShell, AppBar, Avatar, Modal, Toast, Drawer } from '@skeletonlabs/skeleton';
+	import { USFLogo, Resources, SidebarItem} from '$lib/components';
+	import { AppShell, AppBar, Avatar, Modal, Toast, Drawer , getDrawerStore, initializeStores, storePopup } from '@skeletonlabs/skeleton';
 	import { computePosition, autoUpdate, offset, shift, flip, arrow } from '@floating-ui/dom';
-	import { storePopup } from '@skeletonlabs/skeleton';
-	import UsfLogo from '$lib/components/brand/USFLogo.svelte';
 	import { forms } from '$lib/stores/modal';
 	import { onMount } from 'svelte';
-	import Resources from '$lib/components/Resources.svelte';
-	import SidebarItem from '$lib/components/SidebarItem.svelte';
 	export let data;
 
 	initializeStores();
@@ -37,7 +32,7 @@
 				<AppBar background="bg-accSlate text-white/90" padding="py-2 pr-2">
 					<svelte:fragment slot="lead">
 						<span class="flex items-center space-x-2 w-[300px] px-4">
-							<UsfLogo />
+							<USFLogo />
 							<strong class="text-xl">OFA Intranet</strong>
 						</span>
 						<h1 class="hidden mobile:block">{data.profile?.first_name} {data.profile?.last_name} - {data.profile?.title.name}</h1>
